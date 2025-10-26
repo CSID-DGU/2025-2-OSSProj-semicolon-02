@@ -1,21 +1,16 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import HomeScreen from '../screens/HomeScreen';
-
-type RootStackParamList = {
-  Home: undefined;
-};
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import BottomTabs from './BottomTabs';
+import ManualAdd from '../screens/Add/ManualAdd';
+import type {RootStackParamList} from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Home">
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ title: '홈 화면' }}
-      />
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="Tabs" component={BottomTabs} />
+      <Stack.Screen name="ManualAdd" component={ManualAdd} />
     </Stack.Navigator>
   );
 }

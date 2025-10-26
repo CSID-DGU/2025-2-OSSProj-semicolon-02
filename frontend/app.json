@@ -1,4 +1,5 @@
 {
   "name": "frontend",
-  "displayName": "frontend"
+  "displayName": "frontend",
+  "entryFile": "index.ts"
 }
