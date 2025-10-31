@@ -8,3 +8,5 @@ NUL
 
 __pycache__/
 *.pyc
+
+/venv/
