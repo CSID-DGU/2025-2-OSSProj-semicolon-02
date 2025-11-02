@@ -1,6 +1,7 @@
 export type RootStackParamList = {
     Tabs: undefined;
     ManualAdd: undefined;
+    CafeFind: undefined;
   };
   
   export type TabParamList = {
