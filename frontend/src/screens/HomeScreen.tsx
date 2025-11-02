@@ -1,22 +1,29 @@
 import React from 'react';
-import {View, Text, ScrollView} from 'react-native';
-//import {View, Text, TouchableOpacity, ScrollView} from 'react-native';
+import {View, Text, TouchableOpacity, ScrollView} from 'react-native';
 //import Ionicons from 'react-native-vector-icons/Ionicons';
 import {common} from '../styles/common';
 import {homeStyles} from '../styles/homeStyles';
 import SectionHeader from '../components/SectionHeader';
 import StatCard from '../components/StatCard';
 import {theme} from '../styles/theme';
-// import {useNavigation} from '@react-navigation/native';
-// import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-// import type {RootStackParamList} from '../navigation/types';
+import {useNavigation} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import type {RootStackParamList} from '../navigation/types';
+
+type RootNav = NativeStackNavigationProp<RootStackParamList>;
+
 
 export default function HomeScreen() {
+  const navigation = useNavigation<RootNav>();
 
   // 더미 데이터
   const todayMg = 180;
   const limitMg = 400;
   const percent = Math.min(100, Math.round((todayMg / limitMg) * 100));
+
+  const openStatistics = () => {
+    navigation.navigate('Statistics');
+  };
 
   return (
     <View style={common.screen}>
@@ -26,6 +33,34 @@ export default function HomeScreen() {
           <Text style={common.h1}>오늘의 카페인</Text>
           <Text style={homeStyles.subtle}>허용치 {limitMg}mg 기준</Text>
         </View>
+
+         {/* 통계 전체보기 카드 */}
+         <View style={homeStyles.section}>
+          <SectionHeader title="통계" />
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={[homeStyles.gaugeCard, {marginTop: theme.spacing(1)}]}
+            onPress={openStatistics}>
+            <View style={[common.rowBetween]}>
+              <View>
+                <Text style={homeStyles.gaugeValue}>{todayMg} mg</Text>
+                <Text style={homeStyles.subtle}>오늘 섭취량</Text>
+              </View>
+              <View style={{alignItems: 'flex-end'}}>
+                <Text
+                  style={{
+                    fontSize: 24,
+                    fontWeight: '800',
+                    color: theme.colors.primary,
+                  }}>
+                  전체 보기
+                </Text>
+                <Text style={homeStyles.subtle}>나의 카페인 레포트로 이동</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+
 
         {/* 게이지/요약 */}
         <View style={homeStyles.gaugeCard}>
