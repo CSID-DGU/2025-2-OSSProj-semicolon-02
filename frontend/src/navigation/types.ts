@@ -1,7 +1,7 @@
 export type RootStackParamList = {
     Tabs: undefined;
     ManualAdd: undefined;
-    Statistics: undefined; 
+    Statistics: undefined;
   };
   
   export type TabParamList = {
@@ -9,4 +9,3 @@ export type RootStackParamList = {
     Add: undefined;     // 중앙 등록 버튼용
     MyPage: undefined;
   };
-  
