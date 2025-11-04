@@ -2,6 +2,9 @@ export type RootStackParamList = {
     Tabs: undefined;
     ManualAdd: undefined;
     NotificationSettings: undefined;
+    SignUp: undefined;
+    CameraAdd: undefined;
+    Favorites: undefined;
   };
   
   export type TabParamList = {

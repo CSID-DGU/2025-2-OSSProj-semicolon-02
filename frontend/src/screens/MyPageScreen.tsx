@@ -7,17 +7,17 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {common} from '../styles/common';
 import {theme} from '../styles/theme';
 
-type MyPageNav = NativeStackNavigationProp<RootStackParamList>;
+
 
 export default function MyPageScreen() {
-  const navigation = useNavigation<MyPageNav>();
+
+  const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
-    <View style={common.screen}>
-      <ScrollView contentContainerStyle={[common.container]}>
-        <View style={{paddingTop: 24, paddingBottom: 12}}>
-          <Text style={common.h1}>마이 페이지</Text>
-        </View>
+    <View style={[common.screen, common.container]}>
+      <View style={{paddingTop: 24, paddingBottom: 12}}>
+        <Text style={common.h1}>마이 페이지</Text>
+      </View>
 
         <View style={{
           backgroundColor: '#fff',
@@ -46,7 +46,7 @@ export default function MyPageScreen() {
               alignItems: 'center',
               paddingVertical: 4,
             }}
-            onPress={() => navigation.navigate('NotificationSettings')}
+            onPress={() => nav.navigate('NotificationSettings')}
             activeOpacity={0.7}
           >
             <Text>알림설정</Text>
