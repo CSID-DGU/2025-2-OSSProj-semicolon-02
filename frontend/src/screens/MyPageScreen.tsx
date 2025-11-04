@@ -3,11 +3,31 @@ import {View, Text, Switch} from 'react-native';
 import {common} from '../styles/common';
 import {theme} from '../styles/theme';
 
+import {useNavigation} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import type {RootStackParamList} from '../navigation/types';
+
+
 export default function MyPageScreen() {
+
+  const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
   return (
     <View style={[common.screen, common.container]}>
       <View style={{paddingTop: 24, paddingBottom: 12}}>
         <Text style={common.h1}>마이 페이지</Text>
+
+                <Text
+          onPress={() => nav.navigate('SignUp')}
+          style={{
+            marginTop: 6,
+            color: theme.colors.primary,
+            fontWeight: '700',
+          }}
+        >
+          회원가입
+        </Text>
+        
       </View>
 
       <View style={{
