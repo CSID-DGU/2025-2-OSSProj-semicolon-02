@@ -9,6 +9,8 @@ import CameraAdd from '../screens/Add/CameraAdd';
 // import MyReports from '../screens/MyPage/MyReports';
 
 import type { RootStackParamList } from './types';
+import StatisticsScreen from '../screens/Statistics/StatisticsScreen';
+//import type {RootStackParamList} from './types';
 
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -27,6 +29,7 @@ export default function AppNavigator() {
       <Stack.Screen name="SignUp" component={SignUp} />
       <Stack.Screen name="MyReports" component={MyReports} /> */}
       <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+      <Stack.Screen name="Statistics" component={StatisticsScreen} />  
     </Stack.Navigator>
   );
 }

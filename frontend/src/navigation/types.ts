@@ -14,7 +14,7 @@ export type RootStackParamList = {
 export type TabParamList = {
   Home: undefined;
   Add: undefined;
-  MyPage: undefined; 
+  MyPage: undefined;
 };
 
 // 마이페이지 전용 스택
@@ -24,3 +24,14 @@ export type MyPageStackParamList = {
   NotificationSettings: undefined;
   FavoritesManage: undefined;
 };
+//이 코드는 어디에서 왔는지 파악을 못함! 보류!
+
+  export type NotificationSettingsStackParamList = {
+    NotificationSettingsMain: undefined;
+    NotificationSettingsDetail: undefined;
+  };  
+  export type StatisticsStackParamList = {      
+    StatisticsMain: undefined;
+    StatisticsDetail: undefined;
+  };                  
+
