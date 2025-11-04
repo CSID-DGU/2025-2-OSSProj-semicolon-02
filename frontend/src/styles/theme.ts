@@ -9,6 +9,7 @@ export const theme = {
         gray300: '#D9D9D9',
         card: '#eaded1',
         warning: '#FF715B',
+        white: '#FFFFFF',
     },
     spacing: (n: number) => n * 8,
     radius: { sm: 10, md: 16, lg: 20, xl: 28 },

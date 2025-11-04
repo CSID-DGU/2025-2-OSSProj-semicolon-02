@@ -23,7 +23,7 @@ export const goalStyles = StyleSheet.create({
   },
   segmentText: {
     fontSize: 13,
-    color: theme.colors.gray600,
+    color: theme.colors.gray500,
   },
   segmentTextActive: {
     color: theme.colors.text,
@@ -54,7 +54,7 @@ export const goalStyles = StyleSheet.create({
     borderColor: theme.colors.line, backgroundColor: theme.colors.white,
     marginHorizontal: 8, paddingHorizontal: 10, textAlign: 'center', fontSize: 16,
   },
-  unit: { fontSize: 14, color: theme.colors.gray600 },
+  unit: { fontSize: 14, color: theme.colors.gray500 },
 
   // presets
   presetWrap: { flexDirection: 'row', gap: 8, marginTop: 8 },
