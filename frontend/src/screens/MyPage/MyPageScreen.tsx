@@ -1,15 +1,18 @@
 import { SafeAreaView, View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../navigation/types';
+import type { MyPageStackParamList, RootStackParamList } from '../../navigation/types';
 import { common } from '../../styles/common';
 import { theme } from '../../styles/theme';
 import { mypageStyles } from '../../styles/mypageStyles';
 import AppHeader from '../../components/AppHeader';
 import GoalTargetModal from './components/GoalTargetModal';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 
-type Nav = NativeStackNavigationProp<RootStackParamList>;
+// MyPage 스택용 네비 타입
+type MyPageNav = NativeStackNavigationProp<MyPageStackParamList>;
+// (루트로 올려탈 때 타입이 필요하면 아래처럼 보조 타입 둬도 됩니다.)
+// type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
 function RowLink({ label, onPress }: { label: string; onPress: () => void }) {
   return (
@@ -23,7 +26,7 @@ function RowLink({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 export default function MyPageScreen() {
-  const nav = useNavigation<Nav>();
+  const nav = useNavigation<MyPageNav>();
   const [goalVisible, setGoalVisible] = useState(false);
 
   return (
@@ -55,7 +58,7 @@ export default function MyPageScreen() {
           </View>
         </View>
 
-        {/* 목표 설정 카드 (팝업 오픈) */}
+        {/* 목표 설정 카드 */}
         <View style={mypageStyles.goalCard}>
           <View style={mypageStyles.goalHeader}>
             <View>
@@ -72,7 +75,6 @@ export default function MyPageScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* 간단 도넛 프리뷰 */}
           <View style={mypageStyles.donutWrap}>
             <View style={mypageStyles.donutOuter} />
             <View style={mypageStyles.donutInner}>
@@ -92,7 +94,12 @@ export default function MyPageScreen() {
 
           <RowLink label="알림 설정" onPress={() => nav.navigate('NotificationSettings')} />
           <RowLink label="즐겨찾기 관리" onPress={() => nav.navigate('FavoritesManage')} />
-          <RowLink label="나의 카페인 레포트" onPress={() => nav.navigate('MyReports')} />
+
+          {/*  루트 스택 화면으로 이동 → 부모 네비게이터 통해 올려타기 */}
+          <RowLink
+            label="나의 카페인 레포트"
+            onPress={() => nav.getParent()?.navigate('MyReports')}
+          />
         </View>
 
         <View style={{ height: theme.spacing(12) }} />
@@ -107,4 +114,3 @@ export default function MyPageScreen() {
     </SafeAreaView>
   );
 }
-
