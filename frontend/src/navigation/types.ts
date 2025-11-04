@@ -1,11 +1,15 @@
 export type RootStackParamList = {
-    Tabs: undefined;
-    ManualAdd: undefined;
-  };
-  
-  export type TabParamList = {
-    Home: undefined;
-    Add: undefined;     // 중앙 등록 버튼용
-    MyPage: undefined;
-  };
-  
+  Tabs: undefined;            
+  ManualAdd: undefined;
+  AccountSettings: undefined;
+  NotificationSettings: undefined;
+  FavoritesManage: undefined;
+  MyReports: undefined;
+  Statistics: undefined;
+};
+
+export type TabParamList = {
+  Home: undefined;
+  Add: undefined;
+  MyPage: undefined;
+};
