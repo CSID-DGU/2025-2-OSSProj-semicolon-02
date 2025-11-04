@@ -1,11 +1,37 @@
+// RootStack: 앱 전역 화면
 export type RootStackParamList = {
-    Tabs: undefined;
-    ManualAdd: undefined;
-    Statistics: undefined;
-  };
-  
-  export type TabParamList = {
-    Home: undefined;
-    Add: undefined;     // 중앙 등록 버튼용
-    MyPage: undefined;
-  };
+  Tabs: undefined;
+  ManualAdd: undefined;
+  CameraAdd: undefined;
+  Favorites: undefined;
+  Statistics: undefined;
+  SignUp: undefined;
+  MyReports: undefined;
+  NotificationSettings: undefined;
+};
+
+// 하단 탭
+export type TabParamList = {
+  Home: undefined;
+  Add: undefined;
+  MyPage: undefined;
+};
+
+// 마이페이지 전용 스택
+export type MyPageStackParamList = {
+  MyPageMain: undefined;
+  AccountSettings: undefined;
+  NotificationSettings: undefined;
+  FavoritesManage: undefined;
+};
+//이 코드는 어디에서 왔는지 파악을 못함! 보류!
+
+  export type NotificationSettingsStackParamList = {
+    NotificationSettingsMain: undefined;
+    NotificationSettingsDetail: undefined;
+  };  
+  export type StatisticsStackParamList = {      
+    StatisticsMain: undefined;
+    StatisticsDetail: undefined;
+  };                  
+
