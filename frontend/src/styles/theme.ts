@@ -11,6 +11,7 @@ export const theme = {
         gray300: '#D9D9D9',
         card: '#eaded1',
         warning: '#FF715B',
+        white: '#FFFFFF',
         gray700: '#616161',
         gray900: '#212121',
         gray100: '#F7F7F7',

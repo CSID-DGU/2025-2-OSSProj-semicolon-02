@@ -6,9 +6,9 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 import HomeScreen from '../screens/HomeScreen';
+import AddTabButton from '../components/AddTabButton';
 import MyPageScreen from '../screens/MyPageScreen';
 import FabMenu from '../components/FabMenu';
-//import AddTabButton from '../components/AddTabButton';
 import TabBarBackground from '../components/TabBarBackground';
 import type { TabParamList } from './types';
 import { theme } from '../styles/theme';
