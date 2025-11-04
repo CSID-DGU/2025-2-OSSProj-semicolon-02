@@ -7,6 +7,7 @@ export type RootStackParamList = {
   Statistics: undefined;
   SignUp: undefined;
   MyReports: undefined;
+  NotificationSettings: undefined;
 };
 
 // 하단 탭
