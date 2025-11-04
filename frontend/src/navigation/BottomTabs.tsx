@@ -6,8 +6,9 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 import HomeScreen from '../screens/HomeScreen';
-import MyPageScreen from '../screens/MyPage/MyPageScreen';
 import AddTabButton from '../components/AddTabButton';
+import MyPageScreen from '../screens/MyPageScreen';
+import FabMenu from '../components/FabMenu';
 import TabBarBackground from '../components/TabBarBackground';
 import type { TabParamList } from './types';
 import { theme } from '../styles/theme';
@@ -25,6 +26,7 @@ export default function BottomTabs() {
   const navigation = useNavigation<RootNav>();
 
   return (
+    <View style={{ flex: 1 }}>
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
@@ -53,19 +55,16 @@ export default function BottomTabs() {
         component={Empty}
         options={{
           title: '',
-          tabBarButton: () => (
-            <>
-              {/* 공간만 차지하는 빈 슬롯 */}
-              <View style={tabbarStyles.addSlot} />
-              {/* 떠 있는 FAB (절대위치) */}
-              <AddTabButton onPress={() => navigation.navigate('ManualAdd')} />
-            </>
-          ),
+          tabBarButton: () => <View style={tabbarStyles.addSlot} />,
         }}
         listeners={{ tabPress: (e) => e.preventDefault() }}
       />
 
       <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: '마이페이지' }} />
     </Tab.Navigator>
+
+    {/* ✅ 탭 위에 떠 있는 커스텀 FAB 메뉴(수동/카메라/즐겨찾기 3개) */}
+      <FabMenu />
+    </View>
   );
 }

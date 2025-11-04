@@ -6,6 +6,9 @@ export type RootStackParamList = {
   FavoritesManage: undefined;
   MyReports: undefined;
   Statistics: undefined;
+    SignUp: undefined;
+    CameraAdd: undefined;
+    Favorites: undefined;
 };
 
 export type TabParamList = {
