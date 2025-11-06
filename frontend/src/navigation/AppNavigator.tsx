@@ -4,30 +4,24 @@ import BottomTabs from './BottomTabs';
 import ManualAdd from '../screens/Add/ManualAdd';
 import CameraAdd from '../screens/Add/CameraAdd';
 import Favorites from '../screens/Add/Favorites';
-import Statistics from '../screens/Statistics/StatisticsScreen';
+import StatisticsScreen from '../screens/Statistics/StatisticsScreen';
 import SignUp from '../screens/SignUpScreen';
+import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 
 import type { RootStackParamList } from './types';
-import StatisticsScreen from '../screens/Statistics/StatisticsScreen';
-//import type {RootStackParamList} from './types';
 
-import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   return (
     <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
-      {/* 하단 탭 네비게이터 */}
       <Stack.Screen name="Tabs" component={BottomTabs} />
-
-      {/* 전역 공용 스크린들 */}
       <Stack.Screen name="ManualAdd" component={ManualAdd} />
       <Stack.Screen name="CameraAdd" component={CameraAdd} />
       <Stack.Screen name="Favorites" component={Favorites} />
-      <Stack.Screen name="Statistics" component={Statistics} />
+      <Stack.Screen name="Statistics" component={StatisticsScreen} />
       <Stack.Screen name="SignUp" component={SignUp} />
       <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
-      <Stack.Screen name="Statistics" component={StatisticsScreen} />  
     </Stack.Navigator>
   );
 }
