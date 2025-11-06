@@ -15,11 +15,8 @@ export const theme = {
         warning: '#FF715B',
         accent: '#C4A877',
         white: '#FFFFFF',
-        white: '#FFFFFF',
-        gray700: '#616161',
         gray900: '#212121',
         gray100: '#F7F7F7',
-        gray600: '#757575'
     },
     spacing: (n: number) => n * 8,
     radius: { sm: 10, md: 16, lg: 20, xl: 28 },

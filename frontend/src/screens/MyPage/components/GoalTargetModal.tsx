@@ -6,7 +6,7 @@ import { theme } from '../../../styles/theme';
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onSaved: (v?: { daily: number; monthly: number }) => void;
+  onSaved: (v: { daily: number; monthly: number }) => void; 
 };
 
 type Mode = 'daily' | 'monthly';
