@@ -12,6 +12,7 @@ export type RootStackParamList = {
 // 하단 탭
 export type TabParamList = {
   Home: undefined;
+  Statistics: undefined;
   Add: undefined;
   MyPage: undefined;
 };
