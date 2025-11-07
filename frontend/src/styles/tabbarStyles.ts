@@ -29,4 +29,8 @@ export const tabbarStyles = StyleSheet.create({
   item: {
     paddingTop: 6,
   },
+
+  statisticsItem: {
+    marginRight: 90,
+  },
 });

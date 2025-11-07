@@ -54,7 +54,14 @@ export default function BottomTabs() {
       >
         <Tab.Screen name="Home" component={HomeScreen} options={{ title: '홈' }} />
 
-        <Tab.Screen name="Statistics" component={StatisticsScreen} options={{ title: '통계' }} />
+        <Tab.Screen
+          name="Statistics"
+          component={StatisticsScreen}
+          options={{
+            title: '통계',
+            tabBarItemStyle: [tabbarStyles.item, tabbarStyles.statisticsItem],
+          }}
+        />
 
         {/* 가운데 Add 버튼 슬롯 */}
         <Tab.Screen
