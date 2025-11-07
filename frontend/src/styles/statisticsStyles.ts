@@ -4,6 +4,7 @@ import { theme } from './theme';
 export const statisticsStyles = StyleSheet.create({
   screen: {
     flex: 1,
+   
     backgroundColor: theme.colors.background,
   },
   container: {
@@ -17,6 +18,7 @@ export const statisticsStyles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     backgroundColor: '#FCE3BB',
+    marginTop: 0,
   },
   headerTopRow: {
     flexDirection: 'row',

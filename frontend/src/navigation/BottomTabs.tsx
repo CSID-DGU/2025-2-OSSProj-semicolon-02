@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import HomeScreen from '../screens/HomeScreen';
+import StatisticsScreen from '../screens/Statistics/StatisticsScreen';
+
 import AddTabButton from '../components/AddTabButton';
 import FabMenu from '../components/FabMenu';
 import TabBarBackground from '../components/TabBarBackground';
@@ -43,6 +45,7 @@ export default function BottomTabs() {
             if (route.name === 'Add') return null;
             const icons: Record<string, string> = {
               Home: focused ? 'home' : 'home-outline',
+              Statistics: focused ? 'stats-chart' : 'stats-chart-outline', 
               MyPage: focused ? 'person' : 'person-outline',
             };
             return <Ionicons name={icons[route.name]} size={24} color={color} />;
@@ -50,6 +53,8 @@ export default function BottomTabs() {
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} options={{ title: '홈' }} />
+
+        <Tab.Screen name="Statistics" component={StatisticsScreen} options={{ title: '통계' }} />
 
         {/* 가운데 Add 버튼 슬롯 */}
         <Tab.Screen

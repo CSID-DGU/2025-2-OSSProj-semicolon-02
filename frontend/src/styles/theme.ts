@@ -15,7 +15,6 @@ export const theme = {
         warning: '#FF715B',
         accent: '#C4A877',
         white: '#FFFFFF',
-        white: '#FFFFFF',
         gray700: '#616161',
         gray900: '#212121',
         gray100: '#F7F7F7',

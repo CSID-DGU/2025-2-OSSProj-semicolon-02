@@ -24,6 +24,7 @@ export default function HomeScreen() {
 
   const openStatistics = () => {
     navigation.navigate('Statistics');
+    //통계화면이랑 연결시킬 것 
   };
 
   return (
