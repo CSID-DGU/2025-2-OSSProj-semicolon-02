@@ -23,7 +23,9 @@ export const mypageStyles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  profileLeft: { flexDirection: 'row', alignItems: 'center' },
   avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: theme.colors.card },
+  profileInfo: { marginLeft: 12 },
   name: { fontSize: 16, fontWeight: '700', color: theme.colors.text },
   subId: { fontSize: 12, color: theme.colors.gray500, marginTop: 2 },
   editPill: {
@@ -36,7 +38,7 @@ export const mypageStyles = StyleSheet.create({
   },
   editPillTxt: { fontWeight: '700', color: theme.colors.text },
 
-  // goal card
+  // 목표 카드 (월간/일간 토글 표시)
   goalCard: {
     marginTop: theme.spacing(2),
     backgroundColor: theme.colors.white,
@@ -48,23 +50,39 @@ export const mypageStyles = StyleSheet.create({
   goalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   goalTitle: { fontSize: 16, fontWeight: '800', color: theme.colors.text },
   goalSub: { fontSize: 12, color: theme.colors.gray500, marginTop: 2 },
-  dropdownPill: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
-    backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.line,
-  },
-  dropdownTxt: { fontSize: 12, color: theme.colors.text },
 
-  donutWrap: { alignItems: 'center', justifyContent: 'center', marginTop: theme.spacing(2) },
-  donutOuter: {
-    width: 160, height: 160, borderRadius: 80,
+  segment: {
+    flexDirection: 'row',
     backgroundColor: theme.colors.surface,
-    borderWidth: 10, borderColor: theme.colors.card,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: theme.colors.line,
+    padding: 4,
   },
-  donutInner: {
-    position: 'absolute', width: 120, height: 120, borderRadius: 60,
-    backgroundColor: theme.colors.white, alignItems: 'center', justifyContent: 'center',
+  segBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 999,
   },
-  donutPercent: { fontSize: 22, fontWeight: '800', color: theme.colors.primary },
+  segBtnActive: {
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.line,
+  },
+  segTxt: { fontSize: 12, color: theme.colors.text, fontWeight: '700' },
+
+  goalValueBox: {
+    marginTop: theme.spacing(2),
+    paddingVertical: theme.spacing(2),
+    paddingHorizontal: theme.spacing(2),
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.line,
+    backgroundColor: theme.colors.surface,
+  },
+  goalValueRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  goalLabel: { fontSize: 14, color: theme.colors.gray700, fontWeight: '600' },
+  goalValue: { fontSize: 20, fontWeight: '800', color: theme.colors.primary },
 
   // list section
   sectionCard: {
@@ -76,9 +94,13 @@ export const mypageStyles = StyleSheet.create({
     paddingHorizontal: theme.spacing(2),
     paddingTop: theme.spacing(2),
   },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.colors.text },
-  sectionSeeAll: { fontSize: 12, color: theme.colors.gray500 },
 
   row: {
     paddingVertical: 14,
