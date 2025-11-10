@@ -5,6 +5,7 @@ export type RootStackParamList = {
   Favorites: undefined;          
   Statistics: undefined;
   SignUp: undefined;
+  Login: undefined;
   MyReports: undefined;
   NotificationSettings: undefined;
 };

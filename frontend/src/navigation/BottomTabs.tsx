@@ -1,4 +1,3 @@
-import React from 'react';
 import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
@@ -7,21 +6,18 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from '../screens/HomeScreen';
 import StatisticsScreen from '../screens/Statistics/StatisticsScreen';
 
-import AddTabButton from '../components/AddTabButton';
 import FabMenu from '../components/FabMenu';
-import TabBarBackground from '../components/TabBarBackground';
 import MyPageStack from '../navigation/MyPageStack';
 
 import { theme } from '../styles/theme';
-import { tabbarStyles } from '../styles/tabbarStyles';
+import { tabbarStyles, TAB_HEIGHT } from '../styles/tabbarStyles';
 
-import type { TabParamList } from './types';
-import type { RootStackParamList } from './types';
+import type { TabParamList, RootStackParamList } from './types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
-
 const Tab = createBottomTabNavigator<TabParamList>();
+
 function Empty() {
   return <View />;
 }
@@ -31,6 +27,9 @@ export default function BottomTabs() {
 
   return (
     <View style={{ flex: 1 }}>
+      {/* 탭바 위쪽으로 나는 얕은 그림자 (iOS: shadow, Android: 미약한 음영 효과) */}
+      <View style={tabbarStyles.shadowOverlay} pointerEvents="none" />
+
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
@@ -40,12 +39,13 @@ export default function BottomTabs() {
           tabBarItemStyle: tabbarStyles.item,
           tabBarLabelStyle: tabbarStyles.label,
           tabBarShowLabel: false,
-          tabBarBackground: () => <TabBarBackground />,
+
+          // tabBarBackground: undefined,
           tabBarIcon: ({ focused, color }) => {
             if (route.name === 'Add') return null;
             const icons: Record<string, string> = {
               Home: focused ? 'home' : 'home-outline',
-              Statistics: focused ? 'stats-chart' : 'stats-chart-outline', 
+              Statistics: focused ? 'stats-chart' : 'stats-chart-outline',
               MyPage: focused ? 'person' : 'person-outline',
             };
             return <Ionicons name={icons[route.name]} size={24} color={color} />;
@@ -63,7 +63,6 @@ export default function BottomTabs() {
           }}
         />
 
-        {/* 가운데 Add 버튼 슬롯 */}
         <Tab.Screen
           name="Add"
           component={Empty}
@@ -78,7 +77,6 @@ export default function BottomTabs() {
         <Tab.Screen name="MyPage" component={MyPageStack} options={{ title: '마이페이지' }} />
       </Tab.Navigator>
 
-      {/* 플로팅 메뉴 (수동 추가, 카메라 추가, 즐겨찾기 등) */}
       <FabMenu />
     </View>
   );

@@ -1,55 +1,58 @@
 import { StyleSheet } from 'react-native';
 import { theme } from './theme';
+import { common, fonts } from './common';
 
 export const mypageStyles = StyleSheet.create({
+  /** 상단 히어로 */
   hero: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing(2),
-    borderWidth: 1,
-    borderColor: theme.colors.line,
+    ...common.card,
   },
-  heroRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  heroTitle: { fontSize: 22, fontWeight: '800', color: theme.colors.text },
-
-  profileCard: {
-    marginTop: theme.spacing(2),
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.line,
-    padding: theme.spacing(2),
+  heroRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  heroTitle: {
+    ...fonts.bold,
+    fontSize: 22,
+    lineHeight: 28,
+    color: theme.colors.text,
+    fontWeight: '800',
+  },
+
+  /** 프로필 카드 */
+  profileCard: {
+    ...common.card,
+    marginTop: theme.spacing(2),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.white,
   },
   profileLeft: { flexDirection: 'row', alignItems: 'center' },
   avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: theme.colors.card },
   profileInfo: { marginLeft: 12 },
-  name: { fontSize: 16, fontWeight: '700', color: theme.colors.text },
-  subId: { fontSize: 12, color: theme.colors.gray500, marginTop: 2 },
+  name: { ...fonts.bold, fontSize: 16, color: theme.colors.text },
+  subId: { ...fonts.regular, fontSize: 12, color: theme.colors.gray500, marginTop: 2 },
   editPill: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: theme.colors.surface,
     borderRadius: 999,
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.line,
   },
-  editPillTxt: { fontWeight: '700', color: theme.colors.text },
+  editPillTxt: { ...fonts.bold, color: theme.colors.text },
 
-  // 목표 카드 (월간/일간 토글 표시)
+  /** 목표 카드 (일간/월간 토글 포함) */
   goalCard: {
+    ...common.card,
     marginTop: theme.spacing(2),
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.line,
-    padding: theme.spacing(2),
   },
-  goalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  goalTitle: { fontSize: 16, fontWeight: '800', color: theme.colors.text },
-  goalSub: { fontSize: 12, color: theme.colors.gray500, marginTop: 2 },
+  goalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  goalTitle: { ...fonts.bold, fontSize: 16, color: theme.colors.text },
+  goalSub: { ...fonts.regular, fontSize: 12, color: theme.colors.gray500, marginTop: 2 },
 
   segment: {
     flexDirection: 'row',
@@ -69,7 +72,7 @@ export const mypageStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.line,
   },
-  segTxt: { fontSize: 12, color: theme.colors.text, fontWeight: '700' },
+  segTxt: { ...fonts.bold, fontSize: 12, color: theme.colors.text },
 
   goalValueBox: {
     marginTop: theme.spacing(2),
@@ -80,27 +83,25 @@ export const mypageStyles = StyleSheet.create({
     borderColor: theme.colors.line,
     backgroundColor: theme.colors.surface,
   },
-  goalValueRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  goalLabel: { fontSize: 14, color: theme.colors.gray700, fontWeight: '600' },
-  goalValue: { fontSize: 20, fontWeight: '800', color: theme.colors.primary },
+  goalValueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  goalLabel: { ...fonts.semibold, fontSize: 14, color: theme.colors.gray700 },
+  goalValue: { ...fonts.black, fontSize: 20, color: theme.colors.primary, fontWeight: '800' },
 
-  // list section
+  /** 리스트 섹션 */
   sectionCard: {
+    ...common.card,
     marginTop: theme.spacing(2),
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.line,
     paddingHorizontal: theme.spacing(2),
     paddingTop: theme.spacing(2),
   },
   sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.colors.text },
+  sectionTitle: { ...fonts.bold, fontSize: 16, color: theme.colors.text },
 
   row: {
     paddingVertical: 14,
@@ -110,6 +111,6 @@ export const mypageStyles = StyleSheet.create({
     borderTopColor: theme.colors.line,
   },
   rowLeft: { flexDirection: 'row', alignItems: 'center' },
-  rowLabel: { fontSize: 14, color: theme.colors.text },
+  rowLabel: { ...fonts.regular, fontSize: 14, color: theme.colors.text },
   rowArrow: { color: theme.colors.gray500, fontSize: 16 },
 });
