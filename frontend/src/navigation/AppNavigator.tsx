@@ -5,7 +5,8 @@ import ManualAdd from '../screens/Add/ManualAdd';
 import CameraAdd from '../screens/Add/CameraAdd';
 import Favorites from '../screens/Add/Favorites';
 import StatisticsScreen from '../screens/Statistics/StatisticsScreen';
-import SignUp from '../screens/SignUpScreen';
+import SignUp from '../screens/Account/SignUpScreen';
+import Login from '../screens/Account/LoginScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 
 import type { RootStackParamList } from './types';
@@ -21,6 +22,7 @@ export default function AppNavigator() {
       <Stack.Screen name="Favorites" component={Favorites} />
       <Stack.Screen name="Statistics" component={StatisticsScreen} />
       <Stack.Screen name="SignUp" component={SignUp} />
+      <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
     </Stack.Navigator>
   );

@@ -23,6 +23,14 @@ export default function AccountSettingsScreen() {
     navigation.goBack();
   };
 
+  const onLogout = () => {
+  // TODO: 토큰 삭제 등 실제 로그아웃 처리 필요 (현재는 화면 이동만)
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'Login' }], // 로그인 페이지로 스택 초기화
+  });
+};
+
   return (
     <SafeAreaView style={common.screen}>
       <AppHeader title="계정 설정" onBack={() => navigation.goBack()} />
@@ -87,7 +95,23 @@ export default function AccountSettingsScreen() {
           }}>
           <Text style={{color: 'white', fontWeight: '700'}}>저장</Text>
         </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
+        <TouchableOpacity
+        onPress={onLogout}
+        activeOpacity={0.9}
+        style={{
+          marginTop: theme.spacing(2),
+          backgroundColor: theme.colors.gray100,
+          height: 48,
+          borderRadius: 12,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: 1,
+          borderColor: theme.colors.line,
+        }}
+      >
+        <Text style={{ color: theme.colors.text, fontWeight: '700' }}>로그아웃</Text>
+      </TouchableOpacity>
+    </View>
+  </SafeAreaView>
+);
 }

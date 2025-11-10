@@ -8,8 +8,8 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import {common} from '../styles/common';
-import {theme} from '../styles/theme';
+import {common} from '../../styles/common';
+import {theme} from '../../styles/theme';
 import {useNavigation} from '@react-navigation/native';
 
 export default function SignUpScreen() {

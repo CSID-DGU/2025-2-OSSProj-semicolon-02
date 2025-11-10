@@ -17,7 +17,7 @@ export const statisticsStyles = StyleSheet.create({
     paddingBottom: theme.spacing(4),
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
-    backgroundColor: '#FCE3BB',
+    backgroundColor: '#f3e9d8ff',
     marginTop: 0,
   },
   headerTopRow: {
