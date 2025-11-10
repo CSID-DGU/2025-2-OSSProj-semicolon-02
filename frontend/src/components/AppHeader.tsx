@@ -31,9 +31,9 @@ export default function AppHeader({title, subtitle, right, onBack}: AppHeaderPro
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: theme.spacing(2),
-    paddingTop: theme.spacing(3),
-    paddingBottom: theme.spacing(2),
+    paddingHorizontal: theme.spacing(3),      // 좌우 여백 
+    paddingTop: theme.spacing(5),             // 상단 패딩 
+    paddingBottom: theme.spacing(3),          // 하단 패딩 
     backgroundColor: theme.colors.background,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.line,
@@ -41,9 +41,29 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  left: {flexDirection: 'row', alignItems: 'flex-end', gap: 8},
-  backBtn: {marginRight: 4, paddingRight: 4, paddingBottom: 2},
-  backTxt: {fontSize: 22, color: theme.colors.text},
-  title: {fontSize: 24, fontWeight: '800', color: theme.colors.text},
-  subtitle: {fontSize: 12, color: theme.colors.gray500, marginTop: 4},
+  left: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+  },
+  backBtn: {
+    marginRight: 6,
+    paddingRight: 6,
+    paddingBottom: 2,
+  },
+  backTxt: {
+    fontSize: 26,                // 화살표 크기 
+    color: theme.colors.text,
+  },
+  title: {
+    fontSize: 28,                // 제목 크기 
+    fontWeight: '800',
+    color: theme.colors.text,
+    lineHeight: 34,              // 글씨 간격 보정
+  },
+  subtitle: {
+    fontSize: 14,                // 부제
+    color: theme.colors.gray500,
+    marginTop: 6,
+  },
 });
