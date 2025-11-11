@@ -106,9 +106,10 @@ export const homeStyles = StyleSheet.create({
     height: 160,
     alignItems: 'center',
     justifyContent: 'center',
+  },
   gaugeValue: { fontSize: 28, fontWeight: '800', color: theme.colors.text },
   subtle: { fontSize: 12, color: theme.colors.gray500 },
-  section: { marginTop: theme.spacing(2) },
+  //section: { marginTop: theme.spacing(2) },
   grid: { flexDirection: 'row', gap: theme.spacing(2) },
   // 주변 카페 찾기 카드 관련 스타일 - 임의로 추가함
   findCafeCard: {

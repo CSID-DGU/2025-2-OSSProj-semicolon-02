@@ -15,6 +15,7 @@ export type TabParamList = {
   Home: undefined;
   Statistics: undefined;
   Add: undefined;
+  CafeFind: undefined;
   MyPage: undefined;
 };
 
