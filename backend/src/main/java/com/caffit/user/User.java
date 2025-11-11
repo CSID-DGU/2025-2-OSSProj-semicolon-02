@@ -1,38 +1,35 @@
-// com.caffit.user.User.java
 package com.caffit.user;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users") // 테이블명을 users로 고정
 public class User {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(nullable=false, unique=true, length=120)
     private String email;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable=false, length=80)
     private String name;
 
-    @Column(name = "password_hash", nullable = false, length = 255)
-    private String passwordHash;
+    @Column(nullable=false, length=255)
+    private String password; 
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    protected User() {} // JPA 기본 생성자
 
-    protected User() {}
-
-    public User(String email, String name, String passwordHash) {
+    public User(String email, String name, String password) {
         this.email = email;
         this.name = name;
-        this.passwordHash = passwordHash;
+        this.password = password;
     }
 
     public Long getId() { return id; }
     public String getEmail() { return email; }
     public String getName() { return name; }
-    public String getPasswordHash() { return passwordHash; }
+    public String getPassword() { return password; }
+
+    public void setName(String name) { this.name = name; }
+    public void setPassword(String password) { this.password = password; }
 }

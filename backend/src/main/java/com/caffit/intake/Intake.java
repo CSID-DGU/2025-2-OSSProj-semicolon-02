@@ -22,10 +22,10 @@ public class Intake {
     @Column(name = "consumed_at", nullable = false)
     private LocalDateTime consumedAt;
 
-    @Column(name = "volume_ml", nullable = false, precision = 6, scale = 1)
+    @Column(name = "volume_ml", nullable = false)
     private double volumeMl;
 
-    @Column(name = "caffeine_mg", nullable = false, precision = 7, scale = 2)
+    @Column(name = "caffeine_mg", nullable = false)
     private double caffeineMg;
 
     @Column(length = 300)
