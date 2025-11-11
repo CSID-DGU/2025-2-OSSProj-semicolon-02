@@ -13,10 +13,10 @@ public class Beverage {
     @Column(nullable = false, length = 200)
     private String name;
 
-    @Column(name = "caffeine_mg_per_serv", nullable = false, precision = 6, scale = 2)
+    @Column(name = "caffeine_mg_per_serv", nullable = false)
     private double caffeineMgPerServing;
 
-    @Column(name = "serving_ml", nullable = false, precision = 6, scale = 1)
+    @Column(name = "serving_ml", nullable = false)
     private double servingMl;
 
     @Column(name = "is_active", nullable = false)

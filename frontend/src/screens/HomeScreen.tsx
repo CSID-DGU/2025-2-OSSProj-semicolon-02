@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import { SafeAreaView, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -12,11 +12,19 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import GoalTargetModal from './MyPage/components/GoalTargetModal';
 
+import { http } from '../lib/http'; 
+
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<RootNav>();
 
+  useEffect(() => {
+    http.get('/api/health')
+      .then(r => console.log('health:', r.data))   // 기대 출력: "OK"
+      .catch(e => console.log('health error:', e.message));
+  }, []);
+  
   // TODO: Add 화면과 실제 연동
   const todayMg = 180;              
   const [limitMg, setLimitMg] = useState<number>(400); 
