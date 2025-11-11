@@ -14,12 +14,11 @@ public class AuthService {
     public AuthService(UserRepository users) { this.users = users; }
 
     public User signUp(String email, String name, String rawPassword) {
-        if (users.existsByEmail(email)) {
-            throw new IllegalStateException("이미 가입된 이메일입니다.");
-        }
-        // TODO: 비밀번호는 반드시 해시(BCrypt)로 변경 권장
-        User u = new User(email, name, rawPassword);
-        return users.save(u); // 최초 save 시 user 테이블이 자동 생성됨(ddl-auto=update일 때)
+        System.out.println("[AUTH] signUp start email=" + email);
+        if (users.existsByEmail(email)) throw new IllegalStateException("이미 가입된 이메일입니다.");
+        User saved = users.save(new User(email, name, rawPassword));
+        System.out.println("[AUTH] saved id=" + saved.getId());
+        return saved;
     }
 
     public User login(String email, String rawPassword) {

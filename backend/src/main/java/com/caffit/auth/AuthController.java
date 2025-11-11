@@ -23,6 +23,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public UserRes signUp(@RequestBody SignUpReq req) {
+        System.out.println("[AUTH] /signup " + req.email()); // 진입 확인
         return UserRes.from(auth.signUp(req.email(), req.name(), req.password()));
     }
 
