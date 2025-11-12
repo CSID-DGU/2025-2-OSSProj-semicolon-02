@@ -10,6 +10,8 @@ import Login from '../screens/Account/LoginScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 
 import type { RootStackParamList } from './types';
+import CafeFindScreen from '../screens/CafeFindScreen';
+//import type {RootStackParamList} from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -24,6 +26,7 @@ export default function AppNavigator() {
       <Stack.Screen name="SignUp" component={SignUp} />
       <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+      <Stack.Screen name="CafeFind" component={CafeFindScreen} />
     </Stack.Navigator>
   );
 }

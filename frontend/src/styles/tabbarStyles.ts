@@ -15,8 +15,8 @@ export const tabbarStyles = StyleSheet.create({
     borderTopWidth: 0,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    overflow: 'hidden',   // 내부 콘텐츠 라운드에 맞춰 자르기
-    elevation: 0,         // 안드로이드 기본 그림자 제거
+    overflow: 'hidden', // 내부 콘텐츠 라운드에 맞춰 자르기
+    elevation: 0, // 안드로이드 기본 그림자 제거
   },
 
   /** 탭바 위쪽으로만 보이게 할 얕은 그림자 오버레이 */
@@ -24,7 +24,7 @@ export const tabbarStyles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: TAB_HEIGHT,  
+    bottom: TAB_HEIGHT,
     height: 12,
 
     // iOS
@@ -57,5 +57,9 @@ export const tabbarStyles = StyleSheet.create({
   /** 통계 탭만 우측 여백 보정이 필요할 때 사용 */
   statisticsItem: {
     marginRight: 90,
+  },
+
+  cafeFindItem: {
+    marginLeft: -40, // 왼쪽으로 조금 이동
   },
 });

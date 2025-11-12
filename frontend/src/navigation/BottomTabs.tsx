@@ -5,6 +5,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import HomeScreen from '../screens/HomeScreen';
 import StatisticsScreen from '../screens/Statistics/StatisticsScreen';
+import CafeFindScreen from '../screens/CafeFindScreen'; 
 
 import FabMenu from '../components/FabMenu';
 import MyPageStack from '../navigation/MyPageStack';
@@ -14,6 +15,8 @@ import { tabbarStyles, TAB_HEIGHT } from '../styles/tabbarStyles';
 
 import type { TabParamList, RootStackParamList } from './types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+//import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { RouteProp } from '@react-navigation/native';
 
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -31,7 +34,9 @@ export default function BottomTabs() {
       <View style={tabbarStyles.shadowOverlay} pointerEvents="none" />
 
       <Tab.Navigator
-        screenOptions={({ route }) => ({
+        screenOptions={({ route }:{
+          route: RouteProp<TabParamList, keyof TabParamList>;
+        }) => ({
           headerShown: false,
           tabBarActiveTintColor: theme.colors.primary,
           tabBarInactiveTintColor: theme.colors.gray500,
@@ -41,11 +46,14 @@ export default function BottomTabs() {
           tabBarShowLabel: false,
 
           // tabBarBackground: undefined,
-          tabBarIcon: ({ focused, color }) => {
+          tabBarIcon: ({ focused, color }:
+            { focused: boolean; color: string; }
+          ) => {
             if (route.name === 'Add') return null;
             const icons: Record<string, string> = {
               Home: focused ? 'home' : 'home-outline',
               Statistics: focused ? 'stats-chart' : 'stats-chart-outline',
+              CafeFind: focused ? 'navigate' : 'navigate-outline',
               MyPage: focused ? 'person' : 'person-outline',
             };
             return <Ionicons name={icons[route.name]} size={24} color={color} />;
@@ -59,7 +67,7 @@ export default function BottomTabs() {
           component={StatisticsScreen}
           options={{
             title: '통계',
-            tabBarItemStyle: [tabbarStyles.item, tabbarStyles.statisticsItem],
+            tabBarItemStyle:tabbarStyles.item,
           }}
         />
 
@@ -71,8 +79,15 @@ export default function BottomTabs() {
             tabBarButton: () => <View style={tabbarStyles.addSlot} />,
           }}
           listeners={{ tabPress: (e) => e.preventDefault() }}
-        />
-
+         />
+        <Tab.Screen
+          name="CafeFind"
+          component={CafeFindScreen}
+          options={{ 
+            title: '지도',
+            tabBarItemStyle: tabbarStyles.item,
+          }}
+        /> 
         {/* 마이페이지 스택 */}
         <Tab.Screen name="MyPage" component={MyPageStack} options={{ title: '마이페이지' }} />
       </Tab.Navigator>

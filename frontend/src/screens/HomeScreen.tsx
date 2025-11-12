@@ -13,7 +13,7 @@ import type { RootStackParamList } from '../navigation/types';
 import GoalTargetModal from './MyPage/components/GoalTargetModal';
 
 import { http } from '../lib/http'; 
-
+//import type { AxiosResponse } from 'axios'; 
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen() {
