@@ -23,6 +23,26 @@ public class IntakeController {
         this.beverages = beverages;
     }
 
+    @GetMapping //섭취 기록 목록 조회
+    public List<IntakeDto> list(@RequestParam(required = false) Long userId) {
+        List<Intake> entries = (userId != null)
+                ? intakes.findByUserIdOrderByConsumedAtDesc(userId)
+                : intakes.findAll();
+        return entries.stream()
+                .map(i -> new IntakeDto(
+                        i.getId(),
+                        i.getUser().getId(),
+                        i.getBeverage().getId(),
+                        i.getBeverage().getName(),
+                        i.getVolumeMl(),
+                        i.getCaffeineMg(),
+                        i.getConsumedAt(),
+                        i.getNote()
+                ))
+                .toList();
+    }
+
+
     @PostMapping
     public Long create(@RequestBody CreateReq req) {
         User u = users.findById(req.userId()).orElseThrow();
@@ -31,4 +51,10 @@ public class IntakeController {
         Intake saved = intakes.save(new Intake(u, b, at, req.volumeMl(), req.caffeineMg(), req.note()));
         return saved.getId();
     }
+
+    @DeleteMapping("/{id}") // 섭취 기록 삭제-ID 로 삭제 
+    public void delete(@PathVariable Long id) {
+        intakes.deleteById(id);
+    }
+
 }
