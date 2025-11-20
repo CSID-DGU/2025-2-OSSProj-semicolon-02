@@ -1,2 +1,10 @@
 NUL
 /.metadata/
+
+# 모든 위치의 .env 파일 무시
+.env
+*/.env
+**/.env
+
+__pycache__/
+*.pyc
