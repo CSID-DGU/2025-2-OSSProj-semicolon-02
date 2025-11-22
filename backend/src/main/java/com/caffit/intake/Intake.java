@@ -44,4 +44,16 @@ public class Intake {
     }
 
     public Long getId() { return id; }
+    
+    public User getUser() { return user; }
+    
+    public Beverage getBeverage() { return beverage; }
+    
+    public LocalDateTime getConsumedAt() { return consumedAt; }
+    
+    public double getVolumeMl() { return volumeMl; }
+    
+    public double getCaffeineMg() { return caffeineMg; }
+    
+    public String getNote() { return note; }
 }

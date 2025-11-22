@@ -2,7 +2,7 @@ package com.caffit.intake.dto;
 
 import java.time.LocalDateTime;
 
-public record IntakeDto(
+public record IntakeDTO(
         Long id,
         Long userId,
         Long beverageId,
@@ -12,3 +12,4 @@ public record IntakeDto(
         LocalDateTime consumedAt,
         String note
 ) {}
+

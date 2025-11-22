@@ -1,5 +1,6 @@
-import React, { useState, useEffect  } from 'react';
-import { SafeAreaView, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { common } from '../styles/common';
@@ -12,24 +13,52 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import GoalTargetModal from './MyPage/components/GoalTargetModal';
 
-import { http } from '../lib/http'; 
-//import type { AxiosResponse } from 'axios'; 
+import { http } from '../lib/http';
+//import type { AxiosResponse } from 'axios';
+import { fetchIntakes } from '../api/intakes';
+import { IntakeDTO } from '../types/intake';
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<RootNav>();
 
   useEffect(() => {
-    http.get('/api/health')
-      .then(r => console.log('health:', r.data))   // 기대 출력: "OK"
+    http
+      .get('/api/health')
+      .then(r => console.log('health:', r.data)) // 기대 출력: "OK"
       .catch(e => console.log('health error:', e.message));
+
+        // 섭취 기록 조회 추가
+  fetchIntakes()
+  .then(data => {
+    setIntakes(data);
+    console.log('섭취 기록:', data);
+    // todayMg를 실제 데이터로 계산할 수도 있음
+    // const todayTotal = data
+    //   .filter(i => new Date(i.consumedAt).toDateString() === new Date().toDateString())
+    //   .reduce((sum, i) => sum + i.caffeineMg, 0);
+  })
+  .catch(error => {
+    console.error('섭취 기록 조회 오류:', error);
+  });
   }, []);
-  
+
   // TODO: Add 화면과 실제 연동
-  const todayMg = 180;              
-  const [limitMg, setLimitMg] = useState<number>(400); 
+  const todayMg = 180;
+  // 대체할 수 있는 코드 (위의 useEffect에서 계산한 경우):
+// const todayMg = useMemo(() => {
+//   const today = new Date().toDateString();
+//   return intakes
+//     .filter(i => new Date(i.consumedAt).toDateString() === today)
+//     .reduce((sum, i) => sum + i.caffeineMg, 0);
+// }, [intakes]);
+  const [limitMg, setLimitMg] = useState<number>(400);
   const [goalVisible, setGoalVisible] = useState(false);
-  const percent = Math.min(100, Math.round((todayMg / Math.max(limitMg, 1)) * 100));
+  const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
+  const percent = Math.min(
+    100,
+    Math.round((todayMg / Math.max(limitMg, 1)) * 100),
+  );
 
   const openSettings = () => setGoalVisible(true);
 
@@ -44,7 +73,9 @@ export default function HomeScreen() {
           <View style={homeStyles.widgetHeaderRow}>
             <View>
               <Text style={homeStyles.widgetTitle}>오늘의 카페인</Text>
-              <Text style={homeStyles.widgetSubTitle}>허용치 {limitMg}mg 기준</Text>
+              <Text style={homeStyles.widgetSubTitle}>
+                허용치 {limitMg}mg 기준
+              </Text>
             </View>
             <TouchableOpacity
               onPress={openSettings}
@@ -56,7 +87,7 @@ export default function HomeScreen() {
           </View>
 
           {/* 수치 */}
-          <View style={homeStyles.widgetContentRow}>            
+          <View style={homeStyles.widgetContentRow}>
             <View style={homeStyles.widgetLeft}>
               <Text style={homeStyles.widgetMg}>{todayMg} mg</Text>
               <Text style={homeStyles.widgetLabel}>현재 섭취량</Text>
@@ -88,7 +119,9 @@ export default function HomeScreen() {
         <View style={homeStyles.section}>
           <Text style={homeStyles.sectionTitle}>카페인 그래프</Text>
           <View style={homeStyles.chartCard}>
-            <Text style={common.subtle}>시간대별 카페인 농도(그래프 연동 예정)</Text>
+            <Text style={common.subtle}>
+              시간대별 카페인 농도(그래프 연동 예정)
+            </Text>
           </View>
         </View>
 
@@ -96,19 +129,19 @@ export default function HomeScreen() {
         <View style={homeStyles.section}>
           <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
           <View style={homeStyles.adviceCard}>
-          <Text style={common.body}>
-            지금은 추가 섭취를 한 잔까지 허용합니다. 취침 6시간 전에는 카페인 섭취를 피하세요.
-          </Text>
+            <Text style={common.body}>
+              지금은 추가 섭취를 한 잔까지 허용합니다. 취침 6시간 전에는 카페인
+              섭취를 피하세요.
+            </Text>
           </View>
         </View>
-        
       </ScrollView>
       {/* 목표 설정 모달: 저장 시 허용치(limitMg) 즉시 갱신 */}
       <GoalTargetModal
         visible={goalVisible}
         onClose={() => setGoalVisible(false)}
         onSaved={({ daily /*, monthly*/ }) => {
-          setLimitMg(daily);    // 홈 위젯은 일간 
+          setLimitMg(daily); // 홈 위젯은 일간
           setGoalVisible(false);
         }}
       />

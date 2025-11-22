@@ -11,6 +11,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import {common} from '../../styles/common';
 import {theme} from '../../styles/theme';
+//섭취량 연동
+import { createIntake } from '../../api/intakes'; 
 
 export type Theme = typeof theme;
 
@@ -108,10 +110,38 @@ export default function FavoritesScreen() {
     if (category === '전체') return data;
     return data.filter(d => d.type === category);
   }, [category, data]);
-
+/* 
   const onAdd = useCallback((item: FavItem) => {
     // TODO: 선택 목록에 담거나 이전 화면으로 전달
     Alert.alert('추가됨', `${item.name} 항목을 담았어요.`);
+  }, []); */
+  const onAdd = useCallback(async (item: FavItem) => {  // async 추가
+    try {
+      // TODO: userId와 beverageId는 실제로는 로그인한 사용자 ID와 Beverage 테이블에서 조회해야 함
+      const userId = 1; // 임시 값
+      const beverageId = 1; // 임시 값 (FavItem에서 매핑 필요)
+      
+      // caffein 문자열에서 숫자 추출 (예: "카페인 141g" -> 141)
+      const caffeineMatch = item.caffein.match(/(\d+)/);
+      const caffeineMg = caffeineMatch ? Number(caffeineMatch[1]) : 0;
+      
+      // volumeText에서 숫자 추출 (예: "40g" -> 40)
+      const volumeMatch = item.volumeText?.match(/(\d+)/);
+      const volumeMl = volumeMatch ? Number(volumeMatch[1]) : 0;
+      
+      await createIntake({
+        userId,
+        beverageId,
+        volumeMl,
+        caffeineMg,
+        note: `${item.brand} ${item.name}`,
+      });
+      
+      Alert.alert('추가됨', `${item.name} 섭취 기록이 저장되었습니다.`);
+    } catch (error) {
+      Alert.alert('오류', '저장에 실패했습니다.');
+      console.error('Intake 생성 오류:', error);
+    }
   }, []);
 
   const onDone = useCallback(() => {
