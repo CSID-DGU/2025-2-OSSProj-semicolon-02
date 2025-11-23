@@ -19,6 +19,7 @@ import {addStyles} from '../../styles/addStyles';
 import AppHeader from '../../components/AppHeader';
 import type {RootStackParamList} from '../../navigation/types';
 import { http } from '../../lib/http';
+import { getCurrentUser } from '../../lib/authSession';
 
 // 필드
 type FieldProps = {
@@ -72,6 +73,7 @@ export default function ManualAdd() {
       Alert.alert('입력 확인', '음료명과 카페인 함량은 필수입니다.');
       return;
     }
+  
     const caf = Number(caffeine);
     const vol = volume ? Number(volume) : undefined;
   
@@ -85,9 +87,14 @@ export default function ManualAdd() {
     }
   
     try {
-      // TODO: userId=1은 임시. 로그인 완료 후 실제 사용자 id로 교체 필요
+      const user = await getCurrentUser();
+      if (!user) {
+        Alert.alert('로그인 필요', '다시 로그인 후 이용해 주세요.');
+        return;
+      }
+  
       await http.post('/api/intakes/manual', {
-        userId: 1,
+        userId: user.id,
         brand,
         name,
         caffeineMg: caf,
@@ -97,10 +104,7 @@ export default function ManualAdd() {
       });
   
       Alert.alert('완료', '섭취 기록을 저장했습니다.', [
-        {
-          text: '확인',
-          onPress: () => nav.goBack(),
-        },
+        { text: '확인', onPress: () => nav.goBack() },
       ]);
     } catch (e: unknown) {
       if (e instanceof Error) {
@@ -109,9 +113,9 @@ export default function ManualAdd() {
         console.log('unknown error', e);
       }
       Alert.alert('오류', '기록 저장 중 문제가 발생했습니다.');
-    }    
+    }
   }, [brand, name, caffeine, volume, nav]);
-
+  
   return (
     <SafeAreaView style={common.screen}>
       <AppHeader title="수동 등록"/>

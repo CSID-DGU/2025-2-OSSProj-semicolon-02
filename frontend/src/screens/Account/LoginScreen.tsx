@@ -9,7 +9,9 @@ import { theme } from '../../styles/theme';
 import { authStyles } from '../../styles/authStyles';
 import { http } from '../../lib/http';
 import { Alert } from 'react-native';
-import { setCurrentUser } from '../../lib/authSession';
+import { saveCurrentUser, type StoredUser } from '../../lib/authSession';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const nav = useNavigation();
@@ -23,21 +25,38 @@ export default function LoginScreen() {
     return okEmail && okPw && !loading;
   }, [email, password, loading]);
 
+  
+  type LoginRes = {
+    id: number;
+    name: string;
+    email: string;
+  };
+  
   const onLogin = async () => {
     try {
       setLoading(true);
-      const { data } = await http.post('/api/auth/login', { email, password });
-      // data: { id, email, name }
-      setCurrentUser(data);
+  
+      const { data } = await http.post<LoginRes>('/api/auth/login', {
+        email,
+        password,
+      });
+  
+      const user: StoredUser = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+      };
+      await saveCurrentUser(user);
   
       nav.reset({ index: 0, routes: [{ name: 'Tabs' as never }] });
-    } catch (e) {
+    } catch (e: unknown) {
       console.log('[Login] error', e);
-      Alert.alert('오류', '로그인에 실패했습니다.');
+      Alert.alert('로그인 실패', '이메일 또는 비밀번호를 다시 확인해 주세요.');
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: undefined })} style={common.screen}>

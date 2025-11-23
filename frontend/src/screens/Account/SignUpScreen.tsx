@@ -84,7 +84,7 @@ export default function SignUpScreen() {
 
           {/* 비밀번호 */}
           <TextInput
-            placeholder="비밀번호 (6자 이상)"
+            placeholder="비밀번호 (8자 이상)"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
