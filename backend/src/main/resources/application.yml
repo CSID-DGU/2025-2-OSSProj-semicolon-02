@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/caffit?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8
     username: root
-    password: 비밀번호
+    password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -17,6 +17,7 @@ spring:
   sql:
     init:
       mode: always           # data.sql 자동 실행
-  logging:
+
+logging:
     level:
       org.hibernate.SQL: DEBUG

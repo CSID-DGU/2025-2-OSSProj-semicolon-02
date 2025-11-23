@@ -41,6 +41,68 @@ type StoredGoals = {
   monthly: number;
 };
 
+type TodaySleep = {
+  exists: boolean;
+  sleepAt: string | null;
+  wakeAt: string | null;
+  durationMinutes: number | null;
+};
+
+
+const extractTimeHM = (iso: string) => {
+  const d = new Date(iso);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+};
+
+
+const buildSleepDateTimes = (sleepHM: string, wakeHM: string) => {
+  const now = new Date();
+  const [sh, sm] = sleepHM.split(':').map(Number);
+  const [wh, wm] = wakeHM.split(':').map(Number);
+
+  const wake = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    wh,
+    wm,
+    0,
+    0,
+  );
+  const sleep = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    sh,
+    sm,
+    0,
+    0,
+  );
+
+  // 취침 시간이 기상 시간보다 늦으면 전날로 간주
+  if (sleep.getTime() >= wake.getTime()) {
+    sleep.setDate(sleep.getDate() - 1);
+  }
+
+  const toLocalDateTimeString = (date: Date) => {
+    const yyyy = date.getFullYear();
+    const MM = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm2 = String(date.getMinutes()).padStart(2, '0');
+    const ss = '00';
+    // LocalDateTime에 맞게 타임존 없는 형태로 보냄
+    return `${yyyy}-${MM}-${dd}T${hh}:${mm2}:${ss}`;
+  };
+
+  return {
+    sleepAt: toLocalDateTimeString(sleep),
+    wakeAt: toLocalDateTimeString(wake),
+  };
+};
+
 export default function HomeScreen() {
   const navigation = useNavigation<RootNav>();
 
@@ -51,7 +113,7 @@ export default function HomeScreen() {
   const [limitMg, setLimitMg] = useState<number>(400);
   const [goalVisible, setGoalVisible] = useState(false);
 
-  // 로그인한 사용자 id (today-summary 호출용)
+  // 로그인한 사용자 id (today-summary / sleep 호출용)
   const [userId, setUserId] = useState<number | null>(null);
 
   const percent = Math.min(
@@ -73,6 +135,30 @@ export default function HomeScreen() {
         setTodayCount(res.data.count ?? 0);
       } catch (e) {
         console.log('[Home] today-summary error', e);
+      }
+    },
+    [],
+  );
+
+  /**
+   * 오늘 수면 요약을 서버에서 가져오는 함수
+   */
+  const fetchTodaySleep = useCallback(
+    async (uid: number) => {
+      try {
+        const res = await http.get<TodaySleep>('/api/sleep/today', {
+          params: { userId: uid },
+        });
+        console.log('[Home] sleep today res', res.data);
+
+        if (res.data.exists && res.data.sleepAt && res.data.wakeAt) {
+          const sleepHM = extractTimeHM(res.data.sleepAt);
+          const wakeHM = extractTimeHM(res.data.wakeAt);
+          setYesterdaySleepAt(sleepHM);
+          setTodayWakeAt(wakeHM);
+        }
+      } catch (e) {
+        console.log('[Home] sleep today error', e);
       }
     },
     [],
@@ -105,13 +191,14 @@ export default function HomeScreen() {
           .catch(e => console.log('health error:', e.message));
 
         await fetchTodaySummary(effectiveUserId);
+        await fetchTodaySleep(effectiveUserId);
       } catch (err: unknown) {
         console.log('[Home] bootstrap error', err);
       }
     };
 
     bootstrap();
-  }, [fetchTodaySummary]);
+  }, [fetchTodaySummary, fetchTodaySleep]);
 
   /**
    * 탭 전환 등으로 Home 화면이 다시 포커스를 얻을 때마다
@@ -123,10 +210,11 @@ export default function HomeScreen() {
         return;
       }
       fetchTodaySummary(userId);
+      // 필요하면 여기서도 fetchTodaySleep(userId); 호출 가능
     }, [userId, fetchTodaySummary]),
   );
 
-  // 수면 데이터 (일단 더미 + 홈 위젯용)
+  // 수면 데이터 (홈 위젯용)
   const [yesterdaySleepAt, setYesterdaySleepAt] = useState('01:30');
   const [todayWakeAt, setTodayWakeAt] = useState('08:00');
 
@@ -158,11 +246,29 @@ export default function HomeScreen() {
     setSleepEditVisible(true);
   };
 
-  const saveSleepEdit = () => {
+  const saveSleepEdit = async () => {
+    if (!userId) {
+      console.log('[Home] no userId, cannot save sleep');
+      return;
+    }
+
     setYesterdaySleepAt(tmpSleepAt);
     setTodayWakeAt(tmpWakeAt);
     setSleepEditVisible(false);
-    // TODO: 이후 서버에 PATCH 호출 (/api/sleep-today 등)
+
+    try {
+      const { sleepAt, wakeAt } = buildSleepDateTimes(tmpSleepAt, tmpWakeAt);
+
+      await http.post('/api/sleep', {
+        userId,
+        sleepAt,
+        wakeAt,
+      });
+
+      console.log('[Home] sleep saved');
+    } catch (e) {
+      console.log('[Home] save sleep error', e);
+    }
   };
 
   return (
@@ -179,7 +285,9 @@ export default function HomeScreen() {
           <View style={homeStyles.widgetHeaderRow}>
             <View>
               <Text style={homeStyles.widgetTitle}>오늘의 카페인</Text>
-              <Text style={homeStyles.widgetSubTitle}>허용치 {limitMg}mg 기준</Text>
+              <Text style={homeStyles.widgetSubTitle}>
+                허용치 {limitMg}mg 기준
+              </Text>
             </View>
             <TouchableOpacity
               onPress={openSettings}
@@ -291,7 +399,9 @@ export default function HomeScreen() {
         <View style={homeStyles.section}>
           <Text style={homeStyles.sectionTitle}>카페인 그래프</Text>
           <View style={homeStyles.chartCard}>
-            <Text style={common.subtle}>시간대별 카페인 농도(그래프 연동 예정)</Text>
+            <Text style={common.subtle}>
+              시간대별 카페인 농도(그래프 연동 예정)
+            </Text>
           </View>
         </View>
 
@@ -300,8 +410,8 @@ export default function HomeScreen() {
           <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
           <View style={homeStyles.adviceCard}>
             <Text style={common.body}>
-              지금은 추가 섭취를 한 잔까지 허용합니다. 취침 6시간 전에는 카페인 섭취를
-              피하세요.
+              지금은 추가 섭취를 한 잔까지 허용합니다. 취침 6시간 전에는 카페인
+              섭취를 피하세요.
             </Text>
           </View>
         </View>
