@@ -93,13 +93,18 @@ export default function ManualAdd() {
         return;
       }
   
+      const noteText =
+        brand.trim().length > 0
+          ? `${brand.trim()} ${name.trim()}`
+          : name.trim();
+  
       await http.post('/api/intakes/manual', {
         userId: user.id,
         brand,
         name,
         caffeineMg: caf,
         volumeMl: vol,
-        note: undefined,
+        note: noteText,
         consumedAt: null,
       });
   

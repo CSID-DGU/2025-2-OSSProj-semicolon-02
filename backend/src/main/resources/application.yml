@@ -4,8 +4,8 @@ server:
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/caffit?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8
-    username: root           # 또는 'spring'
-    password: root1234  # 비밀번호 입력
+    username: root
+    password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
