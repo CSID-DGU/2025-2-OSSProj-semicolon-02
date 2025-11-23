@@ -1,43 +1,60 @@
+// styles/addStyles.ts
 import {StyleSheet} from 'react-native';
 import {theme} from './theme';
+import {fonts} from './common';
 
 export const addStyles = StyleSheet.create({
+  /** ScrollView 안쪽 여백 */
   scrollInner: {
-    paddingTop: 18,
+    paddingTop: theme.spacing(3),
   },
 
+  /** 필드 래퍼 */
   fieldWrap: {
-    marginTop: 12,
+    marginTop: theme.spacing(2),
   },
+
+  /** 라벨 텍스트 */
   fieldLabel: {
+    ...fonts.medium,
     fontSize: 12,
-    color: theme.colors.gray500,
+    color: theme.colors.gray600,
   },
+
+  /** 인풋 박스 */
   input: {
-    marginTop: 6,
+    marginTop: theme.spacing(0.75),
     borderWidth: 1,
     borderColor: theme.colors.line,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing(2),
+    paddingVertical: theme.spacing(1.5),
+    backgroundColor: theme.colors.white,
   },
 
-  gap20: {height: 20},
-  gap24: {height: 24},
+  /** 간격용 뷰 */
+  gap20: {height: theme.spacing(2.5)},
+  gap24: {height: theme.spacing(3)},
 
+  /** 저장 버튼 */
   saveBtn: {
     backgroundColor: theme.colors.primary,
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingVertical: theme.spacing(1.75),
+    borderRadius: theme.radius.lg,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    columnGap: 8, // RN 0.72+ 지원. 하위 버전이면 대신 marginRight로 처리
+    columnGap: 8,
     ...theme.shadow.card,
   },
+
+  /** 저장 버튼 텍스트 (두껍게 + 그림자) */
   saveText: {
-    color: '#fff',
-    fontWeight: '700',
+    ...fonts.bold,
+    fontSize: 15,
+    color: theme.colors.white,
+    textShadowColor: 'rgba(0,0,0,0.25)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
   },
 });

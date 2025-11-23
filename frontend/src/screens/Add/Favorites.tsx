@@ -1,3 +1,4 @@
+// screens/Add/Favorites.tsx
 import React, {memo, useCallback, useMemo, useState} from 'react';
 import {
   View,
@@ -5,29 +6,40 @@ import {
   TouchableOpacity,
   FlatList,
   SafeAreaView,
+  Platform,
+  ToastAndroid,
   Alert,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useNavigation} from '@react-navigation/native';
 
+import AppHeader from '../../components/AppHeader';
 import {common} from '../../styles/common';
 import {theme} from '../../styles/theme';
+import {favoritesStyles as styles} from '../../styles/favoritesStyles';
+import {http} from '../../lib/http';
+import { getCurrentUser } from '../../lib/authSession';
 
-export type Theme = typeof theme;
-
+// 타입
 type FavType = '커피' | '티' | '그 외';
-type FavItem = {
+
+export type FavItem = {
   id: string;
   type: FavType;
-  name: string;      // 예: 고고단 다이어트 단백질 쉐이크 (…)
-  brand: string;     // 예: 바른닭
-  volumeText?: string; // 예: 40g
- caffein: string;      // 예: 141g
+
+  // 표시용
+  name: string;        // 예: 아이스 아메리카노
+  brand: string;       // 예: 스타벅스
+  volumeText?: string; // 예: Tall / 355ml
+
+  // 백엔드 저장용
+  beverageId: number;  // 어떤 음료인지 식별 
+  volumeMl: number;
+  caffeineMg: number;
 };
 
 const CATEGORIES = ['전체', '커피', '티', '그 외'] as const;
-type Category = typeof CATEGORIES[number];
+type Category = (typeof CATEGORIES)[number];
 
-// ── Chip ────────────────────────────────────────────────────────────────────────
 const Chip = memo(function Chip({
   label,
   active,
@@ -40,99 +52,120 @@ const Chip = memo(function Chip({
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.85}
+      activeOpacity={0.9}
       style={[
         styles.chip,
         active ? styles.chipActive : styles.chipInactive,
       ]}>
-      <Text style={[styles.chipText, active ? styles.chipTextActive : styles.chipTextInactive]}>
+      <Text
+        style={[
+          styles.chipText,
+          active ? styles.chipTextActive : styles.chipTextInactive,
+        ]}>
         {label}
       </Text>
     </TouchableOpacity>
   );
 });
 
-// ── Favorite Row ───────────────────────────────────────────────────────────────
 const FavoriteRow = memo(function FavoriteRow({
   item,
-  onAdd,
+  onSelect,
 }: {
   item: FavItem;
-  onAdd: (v: FavItem) => void;
+  onSelect: (v: FavItem) => void;
 }) {
   return (
-    <View style={styles.row}>
-      {/* 좌측 점 */}
-      <View style={styles.bullet} />
-      {/* 가운데 텍스트 */}
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => onSelect(item)}
+      style={styles.rowCard}>
       <View style={styles.rowTextWrap}>
         <Text numberOfLines={1} style={styles.rowTitle}>
           {item.name}
         </Text>
         <Text numberOfLines={1} style={styles.rowSub}>
-          {item.brand}{item.volumeText ? ` ${item.volumeText}` : ''}
+          {item.brand}
+          {item.volumeText ? ` · ${item.volumeText}` : ''}
         </Text>
       </View>
-      {/* caffein */}
-      <Text style={styles.caffein}>{item.caffein}</Text>
-      {/* + 버튼 */}
-      <TouchableOpacity
-        onPress={() => onAdd(item)}
-        hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-        style={styles.plusBtn}
-        activeOpacity={0.9}>
-        <Ionicons name="add" size={18} color="#fff" />
-      </TouchableOpacity>
-    </View>
+
+      {/* 표시 텍스트는 mg 단위로 통일 */}
+      <Text style={styles.caffeine}>{item.caffeineMg} mg</Text>
+    </TouchableOpacity>
   );
 });
 
-// ── Screen ─────────────────────────────────────────────────────────────────────
+/**
+ * DEMO 데이터
+ *  - beverageId, volumeMl, caffeineMg 값은 실제 DB에 맞게 나중에 수정 필요 (추측입니다)
+ */
+const DEMO_DATA: FavItem[] = [
+  {
+    id: '1',
+    type: '커피',
+    name: '아이스 아메리카노',
+    brand: '스타벅스',
+    volumeText: 'Tall / 355ml',
+    beverageId: 1,   // TODO: 실제 beverage 테이블의 id로 교체
+    volumeMl: 355,
+    caffeineMg: 141,
+  },
+];
+
 export default function FavoritesScreen() {
+  const nav = useNavigation(); // 구조 확정 후 타입 지정 가능
+
   const [category, setCategory] = useState<Category>('전체');
 
-  // 데모 데이터 (백엔드 붙이면 교체)
-  const data: FavItem[] = [
-    {
-      id: '1',
-      type: '커피',
-      name: '아이스 아메리카노',
-      brand: '스타벅스',
-      volumeText: '',
-      caffein: '카페인 141g',
-    },
-    // 더미 아이템 추가 가능
-  ];
-
   const list = useMemo(() => {
-    if (category === '전체') return data;
-    return data.filter(d => d.type === category);
-  }, [category, data]);
+    if (category === '전체') {
+      return DEMO_DATA;
+    }
+    return DEMO_DATA.filter(d => d.type === category);
+  }, [category]);
 
-  const onAdd = useCallback((item: FavItem) => {
-    // TODO: 선택 목록에 담거나 이전 화면으로 전달
-    Alert.alert('추가됨', `${item.name} 항목을 담았어요.`);
-  }, []);
+  const handleSelect = useCallback(
+    async (item: FavItem) => {
+      try {
+        const user = getCurrentUser();
+        if (!user) {
+          Alert.alert('로그인 필요', '다시 로그인 후 이용해 주세요.');
+          return;
+        }
+  
+        await http.post('/api/intakes', {
+          userId: user.id,
+          beverageId: item.beverageId,
+          volumeMl: item.volumeMl,
+          caffeineMg: item.caffeineMg,
+          note: `${item.brand} ${item.name}`,
+          consumedAt: null,
+        });
 
-  const onDone = useCallback(() => {
-    // TODO: 선택값 전달 후 뒤로가기
-    // navigation.goBack();
-    Alert.alert('완료', '선택 항목을 적용합니다.');
-  }, []);
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('섭취 기록을 등록했습니다.', ToastAndroid.SHORT);
+        }
+
+        nav.navigate('Tabs' as never, {screen: 'Home'} as never);
+      } catch (e: unknown) {
+          if (e instanceof Error) {
+            console.log('manual add error', e.message);
+          } else {
+            console.log('unknown error', e);
+          }
+        Alert.alert('오류', '기록 저장 중 문제가 발생했습니다.');
+      }
+      
+    },
+    [nav],
+  );
 
   return (
-    <SafeAreaView style={[common.screen, {backgroundColor: theme.colors.gray100}]}>
-      {/* 상단 화이트 패널 */}
-      <View style={styles.panel}>
-        {/* 헤더 */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} activeOpacity={0.8} onPress={() => { /* navigation.goBack?.(); */ }}>
-            <Ionicons name="chevron-back" size={22} color={theme.colors.gray900} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>즐겨찾기</Text>
-          <View style={{width: 32}} />
-        </View>
+    <SafeAreaView style={common.screen}>
+      <AppHeader title="즐겨찾기 등록" />
 
+      <View style={[common.container, {paddingTop: theme.spacing(2)}]}>
         {/* 카테고리 칩 */}
         <View style={styles.chipRow}>
           {CATEGORIES.map(c => (
@@ -148,137 +181,15 @@ export default function FavoritesScreen() {
         {/* 리스트 */}
         <FlatList
           data={list}
-          keyExtractor={(it) => it.id}
-          renderItem={({item}) => <FavoriteRow item={item} onAdd={onAdd} />}
+          keyExtractor={it => it.id}
+          renderItem={({item}) => (
+            <FavoriteRow item={item} onSelect={handleSelect} />
+          )}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
-          contentContainerStyle={{paddingHorizontal: 16, paddingBottom: 120}}
+          contentContainerStyle={{paddingBottom: theme.spacing(4)}}
           showsVerticalScrollIndicator={false}
         />
-      </View>
-
-      {/* 하단 고정 버튼 */}
-      <View style={styles.footer}>
-        <TouchableOpacity activeOpacity={0.9} onPress={onDone} style={styles.doneBtn}>
-          <Text style={styles.doneText}>완료</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
-
-// ── Styles ─────────────────────────────────────────────────────────────────────
-const RADIUS = 28;
-
-const styles = {
-  panel: {
-    flex: 1,
-    backgroundColor: '#fff',
-    margin: 12,
-    borderRadius: RADIUS,
-    overflow: 'hidden' as const,
-  },
-  header: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    paddingHorizontal: 8,
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
-  backBtn: {
-    width: 32, height: 32, alignItems: 'center' as const, justifyContent: 'center' as const,
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'left' as const,
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: theme.colors.gray900,
-  },
-
-  chipRow: {
-    flexDirection: 'row' as const,
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    borderWidth: 1,
-  },
-  chipActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  chipInactive: {
-    backgroundColor: '#fff',
-    borderColor: theme.colors.gray300,
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: '700' as const,
-  },
-  chipTextActive: {color: '#fff'},
-  chipTextInactive: {color: theme.colors.gray700},
-
-  row: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    paddingVertical: 14,
-  },
-  bullet: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.gray300,
-    marginRight: 10,
-  },
-  rowTextWrap: {flex: 1},
-  rowTitle: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: theme.colors.gray900,
-  },
-  rowSub: {
-    marginTop: 2,
-    fontSize: 12,
-    color: theme.colors.gray500,
-  },
-  caffein: {
-    marginRight: 10,
-    fontSize: 13,
-    color: theme.colors.gray600,
-  },
-  plusBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    backgroundColor: theme.colors.primary,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: theme.colors.gray100,
-  },
-
-  footer: {
-    position: 'absolute' as const,
-    left: 0, right: 0, bottom: 0,
-    padding: 16,
-  },
-  doneBtn: {
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    backgroundColor: '#DEBE8A', // 캡처의 베이지 톤
-    marginHorizontal: 16,
-  },
-  doneText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '800' as const,
-  },
-};

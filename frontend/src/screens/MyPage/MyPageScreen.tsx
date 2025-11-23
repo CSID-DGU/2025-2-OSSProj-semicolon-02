@@ -2,23 +2,23 @@ import React, { useState } from 'react';
 import { SafeAreaView, View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import {
   useNavigation,
-  CompositeNavigationProp,
-  NavigationProp,
+  // CompositeNavigationProp,
+  // NavigationProp,
 } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { MyPageStackParamList, RootStackParamList } from '../../navigation/types';
+//import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+//import type { MyPageStackParamList, RootStackParamList } from '../../navigation/types';
 import { common } from '../../styles/common';
 import { theme } from '../../styles/theme';
 import { mypageStyles } from '../../styles/mypageStyles';
 import AppHeader from '../../components/AppHeader';
 import GoalTargetModal from './components/GoalTargetModal';
 
-// 자식 스택 + 루트 스택 합성 네비 타입
-type MyPageNav = CompositeNavigationProp<
-  NativeStackNavigationProp<MyPageStackParamList>,
-  NativeStackNavigationProp<RootStackParamList>
->;
-type RootNav = NavigationProp<RootStackParamList>;
+// // 자식 스택 + 루트 스택 합성 네비 타입
+// type MyPageNav = CompositeNavigationProp<
+//   NativeStackNavigationProp<MyPageStackParamList>,
+//   NativeStackNavigationProp<RootStackParamList>
+// >;
+// type RootNav = NavigationProp<RootStackParamList>;
 
 function RowLink({ label, onPress }: { label: string; onPress: () => void }) {
   return (
@@ -32,9 +32,8 @@ function RowLink({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 export default function MyPageScreen() {
-  const nav = useNavigation<MyPageNav>();
-  // 부모 네비게이터를 RootNav로 명시
-  const parentNav = nav.getParent<RootNav>();
+  const nav = useNavigation();
+  const parentNav = nav.getParent();
 
   const [goalVisible, setGoalVisible] = useState(false);
 
@@ -55,7 +54,6 @@ export default function MyPageScreen() {
   return (
     <SafeAreaView style={common.screen}>
       <AppHeader title="마이 페이지" />
-
       <ScrollView contentContainerStyle={[common.container, { paddingTop: theme.spacing(2) }]}>
         {/* 상단 프로필 */}
         <View style={mypageStyles.hero}>

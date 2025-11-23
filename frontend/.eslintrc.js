@@ -8,6 +8,7 @@ module.exports = {
   },
   rules: {
     'react/no-unstable-nested-components': ['warn', { allowAsProps: true }],
+    '@typescript-eslint/no-explicit-any': 'off',
   },
   overrides: [
     {

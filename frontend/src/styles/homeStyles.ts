@@ -12,11 +12,11 @@ export const homeStyles = StyleSheet.create({
   /** 상단: 제목 + 설정 버튼 포함 위젯 */
   caffeineWidget: {
     marginHorizontal: theme.spacing(3),
-    marginTop: theme.spacing(4),
-    backgroundColor: theme.colors.primary, // 진한 배경
+    marginTop: theme.spacing(2),
+    backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
-    paddingVertical: theme.spacing(3),
-    paddingHorizontal: theme.spacing(3),
+    paddingVertical: theme.spacing(3),       
+    paddingHorizontal: theme.spacing(3),    
     ...theme.shadow.card,
   },
 
@@ -73,7 +73,189 @@ export const homeStyles = StyleSheet.create({
     marginHorizontal: theme.spacing(3),
     marginBottom: theme.spacing(1),
   },
+  /** 수면 요약 카드 */
+  sleepCard: {
+    ...common.card,
+    ...common.shadowCard,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    marginHorizontal: theme.spacing(3),
+    marginTop: theme.spacing(4),
+    paddingVertical: theme.spacing(2),
+    paddingHorizontal: theme.spacing(2),
+  },
+  sleepLeft: {
+    flex: 1,
+  },
+  sleepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  sleepIcon: {
+    marginRight: 8,
+  },
+  sleepValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginRight: 6,
+  },
+  sleepLabelSmall: {
+    ...common.subtle,
+  },
+  sleepLabel: {
+    ...common.subtle,
+    color: theme.colors.gray600,
+  },
+  sleepRight: {
+    marginLeft: theme.spacing(2),
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    //height: '100%',
+  },
+  sleepHistoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing(1),
+  },
+  sleepHistoryText: {
+    fontSize: 12,
+    color: theme.colors.gray600,
+    marginRight: 2,
+  },
+  sleepEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing(1),
+    paddingVertical: theme.spacing(0.5),
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: theme.colors.line,
+  },
+  sleepEditText: {
+    fontSize: 12,
+    color: theme.colors.gray600,
+    marginLeft: 4,
+  },
+
+  /** 홈 수면 편집 오버레이 */
+  sleepEditOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sleepEditCard: {
+    width: '80%',
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing(3),
+    ...theme.shadow.card,
+  },
+  sleepEditTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: theme.spacing(2),
+    color: theme.colors.text,
+  },
+  sleepEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing(1.5),
+  },
+  sleepInput: {
+    minWidth: 90,
+    paddingHorizontal: theme.spacing(1),
+    paddingVertical: 6,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.gray300,
+    textAlign: 'center',
+  },
+  sleepEditActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: theme.spacing(2),
+  },
+  sleepCancelBtn: {
+    paddingHorizontal: theme.spacing(2),
+    paddingVertical: theme.spacing(1),
+    marginRight: theme.spacing(1),
+  },
+  sleepCancelText: {
+    fontSize: 13,
+    color: theme.colors.gray600,
+  },
+  sleepSaveBtn: {
+    paddingHorizontal: theme.spacing(2),
+    paddingVertical: theme.spacing(1),
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.primary,
+  },
+  sleepSaveText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.colors.white,
+  },
+
   
+    /** 수면 히스토리 카드 */
+    sleepHistoryCard: {
+      ...common.card,
+      ...common.shadowCard,
+      backgroundColor: theme.colors.white,
+      marginHorizontal: theme.spacing(3),
+      marginTop: theme.spacing(1.5),
+    },
+    sleepHistoryHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing(1),
+    },
+    sleepHistoryRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    sleepHistoryLeft: {
+      flex: 1,
+      marginRight: theme.spacing(2),
+    },
+    sleepBarTrack: {
+      height: 8,
+      borderRadius: 999,
+      backgroundColor: theme.colors.gray100,
+      overflow: 'hidden',
+    },
+    sleepBarFill: {
+      height: '100%',
+      borderRadius: 999,
+      backgroundColor: theme.colors.primary,
+    },
+    sleepHistoryDuration: {
+      marginTop: 4,
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.colors.text,
+    },
+    sleepHistoryRight: {
+      flex: 1,
+    },
+    sleepHistoryMeta: {
+      fontSize: 12,
+      color: theme.colors.gray600,
+      marginBottom: 2,
+    },
+  
+
   /** 요약 */
   section: { ...common.section },
   statRow: {
@@ -166,4 +348,5 @@ export const homeStyles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     marginHorizontal: theme.spacing(3),
   },
+
 });
