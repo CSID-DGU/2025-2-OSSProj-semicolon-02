@@ -9,6 +9,7 @@ import { theme } from '../../styles/theme';
 import { authStyles } from '../../styles/authStyles';
 import { http } from '../../lib/http';
 import { Alert } from 'react-native';
+import { setCurrentUser } from '../../lib/authSession';
 
 export default function LoginScreen() {
   const nav = useNavigation();
@@ -25,16 +26,14 @@ export default function LoginScreen() {
   const onLogin = async () => {
     try {
       setLoading(true);
-      // 서버 연동: /api/auth/login
       const { data } = await http.post('/api/auth/login', { email, password });
-      // 토큰 저장 로직은 보류
-      // await SecureStore.setItemAsync('accessToken', data.accessToken);
-      // await SecureStore.setItemAsync('refreshToken', data.refreshToken);
-
-      // 성공 시 앱 스택으로 전환
+      // data: { id, email, name }
+      setCurrentUser(data);
+  
       nav.reset({ index: 0, routes: [{ name: 'Tabs' as never }] });
     } catch (e) {
       console.log('[Login] error', e);
+      Alert.alert('오류', '로그인에 실패했습니다.');
     } finally {
       setLoading(false);
     }

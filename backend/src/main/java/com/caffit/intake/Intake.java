@@ -44,4 +44,12 @@ public class Intake {
     }
 
     public Long getId() { return id; }
+    
+    public double getCaffeineMg() {
+        return caffeineMg;
+    }
+
+    public double getVolumeMl() {
+        return volumeMl;
+    }
 }

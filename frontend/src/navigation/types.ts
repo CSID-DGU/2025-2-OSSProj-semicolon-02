@@ -8,6 +8,7 @@ export type RootStackParamList = {
   Login: undefined;
   MyReports: undefined;
   NotificationSettings: undefined;
+  SleepHistory: undefined;
 };
 
 // 하단 탭
@@ -39,4 +40,20 @@ export type MyPageStackParamList = {
     StatisticsDetail: undefined;
   };                  
 
-  
+  //즐찾 -> 수동
+  export type AddStackParamList = {
+    AddMenu: undefined;
+    ManualAdd:
+      | undefined
+      | {
+          fromFavorite?: boolean;
+          initial?: {
+            name: string;
+            brand: string;
+            volumeText: string;
+            caffeine: string;
+          };
+        };
+    Favorites: undefined;
+    CameraAdd: undefined;
+  };

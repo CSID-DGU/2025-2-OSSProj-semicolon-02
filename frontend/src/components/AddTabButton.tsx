@@ -10,7 +10,7 @@ export default function AddTabButton({ onPress }: Props) {
     <View pointerEvents="box-none" style={styles.wrap}>
       <Pressable
         onPress={onPress}
-        android_ripple={{ color: '##9b8e7d', borderless: true, radius: 40 }}
+        android_ripple={{ color: '#9b8e7d', borderless: true, radius: 40 }}
         style={styles.fab}
       >
         <Ionicons name="add" size={26} color="#FFF" />
