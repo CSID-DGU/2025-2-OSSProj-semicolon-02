@@ -1,5 +1,5 @@
 // screens/HomeScreen.tsx
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   SafeAreaView,
   View,
@@ -9,26 +9,31 @@ import {
   TextInput,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useIsFocused, useNavigation} from '@react-navigation/native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import {common} from '../styles/common';
-import {homeStyles} from '../styles/homeStyles';
-import {theme} from '../styles/theme';
+import { common } from '../styles/common';
+import { homeStyles } from '../styles/homeStyles';
+import { theme } from '../styles/theme';
 import AppHeader from '../components/AppHeader';
 
-import type {RootStackParamList} from '../navigation/types';
+import type { RootStackParamList } from '../navigation/types';
 import GoalTargetModal from './MyPage/components/GoalTargetModal';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {http} from '../lib/http';
-import {getCurrentUser} from '../lib/authSession';
+import { http } from '../lib/http';
 
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
 type TodaySummary = {
   totalCaffeineMg: number;
   count: number;
+};
+
+type StoredUser = {
+  id: number;
+  name: string;
+  email: string;
 };
 
 type StoredGoals = {
@@ -38,7 +43,6 @@ type StoredGoals = {
 
 export default function HomeScreen() {
   const navigation = useNavigation<RootNav>();
-  const isFocused = useIsFocused();
 
   const [todayMg, setTodayMg] = useState<number>(0);
   const [todayCount, setTodayCount] = useState<number>(0);
@@ -47,52 +51,80 @@ export default function HomeScreen() {
   const [limitMg, setLimitMg] = useState<number>(400);
   const [goalVisible, setGoalVisible] = useState(false);
 
+  // 로그인한 사용자 id (today-summary 호출용)
+  const [userId, setUserId] = useState<number | null>(null);
+
   const percent = Math.min(
     100,
     Math.round((todayMg / Math.max(limitMg, 1)) * 100),
   );
 
-  // 홈 진입/복귀 시마다 오늘 요약 + 목표 불러오기
-  useEffect(() => {
-    const fetchData = async () => {
+  /**
+   * 오늘 요약을 서버에서 가져오는 공통 함수
+   */
+  const fetchTodaySummary = useCallback(
+    async (uid: number) => {
       try {
-        const user = await getCurrentUser();
-        if (!user) {
-          console.log('[Home] no user, reset stats');
-          setTodayMg(0);
-          setTodayCount(0);
+        const res = await http.get<TodaySummary>('/api/intakes/today-summary', {
+          params: { userId: uid },
+        });
+        console.log('[Home] today-summary res', res.data);
+        setTodayMg(res.data.totalCaffeineMg ?? 0);
+        setTodayCount(res.data.count ?? 0);
+      } catch (e) {
+        console.log('[Home] today-summary error', e);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const bootstrap = async () => {
+      try {
+        let effectiveUserId = 1; // fallback
+        const rawUser = await AsyncStorage.getItem('caffit:user');
+        if (rawUser) {
+          const parsedUser: StoredUser = JSON.parse(rawUser);
+          if (parsedUser.id) {
+            effectiveUserId = parsedUser.id;
+            setUserId(parsedUser.id);
+          }
         } else {
-          const res = await http.get<TodaySummary>(
-            '/api/intakes/today-summary',
-            {
-              params: {userId: user.id},
-            },
-          );
-          setTodayMg(res.data.totalCaffeineMg ?? 0);
-          setTodayCount(res.data.count ?? 0);
+          setUserId(effectiveUserId);
         }
 
         const rawGoals = await AsyncStorage.getItem('caffit:goals');
         if (rawGoals) {
           const parsedGoals: StoredGoals = JSON.parse(rawGoals);
-          if (typeof parsedGoals.daily === 'number') {
-            setLimitMg(parsedGoals.daily);
-          }
+          setLimitMg(parsedGoals.daily);
         }
 
         http
           .get('/api/health')
           .then(r => console.log('health:', r.data))
           .catch(e => console.log('health error:', e.message));
-      } catch (err) {
-        console.log('[Home] fetchData error', err);
+
+        await fetchTodaySummary(effectiveUserId);
+      } catch (err: unknown) {
+        console.log('[Home] bootstrap error', err);
       }
     };
 
-    if (isFocused) {
-      fetchData();
-    }
-  }, [isFocused]);
+    bootstrap();
+  }, [fetchTodaySummary]);
+
+  /**
+   * 탭 전환 등으로 Home 화면이 다시 포커스를 얻을 때마다
+   * 오늘 요약을 다시 가져오기 (DB에 새로 쌓인 intake 반영용)
+   */
+  useFocusEffect(
+    useCallback(() => {
+      if (!userId) {
+        return;
+      }
+      fetchTodaySummary(userId);
+    }, [userId, fetchTodaySummary]),
+  );
 
   // 수면 데이터 (일단 더미 + 홈 위젯용)
   const [yesterdaySleepAt, setYesterdaySleepAt] = useState('01:30');
@@ -138,22 +170,22 @@ export default function HomeScreen() {
       <AppHeader showLogo />
 
       <ScrollView
-        style={{flex: 1}}
-        contentContainerStyle={{paddingBottom: theme.spacing(14)}}>
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: theme.spacing(14) }}
+      >
         {/* 오늘의 카페인 통합 위젯 */}
         <View style={homeStyles.caffeineWidget}>
           {/* 헤더 */}
           <View style={homeStyles.widgetHeaderRow}>
             <View>
               <Text style={homeStyles.widgetTitle}>오늘의 카페인</Text>
-              <Text style={homeStyles.widgetSubTitle}>
-                허용치 {limitMg}mg 기준
-              </Text>
+              <Text style={homeStyles.widgetSubTitle}>허용치 {limitMg}mg 기준</Text>
             </View>
             <TouchableOpacity
               onPress={openSettings}
               style={homeStyles.widgetIconBtn}
-              activeOpacity={0.85}>
+              activeOpacity={0.85}
+            >
               <Ionicons name="settings-outline" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -214,7 +246,8 @@ export default function HomeScreen() {
             <TouchableOpacity
               style={homeStyles.sleepHistoryBtn}
               activeOpacity={0.8}
-              onPress={openSleepHistory}>
+              onPress={openSleepHistory}
+            >
               <Text style={homeStyles.sleepHistoryText}>전체 기록 보기</Text>
               <Ionicons
                 name="chevron-forward"
@@ -226,7 +259,8 @@ export default function HomeScreen() {
             <TouchableOpacity
               style={homeStyles.sleepEditBtn}
               onPress={openSleepEdit}
-              activeOpacity={0.8}>
+              activeOpacity={0.8}
+            >
               <Ionicons
                 name="create-outline"
                 size={18}
@@ -257,9 +291,7 @@ export default function HomeScreen() {
         <View style={homeStyles.section}>
           <Text style={homeStyles.sectionTitle}>카페인 그래프</Text>
           <View style={homeStyles.chartCard}>
-            <Text style={common.subtle}>
-              시간대별 카페인 농도(그래프 연동 예정)
-            </Text>
+            <Text style={common.subtle}>시간대별 카페인 농도(그래프 연동 예정)</Text>
           </View>
         </View>
 
@@ -268,8 +300,8 @@ export default function HomeScreen() {
           <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
           <View style={homeStyles.adviceCard}>
             <Text style={common.body}>
-              지금은 추가 섭취를 한 잔까지 허용합니다. 취침 6시간 전에는
-              카페인 섭취를 피하세요.
+              지금은 추가 섭취를 한 잔까지 허용합니다. 취침 6시간 전에는 카페인 섭취를
+              피하세요.
             </Text>
           </View>
         </View>
@@ -304,12 +336,14 @@ export default function HomeScreen() {
             <View style={homeStyles.sleepEditActions}>
               <TouchableOpacity
                 style={homeStyles.sleepCancelBtn}
-                onPress={() => setSleepEditVisible(false)}>
+                onPress={() => setSleepEditVisible(false)}
+              >
                 <Text style={homeStyles.sleepCancelText}>취소</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={homeStyles.sleepSaveBtn}
-                onPress={saveSleepEdit}>
+                onPress={saveSleepEdit}
+              >
                 <Text style={homeStyles.sleepSaveText}>저장</Text>
               </TouchableOpacity>
             </View>
@@ -321,16 +355,13 @@ export default function HomeScreen() {
       <GoalTargetModal
         visible={goalVisible}
         onClose={() => setGoalVisible(false)}
-        onSaved={async ({daily, monthly}) => {
+        onSaved={async ({ daily, monthly }) => {
           try {
             setLimitMg(daily);
             setGoalVisible(false);
 
-            const payload: StoredGoals = {daily, monthly};
-            await AsyncStorage.setItem(
-              'caffit:goals',
-              JSON.stringify(payload),
-            );
+            const payload: StoredGoals = { daily, monthly };
+            await AsyncStorage.setItem('caffit:goals', JSON.stringify(payload));
           } catch (e) {
             console.log('[Home] save goals error', e);
           }
