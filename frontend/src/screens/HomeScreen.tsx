@@ -116,10 +116,7 @@ export default function HomeScreen() {
   // 로그인한 사용자 id (today-summary / sleep 호출용)
   const [userId, setUserId] = useState<number | null>(null);
 
-  const percent = Math.min(
-    100,
-    Math.round((todayMg / Math.max(limitMg, 1)) * 100),
-  );
+  const percent = Math.round((todayMg / Math.max(limitMg, 1)) * 100);
 
   /**
    * 오늘 요약을 서버에서 가져오는 공통 함수
