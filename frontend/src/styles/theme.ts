@@ -29,7 +29,7 @@ export const theme = {
       shadowOffset: { width: 0, height: 4 },
     },
   },
-  // ▼ 새 레이아웃 토큰
+  // 새 레이아웃 토큰
   layout: {
     screenPX: 3,      // paddingHorizontal: spacing(3) = 24
     sectionGap: 3,    // 섹션 상단 여백

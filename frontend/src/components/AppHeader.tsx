@@ -1,29 +1,51 @@
+// components/AppHeader.tsx
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import {theme} from '../styles/theme';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { theme } from '../styles/theme';
+import { fonts } from '../styles/common';
+import logoImg from '../../assets/img/logo.png';
 
 interface AppHeaderProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   right?: React.ReactNode;
-  onBack?: () => void; // ← 추가
+  onBack?: () => void;
+  showLogo?: boolean;
 }
 
-export default function AppHeader({title, subtitle, right, onBack}: AppHeaderProps) {
+export default function AppHeader({
+  title,
+  //subtitle,
+  right,
+  onBack,
+  showLogo,
+}: AppHeaderProps) {
   return (
     <View style={styles.container}>
       <View style={styles.left}>
         {onBack && (
-          <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={{top:10,bottom:10,left:10,right:10}}>
-            {/* 아이콘 없을 때를 대비해 텍스트 화살표 사용 */}
+          <TouchableOpacity
+            onPress={onBack}
+            style={styles.backBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={styles.backTxt}>←</Text>
           </TouchableOpacity>
         )}
+
+        {showLogo && (
+          <Image
+            source={logoImg}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        )}
+
         <View>
           <Text style={styles.title}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          {/* {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>} */}
         </View>
       </View>
+
       {right && <View>{right}</View>}
     </View>
   );
@@ -31,9 +53,9 @@ export default function AppHeader({title, subtitle, right, onBack}: AppHeaderPro
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: theme.spacing(3),      // 좌우 여백 
-    paddingTop: theme.spacing(5),             // 상단 패딩 
-    paddingBottom: theme.spacing(3),          // 하단 패딩 
+    paddingHorizontal: theme.spacing(theme.layout.screenPX),
+    paddingTop: theme.spacing(theme.layout.headerPT + 1),
+    paddingBottom: theme.spacing(1),
     backgroundColor: theme.colors.background,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.line,
@@ -43,27 +65,32 @@ const styles = StyleSheet.create({
   },
   left: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 10,
+    alignItems: 'center',
+    columnGap: 10,
   },
   backBtn: {
-    marginRight: 6,
-    paddingRight: 6,
+    paddingRight: 4,
     paddingBottom: 2,
   },
   backTxt: {
-    fontSize: 26,                // 화살표 크기 
+    fontSize: 22,
     color: theme.colors.text,
+  },
+  logo: {
+    width: 50,
+    height: 50,
   },
   title: {
-    fontSize: 28,                // 제목 크기 
-    fontWeight: '800',
+    ...fonts.bold,
+    fontSize: 22,
+    lineHeight: 28,
     color: theme.colors.text,
-    lineHeight: 34,              // 글씨 간격 보정
   },
-  subtitle: {
-    fontSize: 14,                // 부제
-    color: theme.colors.gray500,
-    marginTop: 6,
-  },
+  // 필요 시 사용
+  // subtitle: {
+  //   ...fonts.regular,
+  //   fontSize: 13,
+  //   color: theme.colors.gray500,
+  //   marginTop: 4,
+  // },
 });

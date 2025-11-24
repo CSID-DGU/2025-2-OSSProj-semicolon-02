@@ -1,4 +1,5 @@
-import React, { useCallback, useState, memo } from 'react';
+// screens/Add/ManualAdd.tsx
+import React, {useCallback, useState, memo} from 'react';
 import {
   View,
   Text,
@@ -6,9 +7,21 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useNavigation} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
+import {common} from '../../styles/common';
+import {theme} from '../../styles/theme';
+import {addStyles} from '../../styles/addStyles';
+import AppHeader from '../../components/AppHeader';
+import type {RootStackParamList} from '../../navigation/types';
+import { http } from '../../lib/http';
+import { getCurrentUser } from '../../lib/authSession';
+
+// 필드
 import { common } from '../../styles/common';
 import { theme } from '../../styles/theme';
 import { addStyles } from '../../styles/addStyles';
@@ -23,6 +36,7 @@ type FieldProps = {
   keyboardType?: 'default' | 'numeric';
   required?: boolean;
 };
+
 const Field = memo(function Field({
   label,
   value,
@@ -34,6 +48,8 @@ const Field = memo(function Field({
   return (
     <View style={addStyles.fieldWrap}>
       <Text style={addStyles.fieldLabel}>
+        {label}
+        {required ? '*' : ''}
         {label}
         {required ? '*' : ''}
       </Text>
@@ -50,8 +66,11 @@ const Field = memo(function Field({
   );
 });
 
-//스크린
+type Nav = NativeStackNavigationProp<RootStackParamList>;
+
 export default function ManualAdd() {
+  const nav = useNavigation<Nav>();
+
   const [brand, setBrand] = useState('');
   const [name, setName] = useState('');
   const [caffeine, setCaffeine] = useState('');
@@ -62,9 +81,10 @@ export default function ManualAdd() {
       Alert.alert('입력 확인', '음료명과 카페인 함량은 필수입니다.');
       return;
     }
-    // 숫자 형식 검증
+  
     const caf = Number(caffeine);
-    const vol = volume ? Number(volume) : 0;
+    const vol = volume ? Number(volume) : undefined;
+  
     if (Number.isNaN(caf) || caf <= 0) {
       Alert.alert('형식 오류', '카페인 함량은 양의 숫자로 입력하세요.');
       return;
@@ -73,44 +93,49 @@ export default function ManualAdd() {
       Alert.alert('형식 오류', '용량은 양의 숫자로 입력하세요.');
       return;
     }
+  
     try {
-      // try-catch 추가
-      // TODO: userId와 beverageId는 실제로는 로그인한 사용자 ID와 Beverage 테이블에서 조회해야 함
-      const userId = 1; // 임시 값
-      const beverageId = 1; // 임시 값
-
-      await createIntake({
-        // createIntake 호출
-        userId,
-        beverageId,
-        volumeMl: vol,
+      const user = await getCurrentUser();
+      if (!user) {
+        Alert.alert('로그인 필요', '다시 로그인 후 이용해 주세요.');
+        return;
+      }
+  
+      const noteText =
+        brand.trim().length > 0
+          ? `${brand.trim()} ${name.trim()}`
+          : name.trim();
+  
+      await http.post('/api/intakes/manual', {
+        userId: user.id,
+        brand,
+        name,
         caffeineMg: caf,
-        note: brand ? `${brand} ${name}` : name,
+        volumeMl: vol,
+        note: noteText,
+        consumedAt: null,
       });
-
-      // TODO: 백엔드 연동
-      Alert.alert('저장됨', '섭취 기록이 저장되었습니다.'); //성공
-      // 화면 초기화
-      setBrand('');
-      setName('');
-      setCaffeine('');
-      setVolume('');
-    } catch (error) {
-      console.error('섭취 기록 저장 오류:', error); //실패
-      Alert.alert(
-        '저장 실패',
-        '섭취 기록을 저장하는데 실패했습니다. 다시 시도해주세요.',
-      );
+  
+      Alert.alert('완료', '섭취 기록을 저장했습니다.', [
+        { text: '확인', onPress: () => nav.goBack() },
+      ]);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.log('manual add error', e.message);
+      } else {
+        console.log('unknown error', e);
+      }
+      Alert.alert('오류', '기록 저장 중 문제가 발생했습니다.');
     }
-  }, [name, caffeine, volume, brand]);
-
+  }, [brand, name, caffeine, volume, nav]);
+  
   return (
-    <View style={common.screen}>
-      <ScrollView
-        contentContainerStyle={[common.container, addStyles.scrollInner]}
-      >
-        <Text style={common.h1}>수동 등록</Text>
+    <SafeAreaView style={common.screen}>
+      <AppHeader title="수동 등록"/>
 
+      <ScrollView
+        style={{flex: 1}}
+        contentContainerStyle={[common.container, addStyles.scrollInner]}>
         <Field
           label="브랜드"
           value={brand}
@@ -145,14 +170,13 @@ export default function ManualAdd() {
         <TouchableOpacity
           onPress={onSave}
           style={addStyles.saveBtn}
-          activeOpacity={0.85}
-        >
+          activeOpacity={0.85}>
           <Ionicons name="save" size={18} color="#fff" />
           <Text style={addStyles.saveText}>저장</Text>
         </TouchableOpacity>
 
         <View style={addStyles.gap24} />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

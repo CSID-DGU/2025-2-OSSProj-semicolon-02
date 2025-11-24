@@ -86,7 +86,18 @@ export default function FabMenu() {
               }}>
               <Text style={{fontSize:26}}>{a.icon}</Text>
             </TouchableOpacity>
-            <Text style={{color:'#fff', marginTop:6}}>{a.label}</Text>
+            <Text
+              style={{
+                marginTop: 6,
+                fontWeight: '800',
+                color: '#FFF', 
+                textShadowColor: '#797979', 
+                textShadowOffset: { width: 1, height: 1 },
+                textShadowRadius: 3,
+              }}
+            >
+              {a.label}
+            </Text>
           </Animated.View>
         );
       })}

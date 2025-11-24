@@ -47,8 +47,11 @@ export const tabbarStyles = StyleSheet.create({
     fontSize: 11,
     marginBottom: 6,
     color: theme.colors.gray500,
+    fontWeight: '700',
+    textShadowColor: 'rgba(0,0,0,0.18)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-
   /** 아이콘 간격(원형 FAB와 겹침 방지) */
   item: {
     paddingTop: 6,
