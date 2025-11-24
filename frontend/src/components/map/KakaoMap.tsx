@@ -47,8 +47,30 @@ type Props = {
 
 
 
-  //WebView 설정
-
-
-  //이벤트 브리지 처리
-  }
+      return (
+        <WebView
+          originWhitelist={['*']}
+          javaScriptEnabled
+          injectedJavaScript={script}
+          onMessage={(event) => {
+            const cafe = JSON.parse(event.nativeEvent.data) as Cafe;
+            onMarkerPress?.(cafe);
+          }}
+          source={{
+            html: `
+              <!doctype html>
+              <html>
+                <head>
+                  <meta charset="utf-8" />
+                  <script src="//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=${process.env.EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY}"></script>
+                  <style>html,body,#map{margin:0;height:100%}</style>
+                </head>
+                <body><div id="map"></div></body>
+              </html>`,
+          }}
+          style={{ flex: 1 }}
+        />
+      );
+    };
+    
+    export default KakaoMap;
