@@ -1,13 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {View, Text, ScrollView} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {theme} from '../styles/theme';
 import {common} from '../styles/common';
 import {cafeFindStyles} from '../styles/cafeFindStyles';
 import CafeListItem from '../components/CafeListItem';
+import { useCurrentPosition } from '../hooks/useCurrentPosition';
+import { useNearCafe } from '../hooks/useNearCafe';
 
-export default function CafeFindScreen() {
-  // 더미 데이터
+
+
+
+  export default function CafeFindScreen() {
+    const { coords, error } = useCurrentPosition();
+    const { data: cafes = [], isLoading } = useNearCafe(coords || undefined);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+  
+    if (error) {
+      return (
+        <View style={common.screen}>
+          <Text>{error}</Text>
+        </View>
+      );
+    }
+  
+    if (!coords) {
+      return (
+        <View style={common.screen}>
+          <Text>현재 위치를 가져오는 중입니다…</Text>
+        </View>
+      );
+    }
+
+ /*  // 더미 데이터
   const progressStep = 3; // 총 5단계 중 3단계 완료
   const searchLocation = '동대입구역';
   
@@ -18,7 +43,7 @@ export default function CafeFindScreen() {
       status: '영업 중',
       image: 'star', // 임시로 아이콘 사용
     },
-  ];
+  ]; */
 
   return (
     <View style={common.screen}>
