@@ -6,6 +6,7 @@ import com.caffit.beverage.BeverageRepository;
 import com.caffit.user.User;
 import com.caffit.user.UserRepository;
 import java.time.LocalDateTime;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import com.caffit.intake.dto.IntakeDTO;
 import java.util.List;
@@ -26,6 +27,7 @@ public class IntakeController {
     }
 
     @GetMapping //섭취 기록 목록 조회
+    @Transactional(readOnly = true)
     public List<IntakeDTO> list(@RequestParam(required = false) Long userId) {
         List<Intake> entries = (userId != null)
                 ? intakes.findByUserIdOrderByConsumedAtDesc(userId)

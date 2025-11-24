@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -22,39 +22,48 @@ type RootNav = NativeStackNavigationProp<RootStackParamList>;
 export default function HomeScreen() {
   const navigation = useNavigation<RootNav>();
 
+  const [limitMg, setLimitMg] = useState<number>(400);
+  const [goalVisible, setGoalVisible] = useState(false);
+  const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
+
   useEffect(() => {
     http
       .get('/api/health')
       .then(r => console.log('health:', r.data)) // 기대 출력: "OK"
       .catch(e => console.log('health error:', e.message));
 
-        // 섭취 기록 조회 추가
-  fetchIntakes()
-  .then(data => {
-    setIntakes(data);
-    console.log('섭취 기록:', data);
-    // todayMg를 실제 데이터로 계산할 수도 있음
-    // const todayTotal = data
-    //   .filter(i => new Date(i.consumedAt).toDateString() === new Date().toDateString())
-    //   .reduce((sum, i) => sum + i.caffeineMg, 0);
-  })
-  .catch(error => {
-    console.error('섭취 기록 조회 오류:', error);
-  });
+    // 섭취 기록 조회 추가
+    fetchIntakes()
+      .then(data => {
+        setIntakes(data);
+        console.log('섭취 기록:', data);
+        // todayMg를 실제 데이터로 계산할 수도 있음
+        // const todayTotal = data
+        //   .filter(i => new Date(i.consumedAt).toDateString() === new Date().toDateString())
+        //   .reduce((sum, i) => sum + i.caffeineMg, 0);
+      })
+      .catch(error => {
+        console.error('섭취 기록 조회 오류:', error);
+      });
   }, []);
 
-  // TODO: Add 화면과 실제 연동
-  const todayMg = 180;
-  // 대체할 수 있는 코드 (위의 useEffect에서 계산한 경우):
-// const todayMg = useMemo(() => {
-//   const today = new Date().toDateString();
-//   return intakes
-//     .filter(i => new Date(i.consumedAt).toDateString() === today)
-//     .reduce((sum, i) => sum + i.caffeineMg, 0);
-// }, [intakes]);
-  const [limitMg, setLimitMg] = useState<number>(400);
-  const [goalVisible, setGoalVisible] = useState(false);
-  const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
+  // 오늘의 카페인 섭취량 계산
+  const todayMg = useMemo(() => {
+    const today = new Date().toDateString();
+    return intakes
+      .filter(i => new Date(i.consumedAt).toDateString() === today)
+      .reduce((sum, i) => sum + i.caffeineMg, 0);
+  }, [intakes]);
+
+  // 오늘 섭취한 음료 목록
+  const todayIntakes = useMemo(() => {
+    const today = new Date().toDateString();
+    return intakes.filter(i => new Date(i.consumedAt).toDateString() === today);
+  }, [intakes]);
+
+  const todayDrinksText = todayIntakes
+    .map(i => i.beverageName || i.note || '음료')
+    .join(', ');
   const percent = Math.min(
     100,
     Math.round((todayMg / Math.max(limitMg, 1)) * 100),
@@ -104,8 +113,12 @@ export default function HomeScreen() {
           <View style={homeStyles.statRow}>
             <View style={homeStyles.statCard}>
               <Text style={homeStyles.statTitle}>오늘 음료</Text>
-              <Text style={homeStyles.statValueBig}>2잔</Text>
-              <Text style={homeStyles.statNote}>아메리카노 1, 라떼 1</Text>
+              <Text style={homeStyles.statValueBig}>
+                {todayIntakes.length}잔
+              </Text>
+              <Text style={homeStyles.statNote}>
+                {todayDrinksText || '오늘 섭취한 음료가 없습니다'}
+              </Text>
             </View>
             <View style={homeStyles.statCard}>
               <Text style={homeStyles.statTitle}>평균 반감기</Text>
