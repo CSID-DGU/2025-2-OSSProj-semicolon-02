@@ -1,15 +1,13 @@
 // screens/HomeScreen.tsx
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   TextInput,
 } from 'react-native';
-import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -26,7 +24,6 @@ import GoalTargetModal from './MyPage/components/GoalTargetModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { http } from '../lib/http';
 
-import { http } from '../lib/http';
 //import type { AxiosResponse } from 'axios';
 import { fetchIntakes } from '../api/intakes';
 import { IntakeDTO } from '../types/intake';
@@ -110,7 +107,7 @@ const buildSleepDateTimes = (sleepHM: string, wakeHM: string) => {
 
 export default function HomeScreen() {
   const navigation = useNavigation<RootNav>();
-
+  // 허용치(일간 목표)
   const [limitMg, setLimitMg] = useState<number>(400);
   const [goalVisible, setGoalVisible] = useState(false);
   const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
@@ -118,14 +115,8 @@ export default function HomeScreen() {
   const [todayMg, setTodayMg] = useState<number>(0);
   const [todayCount, setTodayCount] = useState<number>(0);
 
-  // 허용치(일간 목표)
-  const [limitMg, setLimitMg] = useState<number>(400);
-  const [goalVisible, setGoalVisible] = useState(false);
-
   // 로그인한 사용자 id (today-summary / sleep 호출용)
   const [userId, setUserId] = useState<number | null>(null);
-
-  const percent = Math.round((todayMg / Math.max(limitMg, 1)) * 100);
 
   /**
    * 오늘 요약을 서버에서 가져오는 공통 함수
@@ -257,14 +248,6 @@ export default function HomeScreen() {
       });
   }, []);
 
-  // 오늘의 카페인 섭취량 계산
-  const todayMg = useMemo(() => {
-    const today = new Date().toDateString();
-    return intakes
-      .filter(i => new Date(i.consumedAt).toDateString() === today)
-      .reduce((sum, i) => sum + i.caffeineMg, 0);
-  }, [intakes]);
-
   // 오늘 섭취한 음료 목록
   const todayIntakes = useMemo(() => {
     const today = new Date().toDateString();
@@ -274,9 +257,20 @@ export default function HomeScreen() {
   const todayDrinksText = todayIntakes
     .map(i => i.beverageName || i.note || '음료')
     .join(', ');
+
+  // todayMg는 서버에서 가져온 값(setTodayMg)과 로컬 계산값 중 서버 값 우선
+  const localTodayMg = useMemo(() => {
+    const today = new Date().toDateString();
+    return intakes
+      .filter(i => new Date(i.consumedAt).toDateString() === today)
+      .reduce((sum, i) => sum + i.caffeineMg, 0);
+  }, [intakes]);
+
+  const effectiveTodayMg = todayMg > 0 ? todayMg : localTodayMg;
+
   const percent = Math.min(
     100,
-    Math.round((todayMg / Math.max(limitMg, 1)) * 100),
+    Math.round((effectiveTodayMg / Math.max(limitMg, 1)) * 100),
   );
 
   const openSettings = () => setGoalVisible(true);
@@ -343,7 +337,7 @@ export default function HomeScreen() {
           {/* 수치 */}
           <View style={homeStyles.widgetContentRow}>
             <View style={homeStyles.widgetLeft}>
-              <Text style={homeStyles.widgetMg}>{todayMg} mg</Text>
+              <Text style={homeStyles.widgetMg}>{effectiveTodayMg} mg</Text>
               <Text style={homeStyles.widgetLabel}>현재 섭취량</Text>
             </View>
             <View style={homeStyles.widgetRight}>
