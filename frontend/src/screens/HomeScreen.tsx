@@ -48,6 +48,7 @@ type StoredGoals = {
 type TodaySleep = {
   exists: boolean;
   sleepAt: string | null;
+  id: number | null;
   wakeAt: string | null;
   durationMinutes: number | null;
 };
@@ -107,7 +108,6 @@ const buildSleepDateTimes = (sleepHM: string, wakeHM: string) => {
 
 export default function HomeScreen() {
   const navigation = useNavigation<RootNav>();
-  // 허용치(일간 목표)
   const [limitMg, setLimitMg] = useState<number>(400);
   const [goalVisible, setGoalVisible] = useState(false);
   const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
@@ -118,9 +118,7 @@ export default function HomeScreen() {
   // 로그인한 사용자 id (today-summary / sleep 호출용)
   const [userId, setUserId] = useState<number | null>(null);
 
-  /**
-   * 오늘 요약을 서버에서 가져오는 공통 함수
-   */
+
   const fetchTodaySummary = useCallback(async (uid: number) => {
     try {
       const res = await http.get<TodaySummary>('/api/intakes/today-summary', {
@@ -134,26 +132,30 @@ export default function HomeScreen() {
     }
   }, []);
 
-  /**
-   * 오늘 수면 요약을 서버에서 가져오는 함수
-   */
+
   const fetchTodaySleep = useCallback(async (uid: number) => {
     try {
       const res = await http.get<TodaySleep>('/api/sleep/today', {
         params: { userId: uid },
       });
       console.log('[Home] sleep today res', res.data);
-
+  
       if (res.data.exists && res.data.sleepAt && res.data.wakeAt) {
         const sleepHM = extractTimeHM(res.data.sleepAt);
         const wakeHM = extractTimeHM(res.data.wakeAt);
         setYesterdaySleepAt(sleepHM);
         setTodayWakeAt(wakeHM);
+        setTodaySleepId(res.data.id ?? null);  
+      } else {
+        setYesterdaySleepAt(null);
+        setTodayWakeAt(null);
+        setTodaySleepId(null);         
       }
     } catch (e) {
       console.log('[Home] sleep today error', e);
     }
   }, []);
+  
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -191,26 +193,29 @@ export default function HomeScreen() {
     bootstrap();
   }, [fetchTodaySummary, fetchTodaySleep]);
 
-  /**
-   * 탭 전환 등으로 Home 화면이 다시 포커스를 얻을 때마다
-   * 오늘 요약을 다시 가져오기 (DB에 새로 쌓인 intake 반영용)
-   */
+
   useFocusEffect(
     useCallback(() => {
       if (!userId) {
         return;
       }
       fetchTodaySummary(userId);
-      // 필요하면 여기서도 fetchTodaySleep(userId); 호출 가능
+      // fetchTodaySleep(userId);
     }, [userId, fetchTodaySummary]),
   );
 
   // 수면 데이터 (홈 위젯용)
-  const [yesterdaySleepAt, setYesterdaySleepAt] = useState('01:30');
-  const [todayWakeAt, setTodayWakeAt] = useState('08:00');
+  const [yesterdaySleepAt, setYesterdaySleepAt] = useState<string | null>(null);
+  const [todayWakeAt, setTodayWakeAt] = useState<string | null>(null);
 
-  // 수면 시간 계산(단순 HH:mm 기준, 자정 넘는 경우는 24시간 더해줌)
+
+  const [todaySleepId, setTodaySleepId] = useState<number | null>(null);
+
+  // 수면 시간 계산
   const calcDurationLabel = () => {
+    if (!yesterdaySleepAt || !todayWakeAt) {
+      return '-';
+    }
     const [sh, sm] = yesterdaySleepAt.split(':').map(Number);
     const [wh, wm] = todayWakeAt.split(':').map(Number);
     const start = sh * 60 + sm;
@@ -221,12 +226,13 @@ export default function HomeScreen() {
     const m = diff % 60;
     return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
   };
-  const sleepDurationLabel = calcDurationLabel();
+  const sleepDurationLabel = calcDurationLabel();  
 
   // 홈 수면 위젯 편집용 상태 (미니 모듈)
   const [sleepEditVisible, setSleepEditVisible] = useState(false);
-  const [tmpSleepAt, setTmpSleepAt] = useState(yesterdaySleepAt);
-  const [tmpWakeAt, setTmpWakeAt] = useState(todayWakeAt);
+  const [tmpSleepAt, setTmpSleepAt] = useState('');
+  const [tmpWakeAt, setTmpWakeAt] = useState('');
+
   useEffect(() => {
     http
       .get('/api/health')
@@ -277,10 +283,10 @@ export default function HomeScreen() {
   const openSleepHistory = () => navigation.navigate('SleepHistory');
 
   const openSleepEdit = () => {
-    setTmpSleepAt(yesterdaySleepAt);
-    setTmpWakeAt(todayWakeAt);
+    setTmpSleepAt(yesterdaySleepAt ?? '');
+    setTmpWakeAt(todayWakeAt ?? '');
     setSleepEditVisible(true);
-  };
+  };  
 
   const saveSleepEdit = async () => {
     if (!userId) {
@@ -291,21 +297,30 @@ export default function HomeScreen() {
     setYesterdaySleepAt(tmpSleepAt);
     setTodayWakeAt(tmpWakeAt);
     setSleepEditVisible(false);
-
+  
     try {
       const { sleepAt, wakeAt } = buildSleepDateTimes(tmpSleepAt, tmpWakeAt);
-
-      await http.post('/api/sleep', {
-        userId,
-        sleepAt,
-        wakeAt,
-      });
-
-      console.log('[Home] sleep saved');
+  
+      if (todaySleepId) {
+        await http.put(`/api/sleep/${todaySleepId}`, {
+          sleepAt,
+          wakeAt,
+        });
+        console.log('[Home] sleep updated');
+      } else {
+        await http.post('/api/sleep', {
+          userId,
+          sleepAt,
+          wakeAt,
+        });
+        console.log('[Home] sleep created');
+      }
+  
+      await fetchTodaySleep(userId);
     } catch (e) {
       console.log('[Home] save sleep error', e);
     }
-  };
+  };  
 
   return (
     <SafeAreaView style={common.screen}>

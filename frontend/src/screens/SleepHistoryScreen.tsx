@@ -1,5 +1,4 @@
-// src/screens/SleepHistoryScreen.tsx
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   SafeAreaView,
   View,
@@ -7,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -15,18 +15,17 @@ import { homeStyles } from '../styles/homeStyles';
 import { common } from '../styles/common';
 import { theme } from '../styles/theme';
 
+import { getCurrentUser } from '../lib/authSession';
+import { fetchSleepHistory, updateSleepLog, SleepLogApi } from '../api/sleep';
+
 type SleepLog = {
-  date: string;       // YYYY-MM-DD
-  sleepAt: string;    // 'HH:MM'
-  wakeAt: string;     // 'HH:MM'
-  caffeineMg: number; // 해당 날짜 섭취 카페인
+  id: number;
+  date: string; // YYYY-MM-DD
+  sleepAt: string; // HH:MM
+  wakeAt: string; // HH:MM
+  caffeineMg: number; /// todo: 추후 합칠 예정
 };
 
-const initialLogs: SleepLog[] = [
-  { date: '2025-11-23', sleepAt: '01:30', wakeAt: '08:00', caffeineMg: 220 },
-  { date: '2025-11-22', sleepAt: '02:10', wakeAt: '07:40', caffeineMg: 150 },
-  { date: '2025-11-21', sleepAt: '00:50', wakeAt: '07:20', caffeineMg: 310 },
-];
 
 function getDurationMinutes(log: SleepLog): number {
   const [sh, sm] = log.sleepAt.split(':').map(Number);
@@ -37,102 +36,168 @@ function getDurationMinutes(log: SleepLog): number {
   return end - start;
 }
 
-function formatDurationLabel(mins: number): string {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
+function formatDurationLabel(min: number) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
   return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
 }
 
+function buildIso(date: string, sleep: string, wake: string) {
+  const [y, m, d] = date.split('-').map(Number);
+  const [sh, sm] = sleep.split(':').map(Number);
+  const [wh, wm] = wake.split(':').map(Number);
+
+  const sleepDt = new Date(y, m - 1, d, sh, sm);
+
+  let wakeDt = new Date(y, m - 1, d, wh, wm);
+  if (wakeDt.getTime() <= sleepDt.getTime()) {
+    wakeDt = new Date(y, m - 1, d + 1, wh, wm);
+  }
+
+  const toIso = (dt: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return (
+      `${dt.getFullYear()}-` +
+      `${pad(dt.getMonth() + 1)}-` +
+      `${pad(dt.getDate())}T` +
+      `${pad(dt.getHours())}:${pad(dt.getMinutes())}:00`
+    );
+  };
+
+  return {
+    sleepAt: toIso(sleepDt),
+    wakeAt: toIso(wakeDt),
+  };
+}
+
 export default function SleepHistoryScreen() {
-  const [logs, setLogs] = useState<SleepLog[]>(initialLogs);
+  const [logs, setLogs] = useState<SleepLog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   const [editing, setEditing] = useState<SleepLog | null>(null);
-  const [tmpSleepAt, setTmpSleepAt] = useState('');
-  const [tmpWakeAt, setTmpWakeAt] = useState('');
+  const [tmpSleep, setTmpSleep] = useState('');
+  const [tmpWake, setTmpWake] = useState('');
   const [tmpCaffeine, setTmpCaffeine] = useState('');
 
-  const avgDuration = useMemo(() => {
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErr(null);
+
+      const user = await getCurrentUser();
+      if (!user) {
+        setErr('사용자 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      const raw: SleepLogApi[] = await fetchSleepHistory(user.id, 7);
+
+      const mapped: SleepLog[] = raw.map((l) => ({
+        id: l.id,
+        date: l.sleepAt.slice(0, 10),
+        sleepAt: l.sleepAt.slice(11, 16),
+        wakeAt: l.wakeAt.slice(11, 16),
+        caffeineMg: 0,
+      }));
+
+      setLogs(mapped);
+    } catch (e) {
+      setErr('수면 기록 불러오기 실패');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const avg = useMemo(() => {
     if (logs.length === 0) return '-';
-    const total = logs.reduce((sum, l) => sum + getDurationMinutes(l), 0);
-    const avg = Math.round(total / logs.length);
-    return formatDurationLabel(avg);
+    const total = logs.reduce((s, l) => s + getDurationMinutes(l), 0);
+    return formatDurationLabel(Math.round(total / logs.length));
   }, [logs]);
 
-  const maxDuration = useMemo(() => {
+  const max = useMemo(() => {
     if (logs.length === 0) return 1;
-    return logs.reduce(
-      (max, l) => Math.max(max, getDurationMinutes(l)),
-      1,
-    );
+    return logs.reduce((m, l) => Math.max(m, getDurationMinutes(l)), 1);
   }, [logs]);
 
-  const handleEditLog = (log: SleepLog) => {
+  const openEdit = (log: SleepLog) => {
     setEditing(log);
-    setTmpSleepAt(log.sleepAt);
-    setTmpWakeAt(log.wakeAt);
+    setTmpSleep(log.sleepAt);
+    setTmpWake(log.wakeAt);
     setTmpCaffeine(String(log.caffeineMg));
   };
-  const handleCloseEdit = () => {
-    setEditing(null);
-  };
-  const handleSaveEdit = () => {
+
+  const save = async () => {
     if (!editing) return;
 
-    const updated: SleepLog = {
-      ...editing,
-      sleepAt: tmpSleepAt.trim(),
-      wakeAt: tmpWakeAt.trim(),
-      caffeineMg: Number(tmpCaffeine) || 0,
-    };
+    try {
+      setLoading(true);
+      setErr(null);
 
-    setLogs(prev =>
-      prev.map(l => (l.date === editing.date ? updated : l)),
-    );
-    setEditing(null);
+      const { sleepAt, wakeAt } = buildIso(
+        editing.date,
+        tmpSleep.trim(),
+        tmpWake.trim(),
+      );
+
+      await updateSleepLog(editing.id, { sleepAt, wakeAt });
+      await load();
+
+      setEditing(null);
+    } catch (e) {
+      setErr('수정 실패');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={homeStyles.screenBG}>
       <AppHeader title="수면 기록" />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: theme.spacing(6) }}>
-        {/* 상단 요약 카드 */}
-        <View style={[common.section, { marginTop: theme.spacing(3) }]}>
+      {loading && (
+        <View style={{ padding: 12 }}>
+          <ActivityIndicator size="small" color={theme.colors.primary} />
+        </View>
+      )}
+
+      {err && (
+        <View style={{ padding: 12 }}>
+          <Text style={{ color: 'red' }}>{err}</Text>
+        </View>
+      )}
+
+      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+        <View style={[common.section, { marginTop: 20 }]}>
           <View style={homeStyles.chartCard}>
             <Text style={common.subtle}>최근 1주일 평균 수면 시간</Text>
-            <Text
-              style={{
-                fontSize: 24,
-                fontWeight: '800',
-                marginTop: theme.spacing(1),
-              }}
-            >
-              {avgDuration}
-            </Text>
-            <Text
-              style={[common.subtle, { marginTop: theme.spacing(1) }]}
-            >
-              취침·기상 시각과 카페인 섭취량을 함께 확인해 보세요.
+            <Text style={{ fontSize: 24, fontWeight: '800', marginTop: 8 }}>
+              {avg}
             </Text>
           </View>
         </View>
 
-        {/* 일자별 기록 리스트 */}
         <View style={common.section}>
-          <Text style={homeStyles.sectionTitle}>
-            최근 수면 + 카페인 기록
-          </Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={homeStyles.sectionTitle}>최근 수면 기록</Text>
+            <TouchableOpacity onPress={load}>
+              <Ionicons name="refresh" size={18} color={theme.colors.gray600} />
+            </TouchableOpacity>
+          </View>
 
-          {logs.map(log => {
-            const durMin = getDurationMinutes(log);
-            const ratio = Math.min(1, durMin / maxDuration); // 0~1
+          {logs.map((log) => {
+            const mins = getDurationMinutes(log);
+            const ratio = Math.min(1, mins / max);
 
             return (
-              <View key={log.date} style={homeStyles.sleepHistoryCard}>
-                {/* 날짜 + 수정 버튼 */}
+              <View key={log.id} style={homeStyles.sleepHistoryCard}>
                 <View style={homeStyles.sleepHistoryHeader}>
                   <Text style={common.subtle}>{log.date}</Text>
-                  <TouchableOpacity onPress={() => handleEditLog(log)}>
+                  <TouchableOpacity onPress={() => openEdit(log)}>
                     <Ionicons
                       name="create-outline"
                       size={16}
@@ -141,7 +206,6 @@ export default function SleepHistoryScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* 그래프 느낌 바 + 텍스트 */}
                 <View style={homeStyles.sleepHistoryRow}>
                   <View style={homeStyles.sleepHistoryLeft}>
                     <View style={homeStyles.sleepBarTrack}>
@@ -153,7 +217,7 @@ export default function SleepHistoryScreen() {
                       />
                     </View>
                     <Text style={homeStyles.sleepHistoryDuration}>
-                      {formatDurationLabel(durMin)}
+                      {formatDurationLabel(mins)}
                     </Text>
                   </View>
 
@@ -172,21 +236,19 @@ export default function SleepHistoryScreen() {
         </View>
       </ScrollView>
 
-      {/* 편집 모달  */}
       {editing && (
         <View style={homeStyles.sleepEditOverlay}>
           <View style={homeStyles.sleepEditCard}>
             <Text style={homeStyles.sleepEditTitle}>
-              {editing.date} 수면 기록 수정
+              {editing.date} 기록 수정
             </Text>
 
             <View style={homeStyles.sleepEditRow}>
               <Text style={homeStyles.sleepLabel}>어제 취침</Text>
               <TextInput
                 style={homeStyles.sleepInput}
-                value={tmpSleepAt}
-                onChangeText={setTmpSleepAt}
-                placeholder="HH:MM"
+                value={tmpSleep}
+                onChangeText={setTmpSleep}
               />
             </View>
 
@@ -194,33 +256,21 @@ export default function SleepHistoryScreen() {
               <Text style={homeStyles.sleepLabel}>오늘 기상</Text>
               <TextInput
                 style={homeStyles.sleepInput}
-                value={tmpWakeAt}
-                onChangeText={setTmpWakeAt}
-                placeholder="HH:MM"
-              />
-            </View>
-
-            <View style={homeStyles.sleepEditRow}>
-              <Text style={homeStyles.sleepLabel}>카페인 섭취량</Text>
-              <TextInput
-                style={homeStyles.sleepInput}
-                value={tmpCaffeine}
-                onChangeText={setTmpCaffeine}
-                keyboardType="numeric"
-                placeholder="mg"
+                value={tmpWake}
+                onChangeText={setTmpWake}
               />
             </View>
 
             <View style={homeStyles.sleepEditActions}>
               <TouchableOpacity
                 style={homeStyles.sleepCancelBtn}
-                onPress={handleCloseEdit}
+                onPress={() => setEditing(null)}
               >
                 <Text style={homeStyles.sleepCancelText}>취소</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={homeStyles.sleepSaveBtn}
-                onPress={handleSaveEdit}
+                onPress={save}
               >
                 <Text style={homeStyles.sleepSaveText}>저장</Text>
               </TouchableOpacity>
