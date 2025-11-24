@@ -18,6 +18,8 @@ import {theme} from '../../styles/theme';
 import {favoritesStyles as styles} from '../../styles/favoritesStyles';
 import {http} from '../../lib/http';
 import {getCurrentUser} from '../../lib/authSession';
+//섭취량 연동
+import { createIntake } from '../../api/intakes'; 
 
 // 타입
 type FavType = '커피' | '티' | '그 외';
