@@ -204,6 +204,20 @@ export default function HomeScreen() {
     }, [userId, fetchTodaySummary]),
   );
 
+  const reloadToday = useCallback(async () => {
+    try {
+      const data = await fetchIntakes();
+      setIntakes(data);
+
+      if (userId) {
+        await fetchTodaySummary(userId);
+      }
+    } catch (e) {
+      console.log('[Home] reloadToday error', e);
+    }
+  }, [userId, fetchTodaySummary]);
+
+
   // 수면 데이터 (홈 위젯용)
   const [yesterdaySleepAt, setYesterdaySleepAt] = useState<string | null>(null);
   const [todayWakeAt, setTodayWakeAt] = useState<string | null>(null);
@@ -434,7 +448,24 @@ export default function HomeScreen() {
         <View style={homeStyles.section}>
           <View style={homeStyles.statRow}>
             <View style={homeStyles.statCard}>
-              <Text style={homeStyles.statTitle}>오늘 음료</Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 4,
+                }}>
+                <Text style={homeStyles.statTitle}>오늘 음료</Text>
+                <TouchableOpacity
+                  onPress={reloadToday}
+                  style={{ marginLeft: 6, padding: 4 }}>
+                  <Ionicons
+                    name="refresh"
+                    size={14}
+                    color={theme.colors.gray600}
+                  />
+                </TouchableOpacity>
+              </View>
+
               <Text style={homeStyles.statValueBig}>
                 {todayIntakes.length}잔
               </Text>
@@ -442,6 +473,7 @@ export default function HomeScreen() {
                 {todayDrinksText || '오늘 섭취한 음료가 없습니다'}
               </Text>
             </View>
+
             <View style={homeStyles.statCard}>
               <Text style={homeStyles.statTitle}>평균 반감기</Text>
               <Text style={homeStyles.statValueBig}>5.2 h</Text>

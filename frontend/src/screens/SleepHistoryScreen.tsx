@@ -182,12 +182,23 @@ export default function SleepHistoryScreen() {
         </View>
 
         <View style={common.section}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={homeStyles.sectionTitle}>최근 수면 기록</Text>
-            <TouchableOpacity onPress={load}>
-              <Ionicons name="refresh" size={18} color={theme.colors.gray600} />
-            </TouchableOpacity>
-          </View>
+          <View
+            style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 8,
+          }}>
+          <Text style={homeStyles.sectionTitle}>최근 수면 기록</Text>
+          <TouchableOpacity
+            onPress={load}
+            style={{ marginLeft: 6, padding: 4 }}>
+            <Ionicons
+              name="refresh"
+              size={16}
+              color={theme.colors.gray600}
+            />
+          </TouchableOpacity>
+        </View>
 
           {logs.map((log) => {
             const mins = getDurationMinutes(log);
