@@ -1,3 +1,4 @@
+## 카페인 계산 에이전트 ##
 """
 (2) 카페인 계산 에이전트: CaffeineCalcAgent
 	•	입력:
@@ -15,6 +16,11 @@
 
 from datetime import datetime, timedelta
 import math
+
+events = [
+    {"mg": 150, "time": datetime(2025, 11, 25, 14, 30)},  # 150mg 카페인, 오후 2:30에 마심
+    {"mg": 80,  "time": datetime(2025, 11, 25, 16, 0)},   # 80mg, 오후 4시에 마심
+]
 
 class CaffeineCalculator:
     """
@@ -145,3 +151,8 @@ class CaffeineCalculator:
         future_level = self.total_remaining(simulated_events, target_time)
 
         return future_level <= limit_mg, future_level
+    
+    
+calc = CaffeineCalculator()
+now_level = calc.total_remaining(events)
+print("현재 시점 남아있는 카페인:", now_level)
