@@ -1,5 +1,7 @@
 // com.caffit.intake.IntakeRepository.java
-package com.caffit.intake;
+package com.caffit.intake.repository;
+
+import com.caffit.intake.entity.Intake;  
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -206,6 +206,17 @@ export const homeStyles = StyleSheet.create({
     color: theme.colors.white,
   },
 
+  //공용 헤더
+  statHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing(1),
+  },
+  statHeaderRight: {
+    marginLeft: 6,
+    padding: 4,
+  },
   
     /** 수면 히스토리 카드 */
     sleepHistoryCard: {
