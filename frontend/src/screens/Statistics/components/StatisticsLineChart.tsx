@@ -112,15 +112,12 @@ export default function StatisticsDateLineChart({
               curved={true} // false-직선, true-곡선
               animateOnDataChange={true} // 데이터 변경 시 애니메이션
               animationDuration={1000}
-
-
-              //하루 카페인 권장량부분을 따로 표시 
+              // 400mg -하루 권장량
+              secondaryData={chartData.map(() => ({ value: 400 }))}
               secondaryLineConfig={{
-                data: chartData.map(() => ({ value: 400 })),
                 color: '#FF0000', // 빨간색
                 thickness: 2,
-                type: 'dashed', // 또는 'solid'
-                hideDataPoints: true,
+                strokeDashArray: [5, 5], // 점선 (5픽셀 선, 5픽셀 간격)
               }}
             />
           </View>
