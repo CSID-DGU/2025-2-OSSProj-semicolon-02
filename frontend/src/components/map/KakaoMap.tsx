@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { WebView } from 'react-native-webview';
 import { Cafe } from '../../api/cafes';
+import { KAKAO_JAVASCRIPT_KEY } from '../../config/apiKeys';
 
 type Props = {
     userCoords: { lat: number; lng: number }; // 현재 위치
@@ -62,7 +63,7 @@ type Props = {
               <html>
                 <head>
                   <meta charset="utf-8" />
-                  <script src="//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=${process.env.EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY}"></script>
+                  <script src="//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=${KAKAO_JAVASCRIPT_KEY}"></script>
                   <style>html,body,#map{margin:0;height:100%}</style>
                 </head>
                 <body><div id="map"></div></body>
