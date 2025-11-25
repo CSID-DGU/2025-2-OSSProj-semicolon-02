@@ -24,7 +24,24 @@ export default function StatisticsDateLineChart({
   caption,
   monthLabel,
 }: Props) {
-  // react-native-gifted-charts
+  // 데이터가 없을 때 빈 상태 처리
+  if (!data || data.length === 0) {
+    return (
+      <View style={statisticsStyles.chartCard}>
+        {caption ? (
+          <View style={statisticsStyles.sectionHeaderRow}>
+            <Text style={statisticsStyles.sectionTitle}>{caption}</Text>
+            <Text style={statisticsStyles.subtle}>목표 {targetLabel}</Text>
+          </View>
+        ) : null}
+        <View style={{ padding: 20, alignItems: 'center' }}>
+          <Text style={{ color: theme.colors.gray500 }}>데이터가 없습니다</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // react-native-gifted-charts 형식으로 데이터 변환
   const chartData = data.map((point, index) => ({
     value: point.mg,
     label: point.date,

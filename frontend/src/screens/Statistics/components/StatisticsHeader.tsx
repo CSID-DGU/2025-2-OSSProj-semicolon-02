@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Image,
   Pressable,
@@ -39,6 +39,29 @@ export default function StatisticsHeader({
     width: number;
     height: number;
   } | null>(null);
+
+  // 월 스크롤 ref (선택된 월로 자동 스크롤하기 위해)
+  const monthScrollRef = useRef<ScrollView>(null);
+  const monthPillRefs = useRef<(View | null)[]>([]);
+
+  // 선택된 월이 변경되면 해당 위치로 스크롤
+  useEffect(() => {
+    if (monthScrollRef.current && monthPillRefs.current[selectedIndex]) {
+      monthPillRefs.current[selectedIndex]?.measureLayout(
+        monthScrollRef.current as any,
+        (x, y, width, height) => {
+          // 선택된 월이 화면 중앙에 오도록 스크롤
+          monthScrollRef.current?.scrollTo({
+            x: Math.max(0, x - Dimensions.get('window').width / 2 + width / 2),
+            animated: true,
+          });
+        },
+        () => {
+          // measureLayout 실패 시 onLayout으로 대체
+        },
+      );
+    }
+  }, [selectedIndex]);
 
   const openPicker = () => setPickerOpen(true);
   const closePicker = () => setPickerOpen(false);
