@@ -59,9 +59,28 @@ export default function StatisticsDateLineChart({
   return (
     <View style={statisticsStyles.chartCard}>
       {caption ? (
-        <View style={statisticsStyles.sectionHeaderRow}>
-          <Text style={statisticsStyles.sectionTitle}>{caption}</Text>
-          <Text style={statisticsStyles.subtle}>목표 {targetLabel}</Text>
+        <View>
+          <View style={statisticsStyles.sectionHeaderRow}>
+            <Text style={statisticsStyles.sectionTitle}>{caption}</Text>
+            <Text style={statisticsStyles.subtle}>목표 {targetLabel}</Text>
+          </View>
+          {/* 단위 표시 (목표 아래) */}
+          <View
+            style={{
+              alignItems: 'flex-end',
+              marginTop: theme.spacing(0.5),
+              paddingRight: theme.spacing(3),
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 11,
+                color: theme.colors.gray500,
+              }}
+            >
+              (단위: mg)
+            </Text>
+          </View>
         </View>
       ) : null}
 
@@ -93,7 +112,7 @@ export default function StatisticsDateLineChart({
                   statisticsStyles.chartYAxisLabel,
                   {
                     position: 'absolute',
-                    top: gridLinePosition - 8, // 텍스트 중앙이 그리드 라인과 맞도록 조정
+                    top: gridLinePosition, // 그리드 라인
                     textAlign: 'right',
                     paddingRight: 0,
                     lineHeight: 16, // 간격 줄임 (20 -> 16)
@@ -101,54 +120,56 @@ export default function StatisticsDateLineChart({
                   },
                 ]}
               >
-                {value}mg
+                {value}
               </Text>
             );
           })}
         </View>
 
         {/* Line Chart (점 + 선) */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={statisticsStyles.chartScrollArea}
-        >
-          <View style={{ width: chartWidth }}>
-            <LineChart
-              data={chartData}
-              height={180}
-              width={chartWidth}
-              spacing={Math.max(40, chartWidth / data.length - 5)}
-              thickness={2} // 선 두께
-              color={theme.colors.primary} // 선 색상
-              dataPointsColor={theme.colors.primary} // 점 색상
-              dataPointsRadius={6} // 점 크기
-              textColor={theme.colors.gray500}
-              textFontSize={11}
-              hideRules={false} // 그리드 라인 표시
-              rulesType="solid"
-              rulesColor={theme.colors.gray300 || '#D9D9D9'}
-              hideYAxisText={true} // Y축 텍스트 숨기기 (왼쪽에 따로 표시)
-              xAxisColor={theme.colors.gray300 || '#D9D9D9'}
-              yAxisColor={theme.colors.gray300 || '#D9D9D9'}
-              yAxisThickness={1}
-              xAxisThickness={1}
-              maxValue={500}
-              noOfSections={5}
-              curved={true} // false-직선, true-곡선
-              animateOnDataChange={true} // 데이터 변경 시 애니메이션
-              animationDuration={1000}
-              // 400mg -하루 권장량 (빨간색 점선)
-              secondaryData={chartData.map(() => ({ value: 400 }))}
-              secondaryLineConfig={{
-                color: '#FF0000', // 빨간색
-                thickness: 2,
-                strokeDashArray: [5, 5], // 점선 (5픽셀 선, 5픽셀 간격)
-                hideDataPoints: true, // 400mg 라인의 점들 숨기기
-              }}
-            />
-          </View>
-        </ScrollView>
+        <View style={{ flex: 1, position: 'relative' }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={statisticsStyles.chartScrollArea}
+          >
+            <View style={{ width: chartWidth }}>
+              <LineChart
+                data={chartData}
+                height={180}
+                width={chartWidth}
+                spacing={Math.max(40, chartWidth / data.length - 5)}
+                thickness={2} // 선 두께
+                color={theme.colors.primary} // 선 색상
+                dataPointsColor={theme.colors.primary} // 점 색상
+                dataPointsRadius={6} // 점 크기
+                textColor={theme.colors.gray500}
+                textFontSize={11}
+                hideRules={false} // 그리드 라인 표시
+                rulesType="solid"
+                rulesColor={theme.colors.gray300 || '#D9D9D9'}
+                hideYAxisText={true} // Y축 텍스트 숨기기 (왼쪽에 따로 표시)
+                xAxisColor={theme.colors.gray300 || '#D9D9D9'}
+                yAxisColor={theme.colors.gray300 || '#D9D9D9'}
+                yAxisThickness={1}
+                xAxisThickness={1}
+                maxValue={500}
+                noOfSections={5}
+                curved={true} // false-직선, true-곡선
+                animateOnDataChange={true} // 데이터 변경 시 애니메이션
+                animationDuration={1000}
+                // 400mg -하루 권장량 (빨간색 점선)
+                secondaryData={chartData.map(() => ({ value: 400 }))}
+                secondaryLineConfig={{
+                  color: '#FF0000', // 빨간색
+                  thickness: 2,
+                  strokeDashArray: [5, 5], // 점선 (5픽셀 선, 5픽셀 간격)
+                  hideDataPoints: true, // 400mg 라인의 점들 숨기기
+                }}
+              />
+            </View>
+          </ScrollView>
+        </View>
       </View>
     </View>
   );
