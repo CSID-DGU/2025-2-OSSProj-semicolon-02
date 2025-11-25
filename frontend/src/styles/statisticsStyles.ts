@@ -4,7 +4,7 @@ import { theme } from './theme';
 export const statisticsStyles = StyleSheet.create({
   screen: {
     flex: 1,
-   
+
     backgroundColor: theme.colors.background,
   },
   container: {
@@ -114,9 +114,9 @@ export const statisticsStyles = StyleSheet.create({
     flexDirection: 'row',
   },
   chartYAxis: {
-    width: 45,
+    width: 40, // 간격 줄임 (45 -> 40)
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing(1),
+    paddingVertical: 0, // 패딩 제거
     alignItems: 'flex-end', // 오른쪽 정렬로 라인에 더 가깝게
   },
   chartYAxisLabel: {
@@ -125,7 +125,7 @@ export const statisticsStyles = StyleSheet.create({
   },
   chartScrollArea: {
     flex: 1,
-    paddingLeft: theme.spacing(2),
+    paddingLeft: theme.spacing(1), // 간격 줄임 (2 -> 1)
   },
   chartColumn: {
     width: 36,

@@ -70,14 +70,17 @@ export default function StatisticsDateLineChart({
         <View
           style={[
             statisticsStyles.chartYAxis,
-            { height: 180, position: 'relative' },
+            {
+              height: 180,
+              position: 'relative',
+              justifyContent: 'space-between',
+              paddingVertical: 0,
+            },
           ]}
         >
           {[500, 400, 300, 200, 100].map((value, index) => {
-          
-            // 레이블을 각 그리드 라인 위치에 정확히 배치 (텍스트 중앙 기준)
-            const sectionHeight = 180 / 5; // 36px
-            const gridLinePosition = index * sectionHeight; // 그리드 라인 위치 (0, 36, 72, 108, 144)
+            // 400mg 레이블만 빨간색으로 표시
+            const isTargetValue = value === 400;
 
             return (
               <Text
@@ -85,11 +88,10 @@ export default function StatisticsDateLineChart({
                 style={[
                   statisticsStyles.chartYAxisLabel,
                   {
-                    position: 'absolute',
-                    top: gridLinePosition - 10, // 텍스트 높이의 절반(약 10px)만큼 위로 올려서 중앙 정렬
                     textAlign: 'right',
-                    paddingRight: 4,
+                    paddingRight: 2, // 간격 줄임
                     lineHeight: 20,
+                    color: isTargetValue ? '#FF0000' : theme.colors.gray500, // 400mg는 빨간색
                   },
                 ]}
               >
