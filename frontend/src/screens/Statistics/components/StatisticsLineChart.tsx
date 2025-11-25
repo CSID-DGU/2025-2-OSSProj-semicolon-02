@@ -68,7 +68,7 @@ export default function StatisticsDateLineChart({
       <View style={statisticsStyles.chartAxes}>
         {/* Y축 레이블 (왼쪽) */}
         <View style={statisticsStyles.chartYAxis}>
-          {[500, 400, 300, 200, 100].reverse().map(value => (
+          {[500, 400, 300, 200, 100].map(value => (
             <Text
               key={value}
               style={[
@@ -112,6 +112,16 @@ export default function StatisticsDateLineChart({
               curved={true} // false-직선, true-곡선
               animateOnDataChange={true} // 데이터 변경 시 애니메이션
               animationDuration={1000}
+
+
+              //하루 카페인 권장량부분을 따로 표시 
+              secondaryLineConfig={{
+                data: chartData.map(() => ({ value: 400 })),
+                color: '#FF0000', // 빨간색
+                thickness: 2,
+                type: 'dashed', // 또는 'solid'
+                hideDataPoints: true,
+              }}
             />
           </View>
         </ScrollView>

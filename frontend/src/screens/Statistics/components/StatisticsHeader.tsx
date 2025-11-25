@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
+  Dimensions,
   Image,
   Pressable,
   ScrollView,
