@@ -114,7 +114,7 @@ export const statisticsStyles = StyleSheet.create({
     flexDirection: 'row',
   },
   chartYAxis: {
-    width: 35, // 간격 더 줄임 (40 -> 35)
+    width: 30, // 간격 더 줄임 (35 -> 30)
     justifyContent: 'space-between',
     paddingVertical: 0, // 패딩 제거
     alignItems: 'flex-end', // 오른쪽 정렬로 라인에 더 가깝게
@@ -125,7 +125,7 @@ export const statisticsStyles = StyleSheet.create({
   },
   chartScrollArea: {
     flex: 1,
-    paddingLeft: theme.spacing(0.5), // 간격 더 줄임 (1 -> 0.5)
+    paddingLeft: theme.spacing(0.25), // 간격 더 줄임 (0.5 -> 0.25)
   },
   chartColumn: {
     width: 36,

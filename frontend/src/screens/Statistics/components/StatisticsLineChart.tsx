@@ -59,28 +59,16 @@ export default function StatisticsDateLineChart({
   return (
     <View style={statisticsStyles.chartCard}>
       {caption ? (
-        <View>
-          <View style={statisticsStyles.sectionHeaderRow}>
-            <Text style={statisticsStyles.sectionTitle}>{caption}</Text>
-            <Text style={statisticsStyles.subtle}>목표 {targetLabel}</Text>
-          </View>
-          {/* 단위 표시 (목표 아래) */}
-          <View
-            style={{
-              alignItems: 'flex-end',
-              marginTop: theme.spacing(0.5),
-              paddingRight: theme.spacing(3),
-            }}
+        <View style={statisticsStyles.sectionHeaderRow}>
+          <Text style={statisticsStyles.sectionTitle}>{caption}</Text>
+          <Text
+            style={[
+              statisticsStyles.subtle,
+              { marginRight: theme.spacing(-2) },
+            ]}
           >
-            <Text
-              style={{
-                fontSize: 11,
-                color: theme.colors.gray500,
-              }}
-            >
-              (단위: mg)
-            </Text>
-          </View>
+            (단위: mg)
+          </Text>
         </View>
       ) : null}
 
@@ -114,7 +102,7 @@ export default function StatisticsDateLineChart({
                     position: 'absolute',
                     top: gridLinePosition, // 그리드 라인
                     textAlign: 'right',
-                    paddingRight: 0,
+                    marginRight: -4, // 음수 마진으로 Y축에 더 가깝게
                     lineHeight: 16, // 간격 줄임 (20 -> 16)
                     color: isTargetValue ? '#FF0000' : theme.colors.gray500, // 400mg는 빨간색
                   },
@@ -158,13 +146,13 @@ export default function StatisticsDateLineChart({
                 curved={true} // false-직선, true-곡선
                 animateOnDataChange={true} // 데이터 변경 시 애니메이션
                 animationDuration={1000}
-                // 400mg -하루 권장량 (빨간색 점선)
-                secondaryData={chartData.map(() => ({ value: 400 }))}
-                secondaryLineConfig={{
+                // 400mg 위치의 빨간색 그리드 라인
+                showReferenceLine1={true}
+                referenceLine1Position={400}
+                referenceLine1Config={{
                   color: '#FF0000', // 빨간색
-                  thickness: 2,
-                  strokeDashArray: [5, 5], // 점선 (5픽셀 선, 5픽셀 간격)
-                  hideDataPoints: true, // 400mg 라인의 점들 숨기기
+                  thickness: 1,
+                  type: 'solid',
                 }}
               />
             </View>
