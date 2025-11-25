@@ -82,15 +82,21 @@ export default function StatisticsDateLineChart({
             // 400mg 레이블만 빨간색으로 표시
             const isTargetValue = value === 400;
 
+            // 레이블 간격을 줄이기 위해 lineHeight를 줄이고 margin 조정
+            const sectionHeight = 180 / 5; // 36px
+            const gridLinePosition = index * sectionHeight; // 그리드 라인 위치 (0, 36, 72, 108, 144)
+
             return (
               <Text
                 key={value}
                 style={[
                   statisticsStyles.chartYAxisLabel,
                   {
+                    position: 'absolute',
+                    top: gridLinePosition - 8, // 텍스트 중앙이 그리드 라인과 맞도록 조정
                     textAlign: 'right',
-                    paddingRight: 2, // 간격 줄임
-                    lineHeight: 20,
+                    paddingRight: 0,
+                    lineHeight: 16, // 간격 줄임 (20 -> 16)
                     color: isTargetValue ? '#FF0000' : theme.colors.gray500, // 400mg는 빨간색
                   },
                 ]}
