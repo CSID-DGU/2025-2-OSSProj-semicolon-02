@@ -66,24 +66,37 @@ export default function StatisticsDateLineChart({
       ) : null}
 
       <View style={statisticsStyles.chartAxes}>
-        {/* Y축 레이블 (왼쪽) */}
-        <View style={statisticsStyles.chartYAxis}>
-          {[500, 400, 300, 200, 100].map(value => (
-            <Text
-              key={value}
-              style={[
-                statisticsStyles.chartYAxisLabel,
-                {
-                  marginVertical: 0,
-                  lineHeight: 36,
-                  textAlign: 'right',
-                  paddingRight: 4,
-                },
-              ]}
-            >
-              {value}mg
-            </Text>
-          ))}
+        {/* Y축 레이블 (왼쪽) - 그리드 라인과 정렬 */}
+        <View
+          style={[
+            statisticsStyles.chartYAxis,
+            { height: 180, position: 'relative' },
+          ]}
+        >
+          {[500, 400, 300, 200, 100].map((value, index) => {
+          
+            // 레이블을 각 그리드 라인 위치에 정확히 배치 (텍스트 중앙 기준)
+            const sectionHeight = 180 / 5; // 36px
+            const gridLinePosition = index * sectionHeight; // 그리드 라인 위치 (0, 36, 72, 108, 144)
+
+            return (
+              <Text
+                key={value}
+                style={[
+                  statisticsStyles.chartYAxisLabel,
+                  {
+                    position: 'absolute',
+                    top: gridLinePosition - 10, // 텍스트 높이의 절반(약 10px)만큼 위로 올려서 중앙 정렬
+                    textAlign: 'right',
+                    paddingRight: 4,
+                    lineHeight: 20,
+                  },
+                ]}
+              >
+                {value}mg
+              </Text>
+            );
+          })}
         </View>
 
         {/* Line Chart (점 + 선) */}
