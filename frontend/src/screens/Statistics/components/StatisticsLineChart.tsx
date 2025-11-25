@@ -1,9 +1,9 @@
 // src/screens/Statistics/components/StatisticsDateLineChart.tsx
 import React from 'react';
-import {View, Text, Dimensions, ScrollView} from 'react-native';
-import {LineChart} from 'react-native-gifted-charts';
-import {statisticsStyles} from '../../../styles/statisticsStyles';
-import {theme} from '../../../styles/theme';
+import { View, Text, Dimensions, ScrollView } from 'react-native';
+import { LineChart } from 'react-native-gifted-charts';
+import { statisticsStyles } from '../../../styles/statisticsStyles';
+import { theme } from '../../../styles/theme';
 
 type DateChartPoint = {
   date: string;
@@ -24,7 +24,7 @@ export default function StatisticsDateLineChart({
   caption,
   monthLabel,
 }: Props) {
-  // react-native-gifted-charts 
+  // react-native-gifted-charts
   const chartData = data.map((point, index) => ({
     value: point.mg,
     label: point.date,
@@ -56,8 +56,9 @@ export default function StatisticsDateLineChart({
               key={value}
               style={[
                 statisticsStyles.chartYAxisLabel,
-                {marginVertical: 0, lineHeight: 36},
-              ]}>
+                { marginVertical: 0, lineHeight: 36 },
+              ]}
+            >
               {value}mg
             </Text>
           ))}
@@ -67,8 +68,9 @@ export default function StatisticsDateLineChart({
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={statisticsStyles.chartScrollArea}>
-          <View style={{width: chartWidth}}>
+          contentContainerStyle={statisticsStyles.chartScrollArea}
+        >
+          <View style={{ width: chartWidth }}>
             <LineChart
               data={chartData}
               height={180}
@@ -90,28 +92,9 @@ export default function StatisticsDateLineChart({
               xAxisThickness={1}
               maxValue={500}
               noOfSections={5}
-              curved={true} //false-직선, true0곡선ㄴ
+              curved={true} // false-직선, true-곡선
               animateOnDataChange={true} // 데이터 변경 시 애니메이션
               animationDuration={1000}
-              showDataPoint1={true}  
-              showDataPoint2={true}  
-              // 모든 점 표시
-              // showDataPoints={true}
-              customDataPoint={(item: any, index: number) => {
-                return (
-                  <View
-                    key={index}
-                    style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: 6,
-                      backgroundColor: theme.colors.primary,
-                      borderWidth: 2,
-                      borderColor: theme.colors.white,
-                    }}
-                  />
-                );
-              }}
             />
           </View>
         </ScrollView>
