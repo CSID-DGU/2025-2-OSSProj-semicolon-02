@@ -1,10 +1,14 @@
+## 카페인 관리 섭취 총괄 ##
+
 from datetime import datetime
 from typing import Optional, List, Dict
+import json
 
-from vision_agent import VisionAgent
-from mapping_agent import MappingAgent
-from caffeine_calc_agent import CaffeineCalculator
-from advisor_agent import AdvisorAgent
+#from 뒤에있는게 py 파일명 import 뒤에 있는게 그 안에 정의된 클래스 이름
+from drink_image import VisionAgent
+from mapping_db import VectorRAGAgent
+from caffeine_cal import CaffeineCalculator
+from advisor import AdvisorAgent
 
 class SupervisorAgent:
     """
@@ -47,11 +51,18 @@ class SupervisorAgent:
         # -------------------------
         if image_path is not None:
             drink_info = self.vision.analyze(image_path)
+            
+            if isinstance(drink_info, str):
+                drink_info = json.loads(drink_info)
+                
             mapped = self.mapping.map(drink_info)
-
+            
+         
+                
             added_mg = mapped["caffeine_mg"]
 
             # 마신 시간 now로 event 추가
+            
             events.append({
                 "mg": added_mg,
                 "time": now
@@ -84,4 +95,25 @@ class SupervisorAgent:
         # 4) 아무 입력도 없을 때
         # -------------------------
         return "입력(이미지 또는 질문)이 필요합니다."
+    
+    
+if __name__ == "__main__":
+    sup = SupervisorAgent()
 
+    # 예시 이벤트 — 오늘 이미 마신 음료 기록
+    events = []
+
+    # 예시 이미지 파일 (원하는 이미지로 바꿔도 됨)
+    image_path = "/Users/eunjung/Desktop/OSSProj/2025-2-OSSProj-semicolon-02/AI_model/Unknown.jpeg"
+
+    # 예시 질문
+    question = "지금 이 커피 마셔도 돼?"
+
+    result = sup.handle(
+        events=events,
+        image_path=image_path,
+        question=question
+    )
+
+    print("\n=== Supervisor Output ===\n")
+    print(result)
