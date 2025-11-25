@@ -73,7 +73,12 @@ export default function StatisticsDateLineChart({
               key={value}
               style={[
                 statisticsStyles.chartYAxisLabel,
-                { marginVertical: 0, lineHeight: 36 },
+                {
+                  marginVertical: 0,
+                  lineHeight: 36,
+                  textAlign: 'right',
+                  paddingRight: 4,
+                },
               ]}
             >
               {value}mg
@@ -112,12 +117,13 @@ export default function StatisticsDateLineChart({
               curved={true} // false-직선, true-곡선
               animateOnDataChange={true} // 데이터 변경 시 애니메이션
               animationDuration={1000}
-              // 400mg -하루 권장량
+              // 400mg -하루 권장량 (빨간색 점선)
               secondaryData={chartData.map(() => ({ value: 400 }))}
               secondaryLineConfig={{
                 color: '#FF0000', // 빨간색
                 thickness: 2,
                 strokeDashArray: [5, 5], // 점선 (5픽셀 선, 5픽셀 간격)
+                hideDataPoints: true, // 400mg 라인의 점들 숨기기
               }}
             />
           </View>

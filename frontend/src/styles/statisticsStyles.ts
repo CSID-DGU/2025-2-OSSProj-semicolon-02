@@ -114,9 +114,10 @@ export const statisticsStyles = StyleSheet.create({
     flexDirection: 'row',
   },
   chartYAxis: {
-    width: 40,
+    width: 45,
     justifyContent: 'space-between',
     paddingVertical: theme.spacing(1),
+    alignItems: 'flex-end', // 오른쪽 정렬로 라인에 더 가깝게
   },
   chartYAxisLabel: {
     fontSize: 12,
