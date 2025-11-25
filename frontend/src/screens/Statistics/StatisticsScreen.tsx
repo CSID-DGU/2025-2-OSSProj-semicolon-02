@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, View, SafeAreaView } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import StatisticsHeader from './components/StatisticsHeader';
 import StatisticsChart from './components/StatisticsChart';
 import DrinkList from './components/DrinkList';
