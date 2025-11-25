@@ -57,3 +57,4 @@ public class Intake {
     
     public String getNote() { return note; }
 }
+
