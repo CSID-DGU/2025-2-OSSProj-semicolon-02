@@ -2,6 +2,7 @@
 package com.caffit.intake;
 
 import com.caffit.beverage.Beverage;
+
 import com.caffit.beverage.BeverageRepository;
 import com.caffit.user.User;
 import com.caffit.user.UserRepository;
@@ -12,7 +13,6 @@ import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import com.caffit.intake.dto.IntakeDTO;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/intakes")
@@ -97,9 +97,9 @@ public class IntakeController {
         intakes.deleteById(id);
     }
 
-    /**
-     * 수동 등록: 음료 마스터에 없더라도 한 번에 등록 (임시 Beverage 생성)
-     */
+
+    //수동 등록: 음료 마스터에 없더라도 한 번에 등록 (임시 Beverage 생성)
+
     @PostMapping("/manual")
     public Long manualCreate(@RequestBody ManualCreateReq req) {
         User u = users.findById(req.userId()).orElseThrow();
@@ -128,10 +128,7 @@ public class IntakeController {
         return saved.getId();
     }
 
-    /**
-     * 오늘 섭취 요약
-     * TODO: userId는 로그인 세션에서 받도록 변경 필요 
-     */
+
     @GetMapping("/today-summary")
     public TodaySummaryRes todaySummary(@RequestParam("userId") Long userId) {
         LocalDate today = LocalDate.now();
