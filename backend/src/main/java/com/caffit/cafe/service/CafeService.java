@@ -3,7 +3,7 @@ package com.caffit.cafe.service;
 import com.caffit.cafe.domain.Cafe;
 import com.caffit.cafe.dto.CafeResponseDTO;
 import com.caffit.cafe.infra.KakaoClient;
-import com.caffit.cafe.infra.dto.KakaoPlacesResponse;
+import com.caffit.cafe.infra.dto.KakaoPlacesResponseDTO;
 import com.caffit.cafe.repository.CafeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class CafeService {
 
     public List<CafeResponseDTO> findNearby(double lat, double lng, int radiusMeters) {
         // 실시간 카페 검색
-        KakaoPlacesResponse kakaoResponse = kakaoClient.searchCafes(lat, lng, radiusMeters);
+        KakaoPlacesResponseDTO kakaoResponse = kakaoClient.searchCafes(lat, lng, radiusMeters);
         
         // CafeResponseDTO로 변환
         List<CafeResponseDTO> kakaoCafes = kakaoResponse.documents().stream()
