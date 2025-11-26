@@ -1,0 +1,47 @@
+*   [33mceeb92c[m[33m ([m[1;31morigin/dev[m[33m)[m Merge pull request #13 from CSID-DGU/feature/alarmsettingspage/1102
+[31m|[m[32m\[m  
+[31m|[m * [33m6ed2ef1[m[33m ([m[1;31morigin/feature/alarmsettingspage/1102[m[33m, [m[1;32mfeature/alarmsettingspage/1102[m[33m)[m Fix: dev 수정사항 반영
+[31m|[m *   [33m619c8d6[m Fix: 최신 dev 충돌 해결
+[31m|[m [33m|[m[31m\[m  
+[31m|[m [33m|[m[31m/[m  
+[31m|[m[31m/[m[33m|[m   
+* [33m|[m   [33m848b804[m Merge pull request #12 from CSID-DGU/feature/addHomeAddMypage/1026
+[35m|[m[36m\[m [33m\[m  
+[35m|[m * [33m|[m [33mfa211bb[m[33m ([m[1;31morigin/feature/addHomeAddMypage/1026[m[33m)[m fix: 병합 오류 수정
+[35m|[m [36m|[m *   [33m9cc06c7[m Fix: dev 수정사항 반영
+[35m|[m [36m|[m [1;31m|[m[35m\[m  
+[35m|[m [36m|[m[35m_[m[1;31m|[m[35m/[m  
+[35m|[m[35m/[m[36m|[m [1;31m|[m   
+* [36m|[m [1;31m|[m   [33mca2a6fd[m Merge pull request #11 from CSID-DGU/feature/fabMenuCameraMock/1102
+[1;33m|[m[1;34m\[m [36m\[m [1;31m\[m  
+[1;33m|[m * [36m|[m [1;31m|[m [33m2403826[m[33m ([m[1;31morigin/feature/fabMenuCameraMock/1102[m[33m)[m update: fab menu camera mock fixes
+* [1;34m|[m [36m|[m [1;31m|[m   [33m7d88b0a[m Merge pull request #9 from CSID-DGU/feature/addHomeAddMypage/1026
+[1;35m|[m[36m\[m [1;34m\[m [36m\[m [1;31m\[m  
+[1;35m|[m [36m|[m [1;34m|[m[36m/[m [1;31m/[m  
+[1;35m|[m [36m|[m[36m/[m[1;34m|[m [1;31m|[m   
+[1;35m|[m * [1;34m|[m [1;31m|[m [33mb75a60d[m fix: 마이페이지 수정
+[1;35m|[m[1;35m/[m [1;34m/[m [1;31m/[m  
+* [1;34m|[m [1;31m|[m   [33m33591bd[m Merge pull request #6 from CSID-DGU/feature/addHomeAddMypage/1026
+[31m|[m[32m\[m [1;34m\[m [1;31m\[m  
+[31m|[m * [1;34m\[m [1;31m\[m   [33mfe7b958[m fix: 충돌 해결
+[31m|[m [33m|[m[34m\[m [1;34m\[m [1;31m\[m  
+[31m|[m * [34m|[m [1;34m|[m [1;31m|[m [33m52abd2e[m feat: 디자인, 마이페이지 수정, 헤더 추가
+[31m|[m * [34m|[m [1;34m|[m [1;31m|[m [33mdf1d26a[m feat: 디자인, 마이페이지 수정, 헤더 추가
+[31m|[m [34m|[m [34m|[m [1;34m|[m *   [33m70af464[m Fix: dev 충돌 해결
+[31m|[m [34m|[m [34m|[m [1;34m|[m [35m|[m[31m\[m  
+[31m|[m [34m|[m[31m_[m[34m|[m[31m_[m[1;34m|[m[31m_[m[35m|[m[31m/[m  
+[31m|[m[31m/[m[34m|[m [34m|[m [1;34m|[m [35m|[m   
+* [34m|[m [34m|[m [1;34m|[m [35m|[m   [33m5cf4f6e[m[33m ([m[1;32mdev[m[33m)[m Merge pull request #8 from CSID-DGU/feature/fabMenuCameraMock/1102
+[34m|[m[1;34m\[m [34m\[m [34m\[m [1;34m\[m [35m\[m  
+[34m|[m [1;34m|[m[34m_[m[34m|[m[34m/[m [1;34m/[m [35m/[m  
+[34m|[m[34m/[m[1;34m|[m [34m|[m [1;34m/[m [35m/[m   
+[34m|[m [1;34m|[m [34m|[m[1;34m/[m [35m/[m    
+[34m|[m [1;34m|[m[1;34m/[m[34m|[m [35m|[m     
+[34m|[m * [34m|[m [35m|[m [33m2a46f97[m Remove .DS_Store files
+* [1;32m|[m [34m|[m [35m|[m [33mffb45b5[m Merge pull request #2 from CSID-DGU/feature/fabMenuCameraMock/1102
+[1;33m|[m[1;32m\[m[1;32m|[m [34m|[m [35m|[m 
+[1;33m|[m * [34m|[m [35m|[m [33ma87c623[m ✨ Add mock camera screen and adjust FAB menu position
+[1;33m|[m[1;33m/[m [34m/[m [35m/[m  
+[1;33m|[m [34m|[m * [33me0ecd7c[m Feat: 알림설정 화면 추가
+[1;33m|[m [34m|[m[1;33m/[m  
+[1;33m|[m[1;33m/[m[34m|[m   
