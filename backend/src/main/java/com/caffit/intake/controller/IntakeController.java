@@ -1,25 +1,28 @@
 // com.caffit.intake.IntakeController.java
-package com.caffit.intake;
+package com.caffit.intake.controller;
 
 import com.caffit.beverage.Beverage;
 import com.caffit.beverage.BeverageRepository;
+import com.caffit.intake.dto.IntakeDTO;
+import com.caffit.intake.entity.Intake;
+import com.caffit.intake.repository.IntakeRepository;
 import com.caffit.user.User;
 import com.caffit.user.UserRepository;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import com.caffit.intake.dto.IntakeDTO;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/intakes")
 public class IntakeController {
 
     private record CreateReq(
-            Long userId,
+            Long userId,                
             Long beverageId,
             double volumeMl,
             double caffeineMg,
@@ -56,9 +59,11 @@ public class IntakeController {
         this.beverages = beverages;
     }
 
-    @GetMapping //섭취 기록 목록 조회
+    @GetMapping // 섭취 기록 목록 조회
     @Transactional(readOnly = true)
-    public List<IntakeDTO> list(@RequestParam(required = false) Long userId) {
+    public List<IntakeDTO> list(
+            @RequestParam(name = "userId", required = false) Long userId
+    ) {
         List<Intake> entries = (userId != null)
                 ? intakes.findByUserIdOrderByConsumedAtDesc(userId)
                 : intakes.findAll();
@@ -97,9 +102,9 @@ public class IntakeController {
         intakes.deleteById(id);
     }
 
-    /**
-     * 수동 등록: 음료 마스터에 없더라도 한 번에 등록 (임시 Beverage 생성)
-     */
+
+    //수동 등록: 음료 마스터에 없더라도 한 번에 등록 (임시 Beverage 생성)
+
     @PostMapping("/manual")
     public Long manualCreate(@RequestBody ManualCreateReq req) {
         User u = users.findById(req.userId()).orElseThrow();
@@ -128,10 +133,7 @@ public class IntakeController {
         return saved.getId();
     }
 
-    /**
-     * 오늘 섭취 요약
-     * TODO: userId는 로그인 세션에서 받도록 변경 필요 
-     */
+
     @GetMapping("/today-summary")
     public TodaySummaryRes todaySummary(@RequestParam("userId") Long userId) {
         LocalDate today = LocalDate.now();

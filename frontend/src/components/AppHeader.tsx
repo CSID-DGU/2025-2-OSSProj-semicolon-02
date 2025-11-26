@@ -15,13 +15,12 @@ interface AppHeaderProps {
 
 export default function AppHeader({
   title,
-  //subtitle,
   right,
   onBack,
   showLogo,
 }: AppHeaderProps) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, showLogo && styles.containerWithLogo]}>
       <View style={styles.left}>
         {onBack && (
           <TouchableOpacity
@@ -42,7 +41,6 @@ export default function AppHeader({
 
         <View>
           <Text style={styles.title}>{title}</Text>
-          {/* {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>} */}
         </View>
       </View>
 
@@ -54,7 +52,7 @@ export default function AppHeader({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: theme.spacing(theme.layout.screenPX),
-    paddingTop: theme.spacing(theme.layout.headerPT + 1),
+    paddingTop: theme.spacing(theme.layout.headerPT+1),
     paddingBottom: theme.spacing(1),
     backgroundColor: theme.colors.background,
     borderBottomWidth: 1,
@@ -62,6 +60,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
+  },
+
+  containerWithLogo: {
+    paddingTop: theme.spacing(theme.layout.headerPT - 5), 
   },
   left: {
     flexDirection: 'row',
@@ -79,6 +81,8 @@ const styles = StyleSheet.create({
   logo: {
     width: 50,
     height: 50,
+    marginTop: -20, 
+    marginBottom: -20,
   },
   title: {
     ...fonts.bold,
@@ -86,11 +90,4 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     color: theme.colors.text,
   },
-  // 필요 시 사용
-  // subtitle: {
-  //   ...fonts.regular,
-  //   fontSize: 13,
-  //   color: theme.colors.gray500,
-  //   marginTop: 4,
-  // },
 });

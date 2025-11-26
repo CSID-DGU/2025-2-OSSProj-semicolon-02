@@ -1,11 +1,14 @@
+## 카페인 음료 이미지 분석 에이전트 ##
+
 import os
 import base64
 from openai import OpenAI
 from dotenv import load_dotenv
+from mapping_db import VectorRAGAgent
+import json
 
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 SYSTEM_PROMPT = """
 당신은 음료 인식 비전 모델입니다.
@@ -17,7 +20,7 @@ SYSTEM_PROMPT = """
 {
   "brand": "string|null",
   "product_name": "string|null",
-  "drink_type": "string",      // 예: "Iced Americano", "Caffe Latte", "Cold Brew", "Ade"
+  "drink_type": "string",
   "size": "string|null",
   "caffeine_mg": "number|null",
   "confidence": "number",
@@ -40,39 +43,87 @@ SYSTEM_PROMPT = """
 - JSON 바깥에 다른 텍스트를 절대 출력하지 마세요.
 """
 
-def encode_image_to_data_url(image_path: str) -> str:
-    """로컬 이미지를 base64 data URL 문자열로 변환"""
-    with open(image_path, "rb") as f:
-        image_bytes = f.read()
-    b64 = base64.b64encode(image_bytes).decode("utf-8")
-    # jpg라고 가정 (png면 image/png로 바꿔도 됨)
-    return f"data:image/jpeg;base64,{b64}"
 
-def analyze_image(image_path: str):
-    data_url = encode_image_to_data_url(image_path)
+class VisionAgent:
+  
+    def __init__(self, model="gpt-4o-mini"):
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.model = model
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "이 이미지 속 음료 정보를 추출해줘."},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": data_url
+    def encode_image_to_data_url(self, image_path: str) -> str:
+        with open(image_path, "rb") as f:
+            image_bytes = f.read()
+        b64 = base64.b64encode(image_bytes).decode("utf-8")
+        return f"data:image/jpeg;base64,{b64}"
+
+    def analyze(self, image_path: str):
+        data_url = self.encode_image_to_data_url(image_path)
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "이 이미지 속 음료 정보를 추출해줘."},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": data_url},
                         },
-                    },
-                ],
-            },
-        ],
-    )
+                    ],
+                },
+            ],
+        )
 
-    print(response.choices[0].message.content)
+        return response.choices[0].message.content
 
-
+"""
 if __name__ == "__main__":
-    analyze_image("/Users/eunjung/Desktop/OSSProj/AI_model/Unknown.jpeg")
+    agent = VisionAgent()
+    result = agent.analyze("/Users/eunjung/Desktop/OSSProj/2025-2-OSSProj-semicolon-02/AI_model/Unknown.jpeg")
+    print(result)
+"""    
+"""
+if __name__ == "__main__":
+    agent = VisionAgent()
+    json_str = agent.analyze("/Users/eunjung/Desktop/OSSProj/2025-2-OSSProj-semicolon-02/AI_model/Unknown.jpeg")
+    print(json_str)
+
+    import json
+    vision_json = json.loads(json_str)
+
+    from mapping_db import VectorRAGAgent
+    rag = VectorRAGAgent()
+
+    output = rag.query(vision_json)
+
+    print("\n🔍 RAG 검색 쿼리:", output["query_text"])
+    print("📌 가장 유사한 문장:", output["matched_text"])
+    print("☕ 최종 카페인 mg (벡터 RAG):", output["caffeine_mg"])
+    """
+    
+if __name__ == "__main__":
+    image_path = "/Users/eunjung/Desktop/OSSProj/2025-2-OSSProj-semicolon-02/AI_model/Unknown.jpeg"
+
+    # 1) Vision 결과
+    vision_agent = VisionAgent()
+    result_str = vision_agent.analyze(image_path)
+
+    import json
+    vision_json = json.loads(result_str)
+
+    # 2) 벡터 RAG 결과
+    from mapping_db import VectorRAGAgent
+    rag = VectorRAGAgent()
+    rag_out = rag.query(vision_json)
+
+    # 3) Vision 정보 + RAG 카페인 값을 한 번에 합쳐서 최종 결과 출력
+    final_out = {
+        "brand": vision_json.get("brand"),
+        "drink_type": vision_json.get("drink_type"),
+        "caffeine_mg": rag_out.get("caffeine_mg"),   # ← RAG 기반 카페인 mg
+    }
+
+    print(json.dumps(final_out, ensure_ascii=False, indent=2))

@@ -48,6 +48,7 @@ type StoredGoals = {
 type TodaySleep = {
   exists: boolean;
   sleepAt: string | null;
+  id: number | null;
   wakeAt: string | null;
   durationMinutes: number | null;
 };
@@ -107,7 +108,6 @@ const buildSleepDateTimes = (sleepHM: string, wakeHM: string) => {
 
 export default function HomeScreen() {
   const navigation = useNavigation<RootNav>();
-  // 허용치(일간 목표)
   const [limitMg, setLimitMg] = useState<number>(400);
   const [goalVisible, setGoalVisible] = useState(false);
   const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
@@ -118,9 +118,16 @@ export default function HomeScreen() {
   // 로그인한 사용자 id (today-summary / sleep 호출용)
   const [userId, setUserId] = useState<number | null>(null);
 
-  /**
-   * 오늘 요약을 서버에서 가져오는 공통 함수
-   */
+  // 수면 데이터 (홈 위젯용)
+  const [yesterdaySleepAt, setYesterdaySleepAt] = useState<string | null>(null);
+  const [todayWakeAt, setTodayWakeAt] = useState<string | null>(null);
+  const [todaySleepId, setTodaySleepId] = useState<number | null>(null);
+
+  // 홈 수면 위젯 편집용 상태 (미니 모듈)
+  const [sleepEditVisible, setSleepEditVisible] = useState(false);
+  const [tmpSleepAt, setTmpSleepAt] = useState('');
+  const [tmpWakeAt, setTmpWakeAt] = useState('');
+
   const fetchTodaySummary = useCallback(async (uid: number) => {
     try {
       const res = await http.get<TodaySummary>('/api/intakes/today-summary', {
@@ -134,9 +141,6 @@ export default function HomeScreen() {
     }
   }, []);
 
-  /**
-   * 오늘 수면 요약을 서버에서 가져오는 함수
-   */
   const fetchTodaySleep = useCallback(async (uid: number) => {
     try {
       const res = await http.get<TodaySleep>('/api/sleep/today', {
@@ -149,6 +153,11 @@ export default function HomeScreen() {
         const wakeHM = extractTimeHM(res.data.wakeAt);
         setYesterdaySleepAt(sleepHM);
         setTodayWakeAt(wakeHM);
+        setTodaySleepId(res.data.id ?? null);
+      } else {
+        setYesterdaySleepAt(null);
+        setTodayWakeAt(null);
+        setTodaySleepId(null);
       }
     } catch (e) {
       console.log('[Home] sleep today error', e);
@@ -183,6 +192,11 @@ export default function HomeScreen() {
 
         await fetchTodaySummary(effectiveUserId);
         await fetchTodaySleep(effectiveUserId);
+
+        // 섭취 기록 조회 (intakes 테이블 데이터)
+        const intakeData = await fetchIntakes(effectiveUserId);
+        setIntakes(intakeData);
+        console.log('[Home] 섭취 기록:', intakeData);
       } catch (err: unknown) {
         console.log('[Home] bootstrap error', err);
       }
@@ -191,26 +205,33 @@ export default function HomeScreen() {
     bootstrap();
   }, [fetchTodaySummary, fetchTodaySleep]);
 
-  /**
-   * 탭 전환 등으로 Home 화면이 다시 포커스를 얻을 때마다
-   * 오늘 요약을 다시 가져오기 (DB에 새로 쌓인 intake 반영용)
-   */
   useFocusEffect(
     useCallback(() => {
       if (!userId) {
         return;
       }
       fetchTodaySummary(userId);
-      // 필요하면 여기서도 fetchTodaySleep(userId); 호출 가능
+      // fetchTodaySleep(userId);
     }, [userId, fetchTodaySummary]),
   );
 
-  // 수면 데이터 (홈 위젯용)
-  const [yesterdaySleepAt, setYesterdaySleepAt] = useState('01:30');
-  const [todayWakeAt, setTodayWakeAt] = useState('08:00');
+  const reloadToday = useCallback(async () => {
+    try {
+      if (userId) {
+        const data = await fetchIntakes(userId);
+        setIntakes(data);
+        await fetchTodaySummary(userId);
+      }
+    } catch (e) {
+      console.log('[Home] reloadToday error', e);
+    }
+  }, [userId, fetchTodaySummary]);
 
-  // 수면 시간 계산(단순 HH:mm 기준, 자정 넘는 경우는 24시간 더해줌)
+  // 수면 시간 계산
   const calcDurationLabel = () => {
+    if (!yesterdaySleepAt || !todayWakeAt) {
+      return '-';
+    }
     const [sh, sm] = yesterdaySleepAt.split(':').map(Number);
     const [wh, wm] = todayWakeAt.split(':').map(Number);
     const start = sh * 60 + sm;
@@ -223,29 +244,11 @@ export default function HomeScreen() {
   };
   const sleepDurationLabel = calcDurationLabel();
 
-  // 홈 수면 위젯 편집용 상태 (미니 모듈)
-  const [sleepEditVisible, setSleepEditVisible] = useState(false);
-  const [tmpSleepAt, setTmpSleepAt] = useState(yesterdaySleepAt);
-  const [tmpWakeAt, setTmpWakeAt] = useState(todayWakeAt);
   useEffect(() => {
     http
       .get('/api/health')
       .then(r => console.log('health:', r.data)) // 기대 출력: "OK"
       .catch(e => console.log('health error:', e.message));
-
-    // 섭취 기록 조회 추가
-    fetchIntakes()
-      .then(data => {
-        setIntakes(data);
-        console.log('섭취 기록:', data);
-        // todayMg를 실제 데이터로 계산할 수도 있음
-        // const todayTotal = data
-        //   .filter(i => new Date(i.consumedAt).toDateString() === new Date().toDateString())
-        //   .reduce((sum, i) => sum + i.caffeineMg, 0);
-      })
-      .catch(error => {
-        console.error('섭취 기록 조회 오류:', error);
-      });
   }, []);
 
   // 오늘 섭취한 음료 목록
@@ -255,7 +258,7 @@ export default function HomeScreen() {
   }, [intakes]);
 
   const todayDrinksText = todayIntakes
-    .map(i => i.beverageName || i.note || '음료')
+    .map(i => i.note || i.beverageName || '음료')
     .join(', ');
 
   // todayMg는 서버에서 가져온 값(setTodayMg)과 로컬 계산값 중 서버 값 우선
@@ -277,8 +280,8 @@ export default function HomeScreen() {
   const openSleepHistory = () => navigation.navigate('SleepHistory');
 
   const openSleepEdit = () => {
-    setTmpSleepAt(yesterdaySleepAt);
-    setTmpWakeAt(todayWakeAt);
+    setTmpSleepAt(yesterdaySleepAt ?? '');
+    setTmpWakeAt(todayWakeAt ?? '');
     setSleepEditVisible(true);
   };
 
@@ -295,13 +298,22 @@ export default function HomeScreen() {
     try {
       const { sleepAt, wakeAt } = buildSleepDateTimes(tmpSleepAt, tmpWakeAt);
 
-      await http.post('/api/sleep', {
-        userId,
-        sleepAt,
-        wakeAt,
-      });
+      if (todaySleepId) {
+        await http.put(`/api/sleep/${todaySleepId}`, {
+          sleepAt,
+          wakeAt,
+        });
+        console.log('[Home] sleep updated');
+      } else {
+        await http.post('/api/sleep', {
+          userId,
+          sleepAt,
+          wakeAt,
+        });
+        console.log('[Home] sleep created');
+      }
 
-      console.log('[Home] sleep saved');
+      await fetchTodaySleep(userId);
     } catch (e) {
       console.log('[Home] save sleep error', e);
     }
@@ -419,7 +431,26 @@ export default function HomeScreen() {
         <View style={homeStyles.section}>
           <View style={homeStyles.statRow}>
             <View style={homeStyles.statCard}>
-              <Text style={homeStyles.statTitle}>오늘 음료</Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 4,
+                }}
+              >
+                <Text style={homeStyles.statTitle}>오늘 음료</Text>
+                <TouchableOpacity
+                  onPress={reloadToday}
+                  style={{ marginLeft: 6, padding: 4 }}
+                >
+                  <Ionicons
+                    name="refresh"
+                    size={14}
+                    color={theme.colors.gray600}
+                  />
+                </TouchableOpacity>
+              </View>
+
               <Text style={homeStyles.statValueBig}>
                 {todayIntakes.length}잔
               </Text>
@@ -427,6 +458,7 @@ export default function HomeScreen() {
                 {todayDrinksText || '오늘 섭취한 음료가 없습니다'}
               </Text>
             </View>
+
             <View style={homeStyles.statCard}>
               <Text style={homeStyles.statTitle}>평균 반감기</Text>
               <Text style={homeStyles.statValueBig}>5.2 h</Text>

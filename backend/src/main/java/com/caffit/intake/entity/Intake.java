@@ -1,5 +1,10 @@
 // com.caffit.intake.Intake.java
-package com.caffit.intake;
+package com.caffit.intake.entity;
+
+import com.caffit.user.User;
+import com.caffit.beverage.Beverage;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 import com.caffit.user.User;
 import com.caffit.beverage.Beverage;
@@ -57,3 +62,4 @@ public class Intake {
     
     public String getNote() { return note; }
 }
+
