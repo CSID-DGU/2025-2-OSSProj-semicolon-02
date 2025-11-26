@@ -1,9 +1,9 @@
 import React from 'react';
-import {ScrollView, Text, View} from 'react-native';
-import {statisticsStyles} from '../../../styles/statisticsStyles';
-import {theme} from '../../../styles/theme';
+import { ScrollView, Text, View } from 'react-native';
+import { statisticsStyles } from '../../../styles/statisticsStyles';
+import { theme } from '../../../styles/theme';
 
-type ChartPoint = {hour: string; mg: number; target: number};
+type ChartPoint = { hour: string; mg: number; target: number };
 
 type Props = {
   data: ChartPoint[];
@@ -12,7 +12,12 @@ type Props = {
   monthLabel?: string;
 };
 
-export default function StatisticsChart({data, targetLabel, caption, monthLabel,}: Props) {
+export default function StatisticsChart({
+  data,
+  targetLabel,
+  caption,
+  monthLabel,
+}: Props) {
   const maxValue = Math.max(...data.map(point => point.mg), 500);
   const minValue = 0;
 
@@ -37,7 +42,8 @@ export default function StatisticsChart({data, targetLabel, caption, monthLabel,
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={statisticsStyles.chartScrollArea}>
+          contentContainerStyle={statisticsStyles.chartScrollArea}
+        >
           {data.map(point => {
             const ratio = (point.mg - minValue) / (maxValue - minValue || 1);
             const barHeight = Math.max(16, ratio * 140);
@@ -48,7 +54,10 @@ export default function StatisticsChart({data, targetLabel, caption, monthLabel,
                 <View
                   style={[
                     statisticsStyles.chartBar,
-                    {height: barHeight, backgroundColor: theme.colors.primary},
+                    {
+                      height: barHeight,
+                      backgroundColor: theme.colors.primary,
+                    },
                   ]}
                 />
                 <View
@@ -56,7 +65,7 @@ export default function StatisticsChart({data, targetLabel, caption, monthLabel,
                     statisticsStyles.chartDot,
                     {
                       top: dotTop,
-                      backgroundColor: theme.colors.accent,
+                      backgroundColor: theme.colors.primaryDark,
                     },
                   ]}
                 />

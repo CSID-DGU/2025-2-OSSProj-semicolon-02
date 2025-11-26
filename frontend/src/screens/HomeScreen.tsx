@@ -271,10 +271,10 @@ export default function HomeScreen() {
 
   const effectiveTodayMg = todayMg > 0 ? todayMg : localTodayMg;
 
-  const percent = Math.round(
-    (effectiveTodayMg / Math.max(limitMg, 1)) * 100,
+  const percent = Math.min(
+    100,
+    Math.round((effectiveTodayMg / Math.max(limitMg, 1)) * 100),
   );
-  
 
   const openSettings = () => setGoalVisible(true);
   const openSleepHistory = () => navigation.navigate('SleepHistory');
@@ -441,7 +441,7 @@ export default function HomeScreen() {
                 <Text style={homeStyles.statTitle}>오늘 음료</Text>
                 <TouchableOpacity
                   onPress={reloadToday}
-                  style={{ marginLeft: 5, padding: 0 }}
+                  style={{ marginLeft: 6, padding: 4 }}
                 >
                   <Ionicons
                     name="refresh"
@@ -452,13 +452,17 @@ export default function HomeScreen() {
               </View>
 
               <Text style={homeStyles.statValueBig}>
-                {todayCount}잔
+                {todayIntakes.length}잔
+              </Text>
+              <Text style={homeStyles.statNote}>
+                {todayDrinksText || '오늘 섭취한 음료가 없습니다'}
               </Text>
             </View>
 
             <View style={homeStyles.statCard}>
               <Text style={homeStyles.statTitle}>평균 반감기</Text>
-              <Text style={[homeStyles.statValueBig, { marginTop: theme.spacing(1.3) }]}> 5.2 시간</Text>
+              <Text style={homeStyles.statValueBig}>5.2 h</Text>
+              <Text style={homeStyles.statNote}>개인 추정치</Text>
             </View>
           </View>
         </View>

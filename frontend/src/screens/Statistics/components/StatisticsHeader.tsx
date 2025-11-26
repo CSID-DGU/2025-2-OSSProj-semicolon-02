@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
+  Dimensions,
   Image,
   Pressable,
   ScrollView,
@@ -39,6 +40,49 @@ export default function StatisticsHeader({
     width: number;
     height: number;
   } | null>(null);
+
+  // 월 스크롤 ref (선택된 월로 자동 스크롤하기 위해)
+  const monthScrollRef = useRef<ScrollView>(null);
+  const monthPillRefs = useRef<(View | null)[]>([]);
+
+  // 선택된 월이 변경되면 해당 위치로 스크롤
+  useEffect(() => {
+    // 약간의 딜레이를 주어 레이아웃이 완전히 렌더링된 후 스크롤
+    const timer = setTimeout(() => {
+      if (monthScrollRef.current && monthPillRefs.current[selectedIndex]) {
+        monthPillRefs.current[selectedIndex]?.measureLayout(
+          monthScrollRef.current as any,
+          (x, y, width, height) => {
+            // 선택된 월이 화면 중앙에 오도록 스크롤
+            monthScrollRef.current?.scrollTo({
+              x: Math.max(
+                0,
+                x - Dimensions.get('window').width / 2 + width / 2,
+              ),
+              animated: true,
+            });
+          },
+          () => {
+            // measureLayout 실패 시 대체 방법: 간단한 계산으로 스크롤
+            // 각 월 버튼의 대략적인 너비를 계산 (약 60px 가정)
+            const pillWidth = 60;
+            const scrollX = Math.max(
+              0,
+              selectedIndex * pillWidth -
+                Dimensions.get('window').width / 2 +
+                pillWidth / 2,
+            );
+            monthScrollRef.current?.scrollTo({
+              x: scrollX,
+              animated: true,
+            });
+          },
+        );
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [selectedIndex]);
 
   const openPicker = () => setPickerOpen(true);
   const closePicker = () => setPickerOpen(false);
@@ -147,6 +191,7 @@ export default function StatisticsHeader({
       </View>
 
       <ScrollView
+        ref={monthScrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         style={statisticsStyles.monthScroll}
@@ -154,24 +199,30 @@ export default function StatisticsHeader({
         {months.map((month, index) => {
           const active = index === selectedIndex;
           return (
-            <TouchableOpacity
+            <View
               key={month}
-              activeOpacity={0.8}
-              onPress={() => onSelect(index)}
-              style={[
-                statisticsStyles.monthPill,
-                active && statisticsStyles.monthPillActive,
-              ]}
+              ref={el => {
+                monthPillRefs.current[index] = el;
+              }}
             >
-              <Text
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => onSelect(index)}
                 style={[
-                  statisticsStyles.monthLabel,
-                  active && statisticsStyles.monthLabelActive,
+                  statisticsStyles.monthPill,
+                  active && statisticsStyles.monthPillActive,
                 ]}
               >
-                {month}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    statisticsStyles.monthLabel,
+                    active && statisticsStyles.monthLabelActive,
+                  ]}
+                >
+                  {month}
+                </Text>
+              </TouchableOpacity>
+            </View>
           );
         })}
       </ScrollView>

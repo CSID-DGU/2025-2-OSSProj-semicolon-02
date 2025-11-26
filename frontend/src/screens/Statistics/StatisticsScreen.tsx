@@ -1,19 +1,33 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, View, SafeAreaView } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import StatisticsHeader from './components/StatisticsHeader';
 import StatisticsChart from './components/StatisticsChart';
+import StatisticsDateLineChart from './components/StatisticsLineChart';
 import DrinkList from './components/DrinkList';
 import { statisticsStyles } from '../../styles/statisticsStyles';
 import { months, chartDataByMonth, popularDrinksByMonth } from './mockData';
+import { dateChartDataByMonth } from './mockDataDate';
+
+// 현재 월을 months 배열의 인덱스
+const getCurrentMonthIndex = (): number => {
+  const currentMonth = new Date().getMonth() + 1; 
+  const currentMonthLabel = `${currentMonth}월`; 
+  const index = months.indexOf(currentMonthLabel);
+  return index >= 0 ? index : 0;
+};
 
 export default function StatisticsScreen() {
-  const [selectedMonth, setSelectedMonth] = useState(4); // 0-index (10월)
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthIndex());
 
   const monthLabel = months[selectedMonth];
-  const currentChart = useMemo(
-    () => chartDataByMonth[monthLabel] ?? [],
+
+  //월별 카페인 섭취ㄹㅑㅇ
+  const currentDateChart = useMemo(
+    () => dateChartDataByMonth[monthLabel] ?? [],
     [monthLabel],
   );
+
   const currentDrinks = useMemo(
     () => popularDrinksByMonth[monthLabel] ?? [],
     [monthLabel],
@@ -38,11 +52,11 @@ export default function StatisticsScreen() {
           style={{ backgroundColor: '#FFFFFF' }}
         >
           <View style={statisticsStyles.section}>
-            <StatisticsChart
+            <StatisticsDateLineChart
               monthLabel={monthLabel}
-              data={currentChart}
+              data={currentDateChart}
               targetLabel="400mg"
-              caption="시간대별 카페인 농도"
+              caption={`${monthLabel} 일별 카페인 섭취량`}
             />
           </View>
           <View style={statisticsStyles.section}>
