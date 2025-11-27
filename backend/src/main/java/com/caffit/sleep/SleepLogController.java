@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/sleep")
@@ -87,7 +88,13 @@ public class SleepLogController {
 
     @GetMapping("/today")
     public TodaySleepRes today(@RequestParam("userId") Long userId) {
-        Optional<SleepLog> latest = sleepLogs.findTop1ByUser_IdOrderBySleepAtDesc(userId);
+        LocalDate today = LocalDate.now();
+        LocalDateTime start = today.atStartOfDay();
+        LocalDateTime end = start.plusDays(1);
+
+        Optional<SleepLog> latest =
+                sleepLogs.findTop1ByUser_IdAndWakeAtBetweenOrderByWakeAtDesc(userId, start, end);
+
         return latest.map(TodaySleepRes::of).orElseGet(TodaySleepRes::empty);
     }
     
