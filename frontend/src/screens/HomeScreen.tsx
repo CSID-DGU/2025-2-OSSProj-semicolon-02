@@ -291,6 +291,7 @@ export default function HomeScreen() {
       return;
     }
 
+     console.log('[Home] saveSleepEdit userId =', userId);
     setYesterdaySleepAt(tmpSleepAt);
     setTodayWakeAt(tmpWakeAt);
     setSleepEditVisible(false);
