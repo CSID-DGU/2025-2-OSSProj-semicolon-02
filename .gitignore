@@ -8,3 +8,6 @@ NUL
 
 __pycache__/
 *.pyc
+
+# API Keys (보안상 Git에 커밋하지 않음)
+frontend/src/config/apiKeys.ts
