@@ -1,3 +1,5 @@
+// CameraAddScreen.tsx
+
 import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
@@ -23,20 +25,19 @@ const PLACEHOLDER = {
 };
 
 export default function CameraAddScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const cameraRef = useRef<Camera | null>(null);
 
   const [shotUri, setShotUri] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
 
   const devices = useCameraDevices();
-  const device = devices.back; // 후면 카메라 (실기기에서만 생길 가능성 높음)
+  const device = devices.back; // 후면 카메라
 
-  // 카메라 권한 요청
+  // 📌 카메라 권한 요청
   useEffect(() => {
     (async () => {
       const status = await Camera.requestCameraPermission();
-      // 버전에 따라 authorized / granted 둘 다 올 수 있음
       setHasPermission(status === 'authorized' || status === 'granted');
     })();
   }, []);
@@ -45,7 +46,7 @@ export default function CameraAddScreen() {
 
   // 📸 사진 촬영 / 다시 찍기
   const onCapture = async () => {
-    // 이미 한 번 찍은 상태면 “다시 찍기”
+    // 이미 한 번 찍은 상태면 “다시 찍기”로 동작
     if (shotUri) {
       setShotUri(null);
       return;
@@ -65,10 +66,20 @@ export default function CameraAddScreen() {
       });
       const uri = 'file://' + photo.path;
       console.log('photo path =>', uri);
-      setShotUri(uri); // 이걸로 위에서 <Image> 미리보기
+      setShotUri(uri);
     } catch (e) {
       console.warn('takePhoto error', e);
     }
+  };
+
+  // ✅ 확인 버튼: 다음 페이지로 이동
+  const onConfirm = () => {
+    if (!shotUri) return;
+
+    // ❗ 여기서 화면 이름은 네가 네비게이션에 등록한 이름으로 바꿔줘
+    navigation.navigate('SelectDrink', {
+      imageUri: shotUri,
+    });
   };
 
   // 📁 갤러리 권한 요청 (Android용)
@@ -102,18 +113,22 @@ export default function CameraAddScreen() {
       selectionLimit: 1,
     };
 
-    launchImageLibrary(options, (response) => {
+    launchImageLibrary(options, response => {
       if (response.didCancel) {
         return;
       }
       if (response.errorCode) {
-        console.warn('image picker error =>', response.errorCode, response.errorMessage);
+        console.warn(
+          'image picker error =>',
+          response.errorCode,
+          response.errorMessage,
+        );
         return;
       }
       const asset: Asset | undefined = response.assets && response.assets[0];
       if (asset?.uri) {
         console.log('gallery uri =>', asset.uri);
-        setShotUri(asset.uri); // 선택한 사진을 미리보기로
+        setShotUri(asset.uri);
       }
     });
   };
@@ -121,7 +136,10 @@ export default function CameraAddScreen() {
   return (
     <View style={styles.container}>
       {/* 닫기(X) */}
-      <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.8}>
+      <TouchableOpacity
+        style={styles.closeBtn}
+        onPress={onClose}
+        activeOpacity={0.8}>
         <Ionicons name="close" size={28} color="#fff" />
       </TouchableOpacity>
 
@@ -132,15 +150,21 @@ export default function CameraAddScreen() {
           <>
             <View style={{height: 56, backgroundColor: '#000', width: '100%'}} />
             <View style={styles.fakeFrame}>
-              <Text style={styles.hint}>설정에서 카메라 권한을 허용해주세요.</Text>
+              <Text style={styles.hint}>
+                설정에서 카메라 권한을 허용해주세요.
+              </Text>
             </View>
             <View style={{height: 56, backgroundColor: '#000', width: '100%'}} />
           </>
         ) : shotUri ? (
-          // 방금 찍은 (혹은 갤러리/목업) 이미지 미리보기
-          <Image source={{uri: shotUri}} style={styles.previewImg} resizeMode="contain" />
+          // ✅ 찍힌(또는 갤러리) 이미지 미리보기
+          <Image
+            source={{uri: shotUri}}
+            style={styles.previewImg}
+            resizeMode="contain"
+          />
         ) : device ? (
-          // 실기기: 실제 카메라 화면
+          // 📹 실기기: 실제 카메라 프리뷰
           <>
             <View style={{height: 56, backgroundColor: '#000', width: '100%'}} />
             <View style={styles.fakeFrame}>
@@ -157,7 +181,7 @@ export default function CameraAddScreen() {
             <View style={{height: 56, backgroundColor: '#000', width: '100%'}} />
           </>
         ) : (
-          // 📌 에뮬레이터: 카메라 디바이스 없음 → 안내 문구
+          // 📌 에뮬레이터: 카메라 디바이스 없음
           <>
             <View style={{height: 56, backgroundColor: '#000', width: '100%'}} />
             <View style={styles.fakeFrame}>
@@ -173,21 +197,35 @@ export default function CameraAddScreen() {
       {/* 하단 컨트롤 바 */}
       <View style={styles.bottomBar}>
         {/* 갤러리 버튼 */}
-        <TouchableOpacity style={styles.iconBtn} onPress={onPickGallery} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.iconBtn}
+          onPress={onPickGallery}
+          activeOpacity={0.85}>
           <Ionicons name="images-outline" size={28} color="#fff" />
         </TouchableOpacity>
 
-        {/* 촬영 버튼 */}
+        {/* 촬영 버튼 (찍기 / 다시 찍기) */}
         <TouchableOpacity
           style={[styles.captureRing, shotUri && {borderColor: '#aaa'}]}
           onPress={onCapture}
-          activeOpacity={0.9}
-        >
-          <View style={[styles.captureCore, shotUri && {backgroundColor: '#bbb'}]} />
+          activeOpacity={0.9}>
+          <View
+            style={[styles.captureCore, shotUri && {backgroundColor: '#bbb'}]}
+          />
         </TouchableOpacity>
 
-        {/* 우측 균형용 */}
-        <View style={{width: 40}} />
+        {/* 오른쪽: 사진이 있을 때만 확인 버튼 */}
+        {shotUri ? (
+          <TouchableOpacity
+            style={styles.confirmBtn}
+            onPress={onConfirm}
+            activeOpacity={0.85}>
+            <Text style={styles.confirmText}>확인</Text>
+          </TouchableOpacity>
+        ) : (
+          // 아직 안 찍었을 때는 균형 맞추기용 더미 뷰
+          <View style={{width: 60}} />
+        )}
       </View>
     </View>
   );
@@ -196,7 +234,12 @@ export default function CameraAddScreen() {
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#000'},
   closeBtn: {position: 'absolute', top: 50, right: 20, zIndex: 10},
-  previewWrap: {flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center'},
+  previewWrap: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   fakeFrame: {
     width: '92%',
     height: '70%',
@@ -233,5 +276,19 @@ const styles = StyleSheet.create({
     height: 66,
     borderRadius: 33,
     backgroundColor: '#fff',
+  },
+  confirmBtn: {
+    minWidth: 60,
+    height: 36,
+    paddingHorizontal: 10,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmText: {
+    color: '#fff',
+    fontSize: 14,
   },
 });

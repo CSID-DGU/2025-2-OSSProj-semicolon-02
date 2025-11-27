@@ -153,6 +153,13 @@ class CaffeineCalculator:
         return future_level <= limit_mg, future_level
     
     
-calc = CaffeineCalculator()
-now_level = calc.total_remaining(events)
-print("현재 시점 남아있는 카페인:", now_level)
+
+if __name__ == "__main__":
+    # 테스트용 코드 (직접 실행할 때만 동작)
+    events = [
+        {"mg": 150, "time": datetime(2025, 11, 25, 14, 30)},
+        {"mg": 80,  "time": datetime(2025, 11, 25, 16, 0)},
+    ]
+    calc = CaffeineCalculator()
+    now_level = calc.total_remaining(events)
+    print("현재 시점 남아있는 카페인:", now_level)
