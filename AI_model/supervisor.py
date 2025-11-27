@@ -1,5 +1,7 @@
 ## 카페인 관리 섭취 총괄 ##
 
+## 스스로 생각해서 불러오게끔 해야되나
+
 from datetime import datetime
 from typing import Optional, List, Dict
 import json
@@ -23,7 +25,7 @@ class SupervisorAgent:
 
     def __init__(self):
         self.vision = VisionAgent()
-        self.mapping = MappingAgent()
+        self.mapping = VectorRAGAgent()
         self.calc = CaffeineCalculator()
         self.advisor = AdvisorAgent(self.calc)
 

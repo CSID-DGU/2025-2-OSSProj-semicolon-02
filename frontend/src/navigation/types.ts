@@ -9,6 +9,9 @@ export type RootStackParamList = {
   MyReports: undefined;
   NotificationSettings: undefined;
   SleepHistory: undefined;
+    SelectDrink: {
+    imageUri: string;
+  };
 };
 
 // 하단 탭
