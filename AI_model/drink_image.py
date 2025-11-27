@@ -127,3 +127,31 @@ if __name__ == "__main__":
     }
 
     print(json.dumps(final_out, ensure_ascii=False, indent=2))
+    
+    
+def analyze_drink(image_path: str) -> dict:
+    """
+    이미지 한 장을 받아서
+    Vision → RAG까지 돌린 최종 음료 정보(dict)를 반환.
+    형태: { "brand": ..., "drink_type": ..., "caffeine_mg": ... }
+    """
+    # 1) Vision 결과
+    vision_agent = VisionAgent()
+    result_str = vision_agent.analyze(image_path)
+    vision_json = json.loads(result_str)
+
+    # 2) 벡터 RAG 결과
+    rag = VectorRAGAgent()
+    rag_out = rag.query(vision_json)
+
+    # 3) 최종 결과
+    final_out = {
+        "brand": vision_json.get("brand"),
+        "drink_type": vision_json.get("drink_type"),
+        "caffeine_mg": rag_out.get("caffeine_mg"),
+    }
+    return final_out
+
+if __name__ == "__main__":
+    final_out = analyze_drink(image_path)
+    print(json.dumps(final_out, ensure_ascii=False, indent=2))
