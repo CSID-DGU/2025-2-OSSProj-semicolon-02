@@ -38,9 +38,7 @@ export default function DrinkList({ title, items }: Props) {
             </View>
             <View style={statisticsStyles.drinkMeta}>
               {item.count !== undefined ? (
-                <Text style={statisticsStyles.price}>
-                  {item.count}회
-                </Text>
+                <Text style={statisticsStyles.price}>{item.count}회</Text>
               ) : item.price > 0 ? (
                 <Text style={statisticsStyles.price}>
                   {item.price.toLocaleString()}원
