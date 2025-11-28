@@ -135,10 +135,10 @@ export default function StatisticsDateLineChart({
                 textFontSize={11}
                 hideRules={false} // 그리드 라인 표시
                 rulesType="solid"
-                rulesColor={theme.colors.gray300 || '#D9D9D9'}
+                rulesColor={theme.colors.gray300}
                 hideYAxisText={true} // Y축 텍스트 숨기기 (왼쪽에 따로 표시)
-                xAxisColor={theme.colors.gray300 || '#D9D9D9'}
-                yAxisColor={theme.colors.gray300 || '#D9D9D9'}
+                xAxisColor={theme.colors.gray300}
+                yAxisColor={theme.colors.gray300}
                 yAxisThickness={1}
                 xAxisThickness={1}
                 maxValue={500}

@@ -19,6 +19,7 @@ export type Drink = {
   name: string;
   price: number;
   favorite: boolean;
+  count?: number; // 백엔드 데이터에서 마신 횟수 (옵션)
 };
 export const chartDataByMonth: Record<string, ChartPoint[]> = {
   '8월': [
