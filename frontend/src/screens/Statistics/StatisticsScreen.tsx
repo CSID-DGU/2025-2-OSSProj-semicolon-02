@@ -7,7 +7,7 @@ import DrinkList from './components/DrinkList';
 import { statisticsStyles } from '../../styles/statisticsStyles';
 import { months, popularDrinksByMonth, type Drink } from './mockData';
 import { dateChartDataByMonth } from './mockDataDate';
-// TODO: 백엔드 연동 준비 완료 - 필요시 주석 해제
+// TODO: 백엔드 연동 준비
 // import { fetchMonthlyDateChartByLabel, fetchPopularDrinksByLabel } from '../../api/statistics';
 // import { getCurrentUser } from '../../lib/authSession';
 // import type { DateChartPoint } from '../../types/statistics';

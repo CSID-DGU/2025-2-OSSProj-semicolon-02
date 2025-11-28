@@ -11,6 +11,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { statisticsStyles } from '../../../styles/statisticsStyles';
 import { theme } from '../../../styles/theme';
+import { getCurrentUser, type StoredUser } from '../../../lib/authSession';
 
 type Props = {
   title: string;
@@ -45,15 +46,26 @@ export default function StatisticsHeader({
   const monthScrollRef = useRef<ScrollView>(null);
   const monthPillRefs = useRef<(View | null)[]>([]);
 
-  // 선택된 월이 변경되면 해당 위치로 스크롤
+  // 로그인 상태
+  const [user, setUser] = useState<StoredUser | null>(null);
+
+  // 회원 정보 가져오기
   useEffect(() => {
-    // 약간의 딜레이를 주어 레이아웃이 완전히 렌더링된 후 스크롤
+    const loadUser = async () => {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    };
+    loadUser();
+  }, []);
+
+  // 선택된 월이 변경=> 선택된 월ㄹㅇ보이도록 스크롤
+  useEffect(() => {
     const timer = setTimeout(() => {
       if (monthScrollRef.current && monthPillRefs.current[selectedIndex]) {
         monthPillRefs.current[selectedIndex]?.measureLayout(
           monthScrollRef.current as any,
           (x, y, width, height) => {
-            // 선택된 월이 화면 중앙에 오도록 스크롤
+            //  중앙에 오도록 스크롤
             monthScrollRef.current?.scrollTo({
               x: Math.max(
                 0,
@@ -112,7 +124,11 @@ export default function StatisticsHeader({
         </TouchableOpacity>
         <View style={statisticsStyles.profileWrap}>
           <Image
-            source={{ uri: 'https://i.pravatar.cc/100?img=12' }} //바꾸기
+            source={
+              user?.email
+                ? { uri: `https://i.pravatar.cc/100?u=${user.email}` }
+                : { uri: 'https://i.pravatar.cc/100?img=12' }
+            }
             style={statisticsStyles.avatar}
           />
           <Text
@@ -122,7 +138,7 @@ export default function StatisticsHeader({
               color: theme.colors.text,
             }}
           >
-            서현 님
+            {user?.name ? `${user.name} 님` : '사용자'}
           </Text>
         </View>
       </View>
