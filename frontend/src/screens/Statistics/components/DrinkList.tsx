@@ -1,22 +1,22 @@
 import React from 'react';
-import {FlatList, Text, TouchableOpacity, View} from 'react-native';
+import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {statisticsStyles} from '../../../styles/statisticsStyles';
-import {theme} from '../../../styles/theme';
-import type {Drink} from '../mockData';
+import { statisticsStyles } from '../../../styles/statisticsStyles';
+import { theme } from '../../../styles/theme';
+import type { Drink } from '../mockData';
 
 type Props = {
   title: string;
   items: Drink[];
 };
 
-export default function DrinkList({title, items}: Props) {
+export default function DrinkList({ title, items }: Props) {
   return (
     <View>
       <View style={statisticsStyles.drinkListHeader}>
         <Text style={statisticsStyles.sectionTitle}>{title}</Text>
         <TouchableOpacity activeOpacity={0.7}>
-          <Text style={[statisticsStyles.subtle, {fontWeight: '600'}]}>
+          <Text style={[statisticsStyles.subtle, { fontWeight: '600' }]}>
             더보기
           </Text>
         </TouchableOpacity>
@@ -27,7 +27,7 @@ export default function DrinkList({title, items}: Props) {
         keyExtractor={item => item.id}
         scrollEnabled={false}
         contentContainerStyle={statisticsStyles.drinkList}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <View style={statisticsStyles.drinkCard}>
             <View style={statisticsStyles.drinkThumbnail}>
               <Text>☕️</Text>
@@ -37,12 +37,19 @@ export default function DrinkList({title, items}: Props) {
               <Text style={statisticsStyles.drinkName}>{item.name}</Text>
             </View>
             <View style={statisticsStyles.drinkMeta}>
-              <Text style={statisticsStyles.price}>
-                {item.price.toLocaleString()}원
-              </Text>
+              {item.count !== undefined ? (
+                <Text style={statisticsStyles.price}>
+                  {item.count}회
+                </Text>
+              ) : item.price > 0 ? (
+                <Text style={statisticsStyles.price}>
+                  {item.price.toLocaleString()}원
+                </Text>
+              ) : null}
               <TouchableOpacity
                 style={statisticsStyles.favoriteButton}
-                activeOpacity={0.8}>
+                activeOpacity={0.8}
+              >
                 <Ionicons
                   name={item.favorite ? 'heart' : 'heart-outline'}
                   size={16}
