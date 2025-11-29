@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AppHeader from '../../components/AppHeader';
 import { statisticsStyles } from '../../styles/statisticsStyles';
@@ -15,15 +15,12 @@ import { theme } from '../../styles/theme';
 import type { Drink } from './mockData';
 import type { RootStackParamList } from '../../navigation/types';
 
-type StatisticsDetailRouteProp = RouteProp<
-  RootStackParamList,
-  'StatisticsDetail'
->;
-
 export default function StatisticsDetailScreen() {
   const navigation = useNavigation();
-  const route = useRoute<StatisticsDetailRouteProp>();
-  const { monthLabel, items } = route.params;
+  const route = useRoute<{
+    params: RootStackParamList['StatisticsDetail'];
+  }>();
+  const { monthLabel, items } = route.params || { monthLabel: '', items: [] };
 
   return (
     <SafeAreaView
