@@ -1,7 +1,6 @@
 import { http } from '../lib/http';
 import type { DateChartPoint } from '../types/statistics';
 
-
 //월별 날짜별 섭취량 조회
 export async function fetchMonthlyDateChart(
   userId: number,
@@ -16,9 +15,7 @@ export async function fetchMonthlyDateChart(
   );
   return res.data;
 }
-/**
- * 월 레이블 형식으로 요청
- */
+
 export async function fetchMonthlyDateChartByLabel(
   userId: number,
   monthLabel: string,
@@ -35,23 +32,21 @@ export async function fetchMonthlyDateChartByLabel(
   return res.data;
 }
 
-
 //자주 마시는 음료 DTO
-export interface PopularDrinkDTO {
+export interface FrequentDrinkDTO {
   beverageId: number;
   beverageName: string;
   count: number;
   totalCaffeineMg: number;
 }
 
-
 //월별 자주 마시는 음료 조회
 export async function fetchPopularDrinks(
   userId: number,
   year: number,
   month: number,
-): Promise<PopularDrinkDTO[]> {
-  const res = await http.get<PopularDrinkDTO[]>(
+): Promise<FrequentDrinkDTO[]> {
+  const res = await http.get<FrequentDrinkDTO[]>(
     '/api/statistics/popular-drinks',
     {
       params: { userId, year, month },
@@ -60,13 +55,11 @@ export async function fetchPopularDrinks(
   return res.data;
 }
 
-/**
- * 월 레이블 형식으로 자주 마시는 음료 조회
- */
+//자주마시는음료 월별 조회
 export async function fetchPopularDrinksByLabel(
   userId: number,
   monthLabel: string,
-): Promise<PopularDrinkDTO[]> {
+): Promise<FrequentDrinkDTO[]> {
   const month = parseInt(monthLabel.replace('월', ''), 10);
   const currentYear = new Date().getFullYear();
 

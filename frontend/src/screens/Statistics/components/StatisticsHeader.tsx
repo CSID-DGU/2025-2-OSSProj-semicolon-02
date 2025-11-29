@@ -12,6 +12,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { statisticsStyles } from '../../../styles/statisticsStyles';
 import { theme } from '../../../styles/theme';
 import { getCurrentUser, type StoredUser } from '../../../lib/authSession';
+import logoImg from '../../../../assets/img/logo.png';
 
 type Props = {
   title: string;
@@ -42,7 +43,7 @@ export default function StatisticsHeader({
     height: number;
   } | null>(null);
 
-  // 월 스크롤 ref (선택된 월로 자동 스크롤하기 위해)
+  // 월 스크롤
   const monthScrollRef = useRef<ScrollView>(null);
   const monthPillRefs = useRef<(View | null)[]>([]);
 
@@ -75,8 +76,6 @@ export default function StatisticsHeader({
             });
           },
           () => {
-            // measureLayout 실패 시 대체 방법: 간단한 계산으로 스크롤
-            // 각 월 버튼의 대략적인 너비를 계산 (약 60px 가정)
             const pillWidth = 60;
             const scrollX = Math.max(
               0,
@@ -103,7 +102,7 @@ export default function StatisticsHeader({
     closePicker();
   };
 
-  // 드롭다운 위치 계산: periodSelector 아래에 배치
+  // 드롭다운 위치
   const pickerStyle =
     buttonLayout && periodSelectorLayout
       ? {
@@ -123,14 +122,22 @@ export default function StatisticsHeader({
           <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
         </TouchableOpacity>
         <View style={statisticsStyles.profileWrap}>
-          <Image
-            source={
-              user?.email
-                ? { uri: `https://i.pravatar.cc/100?u=${user.email}` }
-                : { uri: 'https://i.pravatar.cc/100?img=12' }
-            }
-            style={statisticsStyles.avatar}
-          />
+          <View
+            style={[
+              statisticsStyles.avatar,
+              {
+                backgroundColor: theme.colors.white,
+                justifyContent: 'center',
+                alignItems: 'center',
+              },
+            ]}
+          >
+            <Image
+              source={logoImg}
+              style={{ width: 28, height: 28 }}
+              resizeMode="contain"
+            />
+          </View>
           <Text
             style={{
               fontSize: 14,
@@ -172,7 +179,6 @@ export default function StatisticsHeader({
           </TouchableOpacity>
         </View>
 
-        {/* 드롭다운이 펼쳐지면 absolute로 표시하여 아래 요소가 움직이지 않게 함 */}
         {pickerOpen && pickerStyle && (
           <View style={[statisticsStyles.monthPickerBase, pickerStyle]}>
             <ScrollView

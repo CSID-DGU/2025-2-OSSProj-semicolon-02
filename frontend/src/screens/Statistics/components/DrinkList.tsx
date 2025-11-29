@@ -1,29 +1,54 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { statisticsStyles } from '../../../styles/statisticsStyles';
 import { theme } from '../../../styles/theme';
 import type { Drink } from '../mockData';
+import type { RootStackParamList } from '../../../navigation/types';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 type Props = {
   title: string;
   items: Drink[];
+  monthLabel: string;
 };
 
-export default function DrinkList({ title, items }: Props) {
+export default function DrinkList({ title, items, monthLabel }: Props) {
+  const navigation = useNavigation<NavigationProp>();
+
+  // 처음 2개만 표시
+  const displayedItems = useMemo(() => {
+    return items.slice(0, 2);
+  }, [items]);
+
+  // 2개이상이면 더보기 버튼 표시
+  const hasMore = items.length > 2;
+
+  const handleMorePress = () => {
+    navigation.navigate('StatisticsDetail', {
+      monthLabel,
+      items,
+    });
+  };
+
   return (
     <View>
       <View style={statisticsStyles.drinkListHeader}>
         <Text style={statisticsStyles.sectionTitle}>{title}</Text>
-        <TouchableOpacity activeOpacity={0.7}>
-          <Text style={[statisticsStyles.subtle, { fontWeight: '600' }]}>
-            더보기
-          </Text>
-        </TouchableOpacity>
+        {hasMore && (
+          <TouchableOpacity activeOpacity={0.7} onPress={handleMorePress}>
+            <Text style={[statisticsStyles.subtle, { fontWeight: '600' }]}>
+              더보기
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
-        data={items}
+        data={displayedItems}
         keyExtractor={item => item.id}
         scrollEnabled={false}
         contentContainerStyle={statisticsStyles.drinkList}

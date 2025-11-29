@@ -11,7 +11,7 @@ import { dateChartDataByMonth } from './mockDataDate';
 // import { fetchMonthlyDateChartByLabel, fetchPopularDrinksByLabel } from '../../api/statistics';
 // import { getCurrentUser } from '../../lib/authSession';
 // import type { DateChartPoint } from '../../types/statistics';
-// import type { PopularDrinkDTO } from '../../api/statistics';
+// import type { FrequentDrinkDTO } from '../../api/statistics';
 
 // 현재 월을 months 배열의 인덱스
 const getCurrentMonthIndex = (): number => {
@@ -22,8 +22,8 @@ const getCurrentMonthIndex = (): number => {
 };
 
 // TODO: 백엔드 연동 시 사용할 변환 함수
-// PopularDrinkDTO를 Drink 타입으로 변환하는 함수
-// const convertToDrink = (dto: PopularDrinkDTO): Drink => {
+// FrequentDrinkDTO를 Drink 타입으로 변환하는 함수
+// const convertToDrink = (dto: FrequentDrinkDTO): Drink => {
 //   const parts = dto.beverageName.split(' ');
 //   const brand = parts.length > 1 ? parts[0] : '';
 //   const name = parts.length > 1 ? parts.slice(1).join(' ') : dto.beverageName;
@@ -132,6 +132,7 @@ export default function StatisticsScreen() {
             <DrinkList
               title={`${monthLabel} 자주 마시는 음료`}
               items={currentDrinks}
+              monthLabel={monthLabel}
             />
           </View>
         </ScrollView>

@@ -4,7 +4,7 @@ package com.caffit.statistics.controller;
 import com.caffit.intake.entity.Intake;
 import com.caffit.intake.repository.IntakeRepository;
 import com.caffit.statistics.dto.DateChartPointDTO;
-import com.caffit.statistics.dto.PopularDrinkDTO;
+import com.caffit.statistics.dto.FrequentDrinkDTO;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -81,7 +81,7 @@ public class StatisticsController {
     //월별 자주 마시는 음료 조회
     @GetMapping("/popular-drinks")
     @Transactional(readOnly = true)
-    public List<PopularDrinkDTO> getPopularDrinks(
+    public List<FrequentDrinkDTO> getPopularDrinks(
             @RequestParam("userId") Long userId,
             @RequestParam("year") int year,
             @RequestParam("month") int month
@@ -100,7 +100,7 @@ public class StatisticsController {
         Map<Long, List<Intake>> groupedByBeverage = intakes.stream()
                 .collect(Collectors.groupingBy(i -> i.getBeverage().getId()));
 
-        // PopularDrinkDTO로 
+        // FrequentDrinkDTO로 
         return groupedByBeverage.entrySet().stream()
                 .map(entry -> {
                     Long beverageId = entry.getKey();
@@ -112,7 +112,7 @@ public class StatisticsController {
                             .mapToDouble(Intake::getCaffeineMg)
                             .sum();
 
-                    return new PopularDrinkDTO(beverageId, beverageName, count, totalCaffeineMg);
+                    return new FrequentDrinkDTO(beverageId, beverageName, count, totalCaffeineMg);
                 })
                 .sorted((a, b) -> Long.compare(b.count(), a.count())) // count 내림차순 정렬
                 .limit(10) // 상위 10개만 반환
