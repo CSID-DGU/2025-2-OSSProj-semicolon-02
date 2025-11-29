@@ -132,6 +132,7 @@ export default function StatisticsScreen() {
             <DrinkList
               title={`${monthLabel} 자주 마시는 음료`}
               items={currentDrinks}
+              monthLabel={monthLabel}
             />
           </View>
         </ScrollView>
