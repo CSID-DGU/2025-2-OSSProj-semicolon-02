@@ -15,9 +15,7 @@ export async function fetchMonthlyDateChart(
   );
   return res.data;
 }
-/**
- * 월 레이블 형식으로 요청
- */
+
 export async function fetchMonthlyDateChartByLabel(
   userId: number,
   monthLabel: string,
@@ -57,9 +55,7 @@ export async function fetchPopularDrinks(
   return res.data;
 }
 
-/**
- * 월 레이블 형식으로 자주 마시는 음료 조회
- */
+//자주마시는음료 월별 조회
 export async function fetchPopularDrinksByLabel(
   userId: number,
   monthLabel: string,

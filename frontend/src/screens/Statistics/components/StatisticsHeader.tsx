@@ -12,6 +12,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { statisticsStyles } from '../../../styles/statisticsStyles';
 import { theme } from '../../../styles/theme';
 import { getCurrentUser, type StoredUser } from '../../../lib/authSession';
+import logoImg from '../../../../assets/img/logo.png';
 
 type Props = {
   title: string;
@@ -121,14 +122,22 @@ export default function StatisticsHeader({
           <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
         </TouchableOpacity>
         <View style={statisticsStyles.profileWrap}>
-          <Image
-            source={
-              user?.email
-                ? { uri: `https://i.pravatar.cc/100?u=${user.email}` }
-                : { uri: 'https://i.pravatar.cc/100?img=12' }
-            }
-            style={statisticsStyles.avatar}
-          />
+          <View
+            style={[
+              statisticsStyles.avatar,
+              {
+                backgroundColor: theme.colors.white,
+                justifyContent: 'center',
+                alignItems: 'center',
+              },
+            ]}
+          >
+            <Image
+              source={logoImg}
+              style={{ width: 28, height: 28 }}
+              resizeMode="contain"
+            />
+          </View>
           <Text
             style={{
               fontSize: 14,
