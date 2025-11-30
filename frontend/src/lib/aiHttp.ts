@@ -16,26 +16,37 @@ export interface CurvePoint {
   caffeineMg: number;
 }
 
+// ---- debug 타입 분리 ----
+export interface TwoParamDebug {
+  reason?: string;
+  scores?: Record<
+    string,
+    {
+      S: number;
+      mse: number;
+    }
+  >;
+}
+
 export interface CaffeineSummaryRes {
   userId: number;
   date: string;              // YYYY-MM-DD
   halfLifeHours: number;
-  halfLifeMethod: 'fixed_default' | 'curve' | 'ml' | string;
+
+  // Flask에서 내려주는 메서드 + 민감도
+  halfLifeMethod: 'fixed_default' | 'curve' | 'ml' | 'two_param_ml' | string;
+  sensitivity: number;
+
   curve: CurvePoint[];
-  latestDrinkPlan: LatestDrinkPlan;
-  debug: {
-    numIntakes: number;
-    numSleepLogs: number;
-    sleepDays: number;
-    scores: Record<string, number>;
-  };
+  latestDrinkPlan: LatestDrinkPlan | null;
+  debug: TwoParamDebug;      // ← any 제거
 }
 
 // Flask 서버 주소에 맞게 baseURL 수정
 export const aiHttp = axios.create({
-    baseURL: 'http://10.0.2.2:5000', 
-    timeout: 7000,
-  });
+  baseURL: 'http://10.0.2.2:5000',
+  timeout: 7000,
+});
 
 export async function fetchCaffeineSummary(
   userId: number,

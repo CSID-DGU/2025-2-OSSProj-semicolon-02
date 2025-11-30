@@ -30,7 +30,6 @@ import { IntakeDTO } from '../types/intake';
 import { LineChart } from 'react-native-gifted-charts';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
-
 // AI 요약용
 import {
   fetchCaffeineSummary,
@@ -161,9 +160,18 @@ export default function HomeScreen() {
   const [latestDrinkPlan, setLatestDrinkPlan] =
     useState<LatestDrinkPlan | null>(null);
 
-  // 카페인 곡선 데이터 (그래프용)
+  // 민감도(S) 상태
+  const [sensitivity, setSensitivity] = useState<number | null>(null);
 
+  // 카페인 둔감 사용자 태그 여부 (S 절댓값이 매우 작으면 둔감으로 간주)
+  const isInsensitive = useMemo(
+    () => sensitivity != null && Math.abs(sensitivity) < 0.05,
+    [sensitivity],
+  );
+
+  // 카페인 곡선 데이터 (그래프용)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [curve, setCurve] = useState<CurvePoint[]>([]);
 
   const changeDate = (delta: number) => {
     setSelectedDate(prev => {
@@ -180,13 +188,11 @@ export default function HomeScreen() {
       is24Hour: true,
       onChange: (_event, date) => {
         if (date) {
-          setSelectedDate(date);   // 여기서 선택한 날짜로 갱신
+          setSelectedDate(date);
         }
       },
     });
-  };  
-
-  const [curve, setCurve] = useState<CurvePoint[]>([]);
+  };
 
   const fetchTodaySummary = useCallback(async (uid: number) => {
     try {
@@ -224,7 +230,7 @@ export default function HomeScreen() {
     }
   }, []);
 
-    const fetchCaffeineAI = useCallback(
+  const fetchCaffeineAI = useCallback(
     async (uid: number, baseDate?: Date) => {
       try {
         const dateObj = baseDate ?? new Date();
@@ -240,12 +246,20 @@ export default function HomeScreen() {
         setHalfLifeMethod(data.halfLifeMethod ?? null);
         setLatestDrinkPlan(data.latestDrinkPlan ?? null);
         setCurve(data.curve ?? []);
+
+        // 민감도 값 세팅
+        if (typeof data.sensitivity === 'number') {
+          setSensitivity(data.sensitivity);
+        } else {
+          setSensitivity(null);
+        }
       } catch (e) {
         console.log('[Home] fetchCaffeineAI error', e);
         setHalfLifeHours(null);
         setHalfLifeMethod(null);
         setLatestDrinkPlan(null);
         setCurve([]);
+        setSensitivity(null);
       }
     },
     [],
@@ -281,7 +295,6 @@ export default function HomeScreen() {
         await fetchTodaySleep(effectiveUserId);
         await fetchCaffeineAI(effectiveUserId);
 
-        // 섭취 기록 조회 (intakes 테이블 데이터)
         const intakeData = await fetchIntakes(effectiveUserId);
         setIntakes(intakeData);
         console.log('[Home] 섭취 기록:', intakeData);
@@ -338,7 +351,7 @@ export default function HomeScreen() {
   useEffect(() => {
     http
       .get('/api/health')
-      .then(r => console.log('health:', r.data)) // 기대 출력: "OK"
+      .then(r => console.log('health:', r.data))
       .catch(e => console.log('health error:', e.message));
   }, []);
 
@@ -368,9 +381,9 @@ export default function HomeScreen() {
 
   const curveChartData = useMemo(() => {
     if (curve.length === 0) return [];
-  
+
     const sameDayPoints = curve
-      .map((p) => {
+      .map(p => {
         const d = new Date(p.time);
         return { value: p.caffeineMg, date: d };
       })
@@ -382,14 +395,14 @@ export default function HomeScreen() {
         );
       })
       .sort((a, b) => a.date.getTime() - b.date.getTime());
-  
+
     return sameDayPoints.map(({ value, date }) => {
       const hh = date.getHours();
       const mm = date.getMinutes();
       const label = mm === 0 ? String(hh) : '';
       return { value, label };
     });
-  }, [curve, selectedDate]);  
+  }, [curve, selectedDate]);
 
   // Y축 설정
   const yAxisConfig = useMemo(() => {
@@ -402,10 +415,8 @@ export default function HomeScreen() {
     }
 
     const maxCurve = Math.max(...curve.map(p => p.caffeineMg));
-    // 허용치(limitMg)와 실제 곡선 중 더 큰 값을 기준으로 스케일링
     const baseMax = Math.max(maxCurve, limitMg);
 
-    // 200 이하면 50 단위, 그 이상이면 100 단위로
     const roughStep = baseMax <= 200 ? 50 : 100;
     const sections = Math.max(1, Math.ceil(baseMax / roughStep));
     const maxValue = sections * roughStep;
@@ -421,7 +432,6 @@ export default function HomeScreen() {
       yAxisLabelTexts,
     };
   }, [curve, limitMg]);
-  
 
   const openSettings = () => setGoalVisible(true);
   const openSleepHistory = () => navigation.navigate('SleepHistory');
@@ -476,7 +486,9 @@ export default function HomeScreen() {
     if (!halfLifeMethod) return '데이터 수집 중';
     if (halfLifeMethod === 'fixed_default') return '초기 기본값';
     if (halfLifeMethod === 'curve') return '최근 데이터 기반 추정치';
-    if (halfLifeMethod === 'ml') return '개인화 모델 기반 추정치';
+    if (halfLifeMethod === 'ml' || halfLifeMethod === 'two_param_ml') {
+      return '개인화 모델 기반 추정치';
+    }
     return '개인 추정치';
   })();
 
@@ -537,7 +549,6 @@ export default function HomeScreen() {
     return '해당 시간 이후 섭취는 수면에 영향을 줄 수 있어 피하는 편이 좋습니다.';
   }, [latestDrinkPlan]);
 
-  // 섭취 조언 텍스트 (임시 플레이스홀더)
   const adviceText = (() => {
     if (!latestDrinkPlan) {
       return '충분한 데이터가 쌓이면 개인 맞춤 섭취 조언이 제공됩니다.';
@@ -656,6 +667,7 @@ export default function HomeScreen() {
         {/* 요약 */}
         <View style={homeStyles.section}>
           <View style={homeStyles.statRow}>
+            {/* 오늘 음료 카드 */}
             <View style={homeStyles.statCard}>
               <View
                 style={{
@@ -682,10 +694,31 @@ export default function HomeScreen() {
               </Text>
             </View>
 
+            {/* 평균 반감기 + 민감도 카드 */}
             <View style={homeStyles.statCard}>
               <Text style={homeStyles.statTitle}>평균 반감기</Text>
               <Text style={homeStyles.statValueBig}>{halfLifeLabel}</Text>
               <Text style={homeStyles.statNote}>{halfLifeNote}</Text>
+
+              {sensitivity != null && (
+                <Text style={homeStyles.sensitivityValue}>
+                  민감도 S = {sensitivity.toFixed(2)}
+                </Text>
+              )}
+
+              {isInsensitive && (
+                <View style={homeStyles.insensitiveTag}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={12}
+                    color={theme.colors.primary}
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text style={homeStyles.insensitiveTagText}>
+                    카페인 영향 거의 없음
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -734,7 +767,7 @@ export default function HomeScreen() {
             ) : (
               <LineChart
                 data={curveChartData}
-                height={180}                     
+                height={180}
                 thickness={3}
                 curved
                 hideDataPoints
@@ -745,7 +778,6 @@ export default function HomeScreen() {
                 areaChart={false}
                 color={theme.colors.primary}
                 dataPointsColor={theme.colors.primary}
-                // ---- Y축 mg 단위 설정 ----
                 maxValue={yAxisConfig.maxValue}
                 noOfSections={yAxisConfig.noOfSections}
                 yAxisLabelTexts={yAxisConfig.yAxisLabelTexts}
