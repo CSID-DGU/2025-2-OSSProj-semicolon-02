@@ -296,10 +296,25 @@ export const homeStyles = StyleSheet.create({
     ...common.shadowCard,
     backgroundColor: theme.colors.white,
     marginHorizontal: theme.spacing(3),
-    height: 160,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    marginTop: theme.spacing(1),
+    paddingHorizontal: theme.spacing(2),
+    paddingVertical: theme.spacing(1),
+    height: 230,
+    overflow: 'hidden',           
+  },  
+
+sleepAvgCard: {
+  ...common.card,
+  ...common.shadowCard,
+  backgroundColor: theme.colors.white,
+  marginHorizontal: theme.spacing(3),
+  marginTop: theme.spacing(1),
+  paddingHorizontal: theme.spacing(2),
+  paddingVertical: theme.spacing(2),
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
   gaugeValue: { fontSize: 28, fontWeight: '800', color: theme.colors.text },
   subtle: { fontSize: 12, color: theme.colors.gray500 },
   //section: { marginTop: theme.spacing(2) },
@@ -359,5 +374,40 @@ export const homeStyles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     marginHorizontal: theme.spacing(3),
   },
+
+  // 섭취 가능 요약 카드
+intakePlanCard: {
+  ...common.card,
+  ...common.shadowCard,
+  backgroundColor: theme.colors.white,
+  marginHorizontal: theme.spacing(3),
+},
+
+intakePlanMain: {
+  fontSize: 14,
+  fontWeight: '700',
+  color: theme.colors.text,
+  marginBottom: theme.spacing(0.5),
+},
+
+intakePlanSub: {
+  ...common.subtle,
+  lineHeight: 18,
+},
+
+dateSelectorRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+},
+dateArrowBtn: {
+  paddingHorizontal: theme.spacing(0.5),
+  paddingVertical: theme.spacing(0.5),
+},
+dateText: {
+  fontSize: 13,
+  fontWeight: '600',
+  color: theme.colors.text,
+  marginHorizontal: theme.spacing(0.5),
+},
 
 });
