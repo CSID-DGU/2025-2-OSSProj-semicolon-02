@@ -299,9 +299,21 @@ export const homeStyles = StyleSheet.create({
     marginTop: theme.spacing(1),
     paddingHorizontal: theme.spacing(2),
     paddingVertical: theme.spacing(1),
-    height: 190,
+    height: 230,
     overflow: 'hidden',           
   },  
+
+sleepAvgCard: {
+  ...common.card,
+  ...common.shadowCard,
+  backgroundColor: theme.colors.white,
+  marginHorizontal: theme.spacing(3),
+  marginTop: theme.spacing(1),
+  paddingHorizontal: theme.spacing(2),
+  paddingVertical: theme.spacing(2),
+  alignItems: 'center',
+  justifyContent: 'center',
+},
 
   gaugeValue: { fontSize: 28, fontWeight: '800', color: theme.colors.text },
   subtle: { fontSize: 12, color: theme.colors.gray500 },
