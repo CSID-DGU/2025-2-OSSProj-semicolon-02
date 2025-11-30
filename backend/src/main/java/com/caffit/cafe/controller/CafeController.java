@@ -20,6 +20,9 @@ public class CafeController {
             @RequestParam double lng,
             @RequestParam(defaultValue = "1000") int radius
     ) {
-        return cafeService.findNearby(lat, lng, radius);
+        System.out.println("📡 [Controller] 카페 검색 요청: lat=" + lat + ", lng=" + lng + ", radius=" + radius);
+        List<CafeResponseDTO> result = cafeService.findNearby(lat, lng, radius);
+        System.out.println("✅ [Controller] 카페 검색 결과: " + result.size() + "개");
+        return result;
     }
 }

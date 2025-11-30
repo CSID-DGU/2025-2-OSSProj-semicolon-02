@@ -20,8 +20,10 @@ public class CafeService {
     private final KakaoClient kakaoClient; // Kakao API 호출
 
     public List<CafeResponseDTO> findNearby(double lat, double lng, int radiusMeters) {
+        System.out.println("🔍 [Service] Kakao API 호출 시작: lat=" + lat + ", lng=" + lng + ", radius=" + radiusMeters);
         // 실시간 카페 검색
         KakaoPlacesResponseDTO kakaoResponse = kakaoClient.searchCafes(lat, lng, radiusMeters);
+        System.out.println("📥 [Service] Kakao API 응답 받음: " + kakaoResponse.documents().size() + "개 카페");
         
         // CafeResponseDTO로 변환
         List<CafeResponseDTO> kakaoCafes = kakaoResponse.documents().stream()

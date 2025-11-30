@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { theme } from '../styles/theme';
@@ -11,9 +11,50 @@ import type { Cafe } from '../api/cafes';
 import KakaoMap from '../components/map/KakaoMap';
 
 export default function CafeFindScreen() {
-  const { coords, error } = useCurrentPosition();
-  const { data: cafes = [], isLoading } = useNearCafe(coords || undefined);
+  const { coords: gpsCoords, error } = useCurrentPosition();
+  const [mapCenter, setMapCenter] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+
+  // 지도 중심 위치를 우선 사용, 없으면 GPS 위치 사용
+  const searchCoords = mapCenter || gpsCoords;
+
+  const {
+    data: cafes = [],
+    isLoading,
+    error: apiError,
+  } = useNearCafe(searchCoords || undefined);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const debounceTimerRef = useRef<number | null>(null);
+
+  // 지도 중심 변경 핸들러 (디바운스 적용)
+  const handleCenterChanged = (coords: { lat: number; lng: number }) => {
+    // 이전 타이머 취소
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // 디바운스: 500ms 후에 위치 업데이트
+    debounceTimerRef.current = setTimeout(() => {
+      setMapCenter(coords);
+      console.log('🗺️ [지도화면] 지도 중심 변경:', coords);
+    }, 500);
+  };
+
+  // API 상태 확인 로그
+  useEffect(() => {
+    console.log('📍 [지도화면] GPS 위치:', gpsCoords);
+    console.log('📍 [지도화면] 검색 위치:', searchCoords);
+    console.log('☕ [지도화면] 카페 데이터:', cafes.length, '개');
+    console.log('⏳ [지도화면] 로딩 중:', isLoading);
+    if (apiError) {
+      console.error('❌ [지도화면] API 에러:', apiError);
+    }
+    if (cafes.length > 0) {
+      console.log('📋 [지도화면] 카페 목록:', cafes);
+    }
+  }, [gpsCoords, searchCoords, cafes, isLoading, apiError]);
 
   if (error) {
     return (
@@ -23,7 +64,7 @@ export default function CafeFindScreen() {
     );
   }
 
-  if (!coords) {
+  if (!gpsCoords) {
     return (
       <View style={common.screen}>
         <Text>현재 위치를 가져오는 중입니다…</Text>
@@ -49,9 +90,10 @@ export default function CafeFindScreen() {
       {/* 지도 영역 */}
       <View style={cafeFindStyles.mapContainer}>
         <KakaoMap
-          userCoords={coords}
+          userCoords={gpsCoords}
           cafes={cafes}
           onMarkerPress={cafe => setSelectedId(String(cafe.id))}
+          onCenterChanged={handleCenterChanged}
         />
       </View>
 

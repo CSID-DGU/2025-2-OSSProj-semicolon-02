@@ -1,13 +1,13 @@
-import {StyleSheet} from 'react-native';
-import {theme} from './theme';
+import { StyleSheet } from 'react-native';
+import { theme } from './theme';
 
 export const cafeFindStyles = StyleSheet.create({
-  // 지도 컨테이너 (임시)
+  // 지도 컨테이너
   mapContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
   },
   mapPlaceholder: {
     fontSize: 16,
@@ -25,7 +25,7 @@ export const cafeFindStyles = StyleSheet.create({
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
     ...theme.shadow.card,
-    shadowOffset: {width: 0, height: -4},
+    shadowOffset: { width: 0, height: -4 },
     paddingTop: theme.spacing(1.5),
     paddingBottom: theme.spacing(2),
   },
@@ -120,4 +120,3 @@ export const cafeFindStyles = StyleSheet.create({
     gap: theme.spacing(1.5),
   },
 });
-
