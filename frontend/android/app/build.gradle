@@ -121,7 +121,7 @@ android {
             manifestPlaceholders = [ usesCleartextTraffic: "false" ]
         }
     }
-dependencies {
+    dependencies {
   implementation("com.facebook.react:react-android")
 
   if (hermesEnabled.toBoolean()) {

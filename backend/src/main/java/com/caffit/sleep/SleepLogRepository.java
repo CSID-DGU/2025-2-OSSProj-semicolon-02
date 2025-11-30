@@ -8,8 +8,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SleepLogRepository extends JpaRepository<SleepLog, Long> {
 
-    // 가장 최근 수면 기록 한 건
-    Optional<SleepLog> findTop1ByUser_IdOrderBySleepAtDesc(Long userId);
+	// 가장 최근 수면 기록 한 건
+	Optional<SleepLog> findTop1ByUser_IdOrderBySleepAtDesc(Long userId);
+
+	
+	// 오늘 기준: wakeAt 이 [start, end) 범위인 가장 최근 1건
+	Optional<SleepLog> findTop1ByUser_IdAndWakeAtBetweenOrderByWakeAtDesc(
+	        Long userId,
+	        LocalDateTime start,
+	        LocalDateTime end
+	);
+
 
     // 기간별 조회 (추후 통계용)
     List<SleepLog> findByUser_IdAndSleepAtBetween(Long userId,
