@@ -290,6 +290,32 @@ export const homeStyles = StyleSheet.create({
   },
   statNote: { ...common.subtle, marginTop: theme.spacing(0.5) },
 
+  // 민감도 숫자 텍스트
+  sensitivityValue: {
+    ...common.subtle,
+    marginTop: theme.spacing(0.75),
+    color: theme.colors.gray600,
+  },
+
+  // "카페인 영향 거의 없음" 태그 영역
+  insensitiveTag: {
+    marginTop: theme.spacing(0.5),
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: theme.spacing(1.5),
+    paddingVertical: theme.spacing(0.5),
+    borderRadius: 999,
+    backgroundColor: theme.colors.gray100,
+  },
+
+  // 태그 내부 글자
+  insensitiveTagText: {
+    fontSize: 11,
+    color: theme.colors.gray700,
+    fontWeight: '500',
+  },
+
   /** 그래프 카드 */
   chartCard: {
     ...common.card,
