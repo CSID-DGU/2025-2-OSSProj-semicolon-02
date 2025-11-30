@@ -24,12 +24,10 @@ import GoalTargetModal from './MyPage/components/GoalTargetModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { http } from '../lib/http';
 
-//import type { AxiosResponse } from 'axios';
 import { fetchIntakes } from '../api/intakes';
 import { IntakeDTO } from '../types/intake';
 
 import { LineChart } from 'react-native-gifted-charts';
-
 
 // AI 요약용
 import {
@@ -132,6 +130,7 @@ const formatIsoHM = (iso?: string | null) => {
 
 export default function HomeScreen() {
   const navigation = useNavigation<RootNav>();
+
   const [limitMg, setLimitMg] = useState<number>(400);
   const [goalVisible, setGoalVisible] = useState(false);
   const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
@@ -211,12 +210,12 @@ export default function HomeScreen() {
         setHalfLifeMethod(data.halfLifeMethod ?? null);
         setLatestDrinkPlan(data.latestDrinkPlan ?? null);
         setCurve(data.curve ?? []);
-        // curve 데이터는 나중에 그래프 연동용으로 별도 상태에 담을 예정정
       } catch (e) {
         console.log('[Home] fetchCaffeineAI error', e);
         setHalfLifeHours(null);
         setHalfLifeMethod(null);
         setLatestDrinkPlan(null);
+        setCurve([]);
       }
     },
     [],
@@ -316,7 +315,9 @@ export default function HomeScreen() {
   // 오늘 섭취한 음료 목록
   const todayIntakes = useMemo(() => {
     const today = new Date().toDateString();
-    return intakes.filter(i => new Date(i.consumedAt).toDateString() === today);
+    return intakes.filter(
+      i => new Date(i.consumedAt).toDateString() === today,
+    );
   }, [intakes]);
 
   const todayDrinksText = todayIntakes
@@ -334,41 +335,89 @@ export default function HomeScreen() {
   const effectiveTodayMg = todayMg > 0 ? todayMg : localTodayMg;
 
   const percent = Math.round((effectiveTodayMg / Math.max(limitMg, 1)) * 100);
-const curveChartData = useMemo(() => {
-  if (curve.length === 0) return [];
 
-  const now = new Date().getTime();
-  const RANGE_MS = 5 * 60 * 60 * 1000; // 5시간
+  const curveChartData = useMemo(() => {
+    if (curve.length === 0) return [];
 
-  // 현재 시간 기준 ±5시간 범위로 필터
-  const filtered = curve.filter(p => {
-    const t = new Date(p.time).getTime();
-    if (Number.isNaN(t)) {
-      // time이 '0.0' 같은 숫자 문자열이면, 범위 필터는 건너뛰고 나중에 전체 사용
-      return true;
+    const now = new Date();
+
+    const toDateFromPoint = (timeStr: string) => {
+      const num = Number(timeStr);
+
+      if (!Number.isNaN(num)) {
+        const h = Math.floor(num);
+        const m = Math.round((num - h) * 60);
+        return new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          now.getHours() + h,
+          now.getMinutes() + m,
+          0,
+          0,
+        );
+      }
+
+      const d = new Date(timeStr);
+      if (!Number.isNaN(d.getTime())) {
+        return d;
+      }
+
+      return now;
+    };
+
+    const withDate = curve.map(p => ({
+      value: p.caffeineMg,
+      date: toDateFromPoint(p.time),
+    }));
+
+    const FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
+    const filtered = withDate.filter(({ date }) => {
+      const diff = date.getTime() - now.getTime();
+      return diff >= -FIVE_HOURS_MS && diff <= FIVE_HOURS_MS;
+    });
+
+    filtered.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    return filtered.map(({ value, date }) => {
+      const hh = date.getHours();
+      const mm = date.getMinutes();
+      const label = mm === 0 ? String(hh) : '';
+      return { value, label };
+    });
+  }, [curve]);
+
+  // Y축 설정
+  const yAxisConfig = useMemo(() => {
+    if (curve.length === 0) {
+      return {
+        maxValue: 0,
+        noOfSections: 0,
+        yAxisLabelTexts: [] as string[],
+      };
     }
-    return Math.abs(t - now) <= RANGE_MS;
-  });
 
-  const base = filtered.length > 0 ? filtered : curve;
+    const maxCurve = Math.max(...curve.map(p => p.caffeineMg));
+    // 허용치(limitMg)와 실제 곡선 중 더 큰 값을 기준으로 스케일링
+    const baseMax = Math.max(maxCurve, limitMg);
 
-  // 라벨을 HH:MM 로 포맷 (너무 많으면 2개 중 1개만 표시)
-  const formatLabel = (timeStr: string) => {
-    const d = new Date(timeStr);
-    if (Number.isNaN(d.getTime())) {
-      // ISO 아니면 그대로 사용 (예: '0.0', '1.5h' 같은 값)
-      return timeStr;
+    // 200 이하면 50 단위, 그 이상이면 100 단위로
+    const roughStep = baseMax <= 200 ? 50 : 100;
+    const sections = Math.max(1, Math.ceil(baseMax / roughStep));
+    const maxValue = sections * roughStep;
+
+    const yAxisLabelTexts: string[] = [];
+    for (let i = 0; i <= sections; i += 1) {
+      yAxisLabelTexts.push(String(i * roughStep));
     }
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${hh}:${mm}`;
-  };
 
-  return base.map((p, idx) => ({
-    value: p.caffeineMg,                      // Y축 : 카페인 mg
-    label: idx % 2 === 0 ? formatLabel(p.time) : '',  // X축 : 시간
-  }));
-}, [curve]);
+    return {
+      maxValue,
+      noOfSections: sections,
+      yAxisLabelTexts,
+    };
+  }, [curve, limitMg]);
+  
 
   const openSettings = () => setGoalVisible(true);
   const openSleepHistory = () => navigation.navigate('SleepHistory');
@@ -428,67 +477,69 @@ const curveChartData = useMemo(() => {
   })();
 
   // 섭취 가능 요약용 메인 텍스트
-const intakePlanMain = useMemo(() => {
-  if (!latestDrinkPlan) {
-    return '아직 섭취 계획을 계산할 수 없습니다.';
-  }
+  const intakePlanMain = useMemo(() => {
+    if (!latestDrinkPlan) {
+      return '아직 섭취 계획을 계산할 수 없습니다.';
+    }
 
-  if (!latestDrinkPlan.possible) {
-    const reason = latestDrinkPlan.reason;
-    if (reason === 'already_over_threshold') {
+    if (!latestDrinkPlan.possible) {
+      const reason = latestDrinkPlan.reason;
+      if (reason === 'already_over_threshold') {
+        return '오늘은 추가 카페인 섭취를 권장하지 않습니다.';
+      }
+      if (reason === 'no_safe_slot') {
+        return '오늘 남은 시간에 안전한 섭취 시간이 없습니다.';
+      }
+      if (reason === 'target_sleep_at_is_past') {
+        return '설정된 취침 시간이 지나 내일 기준으로 다시 계산합니다.';
+      }
       return '오늘은 추가 카페인 섭취를 권장하지 않습니다.';
     }
-    if (reason === 'no_safe_slot') {
-      return '오늘 남은 시간에 안전한 섭취 시간이 없습니다.';
+
+    const latestHM = formatIsoHM(latestDrinkPlan.latestAllowedTime);
+    const dose = latestDrinkPlan.doseMg ?? 80;
+
+    if (latestHM === '-') {
+      return '오늘은 한 잔 정도의 추가 섭취가 가능합니다.';
     }
-    if (reason === 'target_sleep_at_is_past') {
-      return '설정된 취침 시간이 지나 내일 기준으로 다시 계산합니다.';
+
+    return `${latestHM}까지 약 ${dose}mg 1잔 섭취 가능`;
+  }, [latestDrinkPlan]);
+
+  // 섭취 가능 요약용 서브 텍스트 (상한선/수면 시 농도 설명)
+  const intakePlanSub = useMemo(() => {
+    if (!latestDrinkPlan) {
+      return '수면·섭취 데이터를 더 수집하면 보다 정확한 계획이 제공됩니다.';
     }
-    return '오늘은 추가 카페인 섭취를 권장하지 않습니다.';
-  }
 
-  const latestHM = formatIsoHM(latestDrinkPlan.latestAllowedTime);
-  const dose = latestDrinkPlan.doseMg ?? 80;
+    const atSleep = latestDrinkPlan.caffeineAtSleepIfDrink;
+    const threshold = latestDrinkPlan.safeThreshold;
 
-  if (latestHM === '-') {
-    return '오늘은 한 잔 정도의 추가 섭취가 가능합니다.';
-  }
-
-  return `${latestHM}까지 약 ${dose}mg 1잔 섭취 가능`;
-}, [latestDrinkPlan]);
-
-// 섭취 가능 요약용 서브 텍스트 (상한선/수면 시 농도 설명)
-const intakePlanSub = useMemo(() => {
-  if (!latestDrinkPlan) {
-    return '수면·섭취 데이터를 더 수집하면 보다 정확한 계획이 제공됩니다.';
-  }
-
-  const atSleep = latestDrinkPlan.caffeineAtSleepIfDrink;
-  const threshold = latestDrinkPlan.safeThreshold;
-
-  if (!latestDrinkPlan.possible) {
-    if (threshold != null) {
-      return `현재 잔여 카페인이 설정된 수면 상한선(${threshold}mg)을 이미 초과했거나, 초과할 가능성이 높습니다.`;
+    if (!latestDrinkPlan.possible) {
+      if (threshold != null) {
+        return `현재 잔여 카페인이 설정된 수면 상한선(${threshold}mg)을 이미 초과했거나, 초과할 가능성이 높습니다.`;
+      }
+      return '현재 잔여 카페인이 높거나 오늘 남은 시간에 안전한 섭취 구간이 없습니다.';
     }
-    return '현재 잔여 카페인이 높거나 오늘 남은 시간에 안전한 섭취 구간이 없습니다.';
-  }
 
-  if (atSleep != null && threshold != null) {
-    return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg, 설정 상한선은 ${threshold}mg입니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
-  }
+    if (atSleep != null && threshold != null) {
+      return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg, 설정 상한선은 ${threshold}mg입니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
+    }
 
-  if (atSleep != null) {
-    return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg 이하로 예상됩니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
-  }
+    if (atSleep != null) {
+      return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg 이하로 예상됩니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
+    }
 
-  return '해당 시간 이후 섭취는 수면에 영향을 줄 수 있어 피하는 편이 좋습니다.';
-}, [latestDrinkPlan]);
+    return '해당 시간 이후 섭취는 수면에 영향을 줄 수 있어 피하는 편이 좋습니다.';
+  }, [latestDrinkPlan]);
 
-  // 섭취 조언 텍스트
+  // 섭취 조언 텍스트 (임시 플레이스홀더)
   const adviceText = (() => {
     if (!latestDrinkPlan) {
-      return '~~';
-    } })();
+      return '충분한 데이터가 쌓이면 개인 맞춤 섭취 조언이 제공됩니다.';
+    }
+    return '현재 모델 기반 상세 조언은 준비 중입니다.';
+  })();
 
   return (
     <SafeAreaView style={common.screen}>
@@ -635,51 +686,59 @@ const intakePlanSub = useMemo(() => {
           </View>
         </View>
 
-          {/* 그래프 카드 */}
-<View style={homeStyles.section}>
-  <Text style={homeStyles.sectionTitle}>카페인 그래프</Text>
-  <View style={homeStyles.chartCard}>
-    {curveChartData.length === 0 ? (
-      <Text style={common.subtle}>
-        최근 1~2일 내 섭취/수면 데이터가 부족해 그래프를 표시할 수 없습니다.
-      </Text>
-    ) : (
-      <LineChart
-        data={curveChartData}
-        height={140}
-        thickness={3}
-        curved
-        hideDataPoints={false}
-        initialSpacing={15}
-        spacing={24}
-        xAxisTextNumberOfLines={1}
-        adjustToWidth
-        areaChart={false}                     // 영역 채우기 제거
-        color={theme.colors.primary}          // 선 색상
-        dataPointsColor={theme.colors.primary} // 점 색상
-      />
-    )}
-  </View>
-</View>
-
+        {/* 그래프 카드 */}
+        <View style={homeStyles.section}>
+          <Text style={homeStyles.sectionTitle}>카페인 그래프</Text>
+          <View style={homeStyles.chartCard}>
+            {curveChartData.length === 0 ? (
+              <Text style={common.subtle}>
+                최근 1~2일 내 섭취/수면 데이터가 부족해 그래프를 표시할 수
+                없습니다.
+              </Text>
+            ) : (
+              <LineChart
+                data={curveChartData}
+                height={180}                     
+                thickness={3}
+                curved
+                hideDataPoints
+                initialSpacing={15}
+                spacing={24}
+                xAxisTextNumberOfLines={1}
+                adjustToWidth
+                areaChart={false}
+                color={theme.colors.primary}
+                dataPointsColor={theme.colors.primary}
+                // ---- Y축 mg 단위 설정 ----
+                maxValue={yAxisConfig.maxValue}
+                noOfSections={yAxisConfig.noOfSections}
+                yAxisLabelTexts={yAxisConfig.yAxisLabelTexts}
+                yAxisTextStyle={{
+                  fontSize: 10,
+                  color: theme.colors.gray500,
+                }}
+                yAxisLabelWidth={32}
+              />
+            )}
+          </View>
+        </View>
 
         {/* 섭취 가능 요약 */}
-<View style={homeStyles.section}>
-  <Text style={homeStyles.sectionTitle}>섭취 가능 요약</Text>
-  <View style={homeStyles.intakePlanCard}>
-    <Text style={homeStyles.intakePlanMain}>{intakePlanMain}</Text>
-    <Text style={homeStyles.intakePlanSub}>{intakePlanSub}</Text>
-  </View>
-</View>
+        <View style={homeStyles.section}>
+          <Text style={homeStyles.sectionTitle}>섭취 가능 요약</Text>
+          <View style={homeStyles.intakePlanCard}>
+            <Text style={homeStyles.intakePlanMain}>{intakePlanMain}</Text>
+            <Text style={homeStyles.intakePlanSub}>{intakePlanSub}</Text>
+          </View>
+        </View>
 
-{/* 섭취 조언 (LLM/무카페인 추천용) */}
-<View style={homeStyles.section}>
-  <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
-  <View style={homeStyles.adviceCard}>
-    <Text style={common.body}>{adviceText}</Text>
-  </View>
-</View>
-
+        {/* 섭취 조언 (LLM/무카페인 추천용) */}
+        <View style={homeStyles.section}>
+          <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
+          <View style={homeStyles.adviceCard}>
+            <Text style={common.body}>{adviceText}</Text>
+          </View>
+        </View>
       </ScrollView>
 
       {/* 수면 편집 미니 모듈 */}
@@ -726,7 +785,7 @@ const intakePlanSub = useMemo(() => {
         </View>
       )}
 
-      {/* 목표 설정 모달: 저장 시 허용치(limitMg) + AsyncStorage 동기화 */}
+      {/* 목표 설정 모달 */}
       <GoalTargetModal
         visible={goalVisible}
         onClose={() => setGoalVisible(false)}

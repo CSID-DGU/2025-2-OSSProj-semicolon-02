@@ -173,7 +173,7 @@ export default function SleepHistoryScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <View style={[common.section, { marginTop: 20 }]}>
-          <View style={homeStyles.chartCard}>
+          <View style={homeStyles.sleepAvgCard}>
             <Text style={common.subtle}>최근 1주일 평균 수면 시간</Text>
             <Text style={{ fontSize: 24, fontWeight: '800', marginTop: 8 }}>
               {avg}
