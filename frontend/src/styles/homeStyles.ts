@@ -395,4 +395,19 @@ intakePlanSub: {
   lineHeight: 18,
 },
 
+dateSelectorRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+},
+dateArrowBtn: {
+  paddingHorizontal: theme.spacing(0.5),
+  paddingVertical: theme.spacing(0.5),
+},
+dateText: {
+  fontSize: 13,
+  fontWeight: '600',
+  color: theme.colors.text,
+  marginHorizontal: theme.spacing(0.5),
+},
+
 });
