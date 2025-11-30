@@ -27,6 +27,18 @@ import { http } from '../lib/http';
 //import type { AxiosResponse } from 'axios';
 import { fetchIntakes } from '../api/intakes';
 import { IntakeDTO } from '../types/intake';
+
+import { LineChart } from 'react-native-gifted-charts';
+
+
+// AI 요약용
+import {
+  fetchCaffeineSummary,
+  type CaffeineSummaryRes,
+  type LatestDrinkPlan,
+  type CurvePoint,
+} from '../lib/aiHttp';
+
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
 type TodaySummary = {
@@ -106,6 +118,18 @@ const buildSleepDateTimes = (sleepHM: string, wakeHM: string) => {
   };
 };
 
+const formatIsoHM = (iso?: string | null) => {
+  if (!iso) return '-';
+  try {
+    const d = new Date(iso);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  } catch {
+    return '-';
+  }
+};
+
 export default function HomeScreen() {
   const navigation = useNavigation<RootNav>();
   const [limitMg, setLimitMg] = useState<number>(400);
@@ -115,7 +139,7 @@ export default function HomeScreen() {
   const [todayMg, setTodayMg] = useState<number>(0);
   const [todayCount, setTodayCount] = useState<number>(0);
 
-  // 로그인한 사용자 id (today-summary / sleep 호출용)
+  // 로그인한 사용자 id (today-summary / sleep / AI 호출용)
   const [userId, setUserId] = useState<number | null>(null);
 
   // 수면 데이터 (홈 위젯용)
@@ -127,6 +151,15 @@ export default function HomeScreen() {
   const [sleepEditVisible, setSleepEditVisible] = useState(false);
   const [tmpSleepAt, setTmpSleepAt] = useState('');
   const [tmpWakeAt, setTmpWakeAt] = useState('');
+
+  // AI 요약 상태
+  const [halfLifeHours, setHalfLifeHours] = useState<number | null>(null);
+  const [halfLifeMethod, setHalfLifeMethod] = useState<string | null>(null);
+  const [latestDrinkPlan, setLatestDrinkPlan] =
+    useState<LatestDrinkPlan | null>(null);
+
+  // 카페인 곡선 데이터 (그래프용)
+  const [curve, setCurve] = useState<CurvePoint[]>([]);
 
   const fetchTodaySummary = useCallback(async (uid: number) => {
     try {
@@ -164,6 +197,31 @@ export default function HomeScreen() {
     }
   }, []);
 
+  const fetchCaffeineAI = useCallback(
+    async (uid: number) => {
+      try {
+        const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const data: CaffeineSummaryRes = await fetchCaffeineSummary(
+          uid,
+          todayStr,
+        );
+        console.log('[Home] AI summary', data);
+
+        setHalfLifeHours(data.halfLifeHours ?? null);
+        setHalfLifeMethod(data.halfLifeMethod ?? null);
+        setLatestDrinkPlan(data.latestDrinkPlan ?? null);
+        setCurve(data.curve ?? []);
+        // curve 데이터는 나중에 그래프 연동용으로 별도 상태에 담을 예정정
+      } catch (e) {
+        console.log('[Home] fetchCaffeineAI error', e);
+        setHalfLifeHours(null);
+        setHalfLifeMethod(null);
+        setLatestDrinkPlan(null);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     const bootstrap = async () => {
       try {
@@ -192,6 +250,7 @@ export default function HomeScreen() {
 
         await fetchTodaySummary(effectiveUserId);
         await fetchTodaySleep(effectiveUserId);
+        await fetchCaffeineAI(effectiveUserId);
 
         // 섭취 기록 조회 (intakes 테이블 데이터)
         const intakeData = await fetchIntakes(effectiveUserId);
@@ -203,7 +262,7 @@ export default function HomeScreen() {
     };
 
     bootstrap();
-  }, [fetchTodaySummary, fetchTodaySleep]);
+  }, [fetchTodaySummary, fetchTodaySleep, fetchCaffeineAI]);
 
   useFocusEffect(
     useCallback(() => {
@@ -211,8 +270,10 @@ export default function HomeScreen() {
         return;
       }
       fetchTodaySummary(userId);
+      fetchCaffeineAI(userId);
+      // 필요하면 수면도 함께 새로고침
       // fetchTodaySleep(userId);
-    }, [userId, fetchTodaySummary]),
+    }, [userId, fetchTodaySummary, fetchCaffeineAI]),
   );
 
   const reloadToday = useCallback(async () => {
@@ -221,11 +282,12 @@ export default function HomeScreen() {
         const data = await fetchIntakes(userId);
         setIntakes(data);
         await fetchTodaySummary(userId);
+        await fetchCaffeineAI(userId);
       }
     } catch (e) {
       console.log('[Home] reloadToday error', e);
     }
-  }, [userId, fetchTodaySummary]);
+  }, [userId, fetchTodaySummary, fetchCaffeineAI]);
 
   // 수면 시간 계산
   const calcDurationLabel = () => {
@@ -271,10 +333,42 @@ export default function HomeScreen() {
 
   const effectiveTodayMg = todayMg > 0 ? todayMg : localTodayMg;
 
-  const percent = Math.min(
-    100,
-    Math.round((effectiveTodayMg / Math.max(limitMg, 1)) * 100),
-  );
+  const percent = Math.round((effectiveTodayMg / Math.max(limitMg, 1)) * 100);
+const curveChartData = useMemo(() => {
+  if (curve.length === 0) return [];
+
+  const now = new Date().getTime();
+  const RANGE_MS = 5 * 60 * 60 * 1000; // 5시간
+
+  // 현재 시간 기준 ±5시간 범위로 필터
+  const filtered = curve.filter(p => {
+    const t = new Date(p.time).getTime();
+    if (Number.isNaN(t)) {
+      // time이 '0.0' 같은 숫자 문자열이면, 범위 필터는 건너뛰고 나중에 전체 사용
+      return true;
+    }
+    return Math.abs(t - now) <= RANGE_MS;
+  });
+
+  const base = filtered.length > 0 ? filtered : curve;
+
+  // 라벨을 HH:MM 로 포맷 (너무 많으면 2개 중 1개만 표시)
+  const formatLabel = (timeStr: string) => {
+    const d = new Date(timeStr);
+    if (Number.isNaN(d.getTime())) {
+      // ISO 아니면 그대로 사용 (예: '0.0', '1.5h' 같은 값)
+      return timeStr;
+    }
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  };
+
+  return base.map((p, idx) => ({
+    value: p.caffeineMg,                      // Y축 : 카페인 mg
+    label: idx % 2 === 0 ? formatLabel(p.time) : '',  // X축 : 시간
+  }));
+}, [curve]);
 
   const openSettings = () => setGoalVisible(true);
   const openSleepHistory = () => navigation.navigate('SleepHistory');
@@ -291,7 +385,7 @@ export default function HomeScreen() {
       return;
     }
 
-     console.log('[Home] saveSleepEdit userId =', userId);
+    console.log('[Home] saveSleepEdit userId =', userId);
     setYesterdaySleepAt(tmpSleepAt);
     setTodayWakeAt(tmpWakeAt);
     setSleepEditVisible(false);
@@ -315,10 +409,86 @@ export default function HomeScreen() {
       }
 
       await fetchTodaySleep(userId);
+      await fetchCaffeineAI(userId);
     } catch (e) {
       console.log('[Home] save sleep error', e);
     }
   };
+
+  // 반감기 카드용 라벨
+  const halfLifeLabel =
+    halfLifeHours != null ? `${halfLifeHours.toFixed(1)} h` : '-';
+
+  const halfLifeNote = (() => {
+    if (!halfLifeMethod) return '데이터 수집 중';
+    if (halfLifeMethod === 'fixed_default') return '초기 기본값';
+    if (halfLifeMethod === 'curve') return '최근 데이터 기반 추정치';
+    if (halfLifeMethod === 'ml') return '개인화 모델 기반 추정치';
+    return '개인 추정치';
+  })();
+
+  // 섭취 가능 요약용 메인 텍스트
+const intakePlanMain = useMemo(() => {
+  if (!latestDrinkPlan) {
+    return '아직 섭취 계획을 계산할 수 없습니다.';
+  }
+
+  if (!latestDrinkPlan.possible) {
+    const reason = latestDrinkPlan.reason;
+    if (reason === 'already_over_threshold') {
+      return '오늘은 추가 카페인 섭취를 권장하지 않습니다.';
+    }
+    if (reason === 'no_safe_slot') {
+      return '오늘 남은 시간에 안전한 섭취 시간이 없습니다.';
+    }
+    if (reason === 'target_sleep_at_is_past') {
+      return '설정된 취침 시간이 지나 내일 기준으로 다시 계산합니다.';
+    }
+    return '오늘은 추가 카페인 섭취를 권장하지 않습니다.';
+  }
+
+  const latestHM = formatIsoHM(latestDrinkPlan.latestAllowedTime);
+  const dose = latestDrinkPlan.doseMg ?? 80;
+
+  if (latestHM === '-') {
+    return '오늘은 한 잔 정도의 추가 섭취가 가능합니다.';
+  }
+
+  return `${latestHM}까지 약 ${dose}mg 1잔 섭취 가능`;
+}, [latestDrinkPlan]);
+
+// 섭취 가능 요약용 서브 텍스트 (상한선/수면 시 농도 설명)
+const intakePlanSub = useMemo(() => {
+  if (!latestDrinkPlan) {
+    return '수면·섭취 데이터를 더 수집하면 보다 정확한 계획이 제공됩니다.';
+  }
+
+  const atSleep = latestDrinkPlan.caffeineAtSleepIfDrink;
+  const threshold = latestDrinkPlan.safeThreshold;
+
+  if (!latestDrinkPlan.possible) {
+    if (threshold != null) {
+      return `현재 잔여 카페인이 설정된 수면 상한선(${threshold}mg)을 이미 초과했거나, 초과할 가능성이 높습니다.`;
+    }
+    return '현재 잔여 카페인이 높거나 오늘 남은 시간에 안전한 섭취 구간이 없습니다.';
+  }
+
+  if (atSleep != null && threshold != null) {
+    return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg, 설정 상한선은 ${threshold}mg입니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
+  }
+
+  if (atSleep != null) {
+    return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg 이하로 예상됩니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
+  }
+
+  return '해당 시간 이후 섭취는 수면에 영향을 줄 수 있어 피하는 편이 좋습니다.';
+}, [latestDrinkPlan]);
+
+  // 섭취 조언 텍스트
+  const adviceText = (() => {
+    if (!latestDrinkPlan) {
+      return '~~';
+    } })();
 
   return (
     <SafeAreaView style={common.screen}>
@@ -455,39 +625,61 @@ export default function HomeScreen() {
               <Text style={homeStyles.statValueBig}>
                 {todayIntakes.length}잔
               </Text>
-              <Text style={homeStyles.statNote}>
-                {todayDrinksText || '오늘 섭취한 음료가 없습니다'}
-              </Text>
             </View>
 
             <View style={homeStyles.statCard}>
               <Text style={homeStyles.statTitle}>평균 반감기</Text>
-              <Text style={homeStyles.statValueBig}>5.2 h</Text>
-              <Text style={homeStyles.statNote}>개인 추정치</Text>
+              <Text style={homeStyles.statValueBig}>{halfLifeLabel}</Text>
+              <Text style={homeStyles.statNote}>{halfLifeNote}</Text>
             </View>
           </View>
         </View>
 
-        {/* 그래프 카드 */}
-        <View style={homeStyles.section}>
-          <Text style={homeStyles.sectionTitle}>카페인 그래프</Text>
-          <View style={homeStyles.chartCard}>
-            <Text style={common.subtle}>
-              시간대별 카페인 농도(그래프 연동 예정)
-            </Text>
-          </View>
-        </View>
+          {/* 그래프 카드 */}
+<View style={homeStyles.section}>
+  <Text style={homeStyles.sectionTitle}>카페인 그래프</Text>
+  <View style={homeStyles.chartCard}>
+    {curveChartData.length === 0 ? (
+      <Text style={common.subtle}>
+        최근 1~2일 내 섭취/수면 데이터가 부족해 그래프를 표시할 수 없습니다.
+      </Text>
+    ) : (
+      <LineChart
+        data={curveChartData}
+        height={140}
+        thickness={3}
+        curved
+        hideDataPoints={false}
+        initialSpacing={15}
+        spacing={24}
+        xAxisTextNumberOfLines={1}
+        adjustToWidth
+        areaChart={false}                     // 영역 채우기 제거
+        color={theme.colors.primary}          // 선 색상
+        dataPointsColor={theme.colors.primary} // 점 색상
+      />
+    )}
+  </View>
+</View>
 
-        {/* 섭취 권고 */}
-        <View style={homeStyles.section}>
-          <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
-          <View style={homeStyles.adviceCard}>
-            <Text style={common.body}>
-              지금은 추가 섭취를 한 잔까지 허용합니다. 취침 6시간 전에는 카페인
-              섭취를 피하세요.
-            </Text>
-          </View>
-        </View>
+
+        {/* 섭취 가능 요약 */}
+<View style={homeStyles.section}>
+  <Text style={homeStyles.sectionTitle}>섭취 가능 요약</Text>
+  <View style={homeStyles.intakePlanCard}>
+    <Text style={homeStyles.intakePlanMain}>{intakePlanMain}</Text>
+    <Text style={homeStyles.intakePlanSub}>{intakePlanSub}</Text>
+  </View>
+</View>
+
+{/* 섭취 조언 (LLM/무카페인 추천용) */}
+<View style={homeStyles.section}>
+  <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
+  <View style={homeStyles.adviceCard}>
+    <Text style={common.body}>{adviceText}</Text>
+  </View>
+</View>
+
       </ScrollView>
 
       {/* 수면 편집 미니 모듈 */}
@@ -544,7 +736,10 @@ export default function HomeScreen() {
             setGoalVisible(false);
 
             const payload: StoredGoals = { daily, monthly };
-            await AsyncStorage.setItem('caffit:goals', JSON.stringify(payload));
+            await AsyncStorage.setItem(
+              'caffit:goals',
+              JSON.stringify(payload),
+            );
           } catch (e) {
             console.log('[Home] save goals error', e);
           }
