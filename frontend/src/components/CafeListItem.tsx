@@ -1,8 +1,8 @@
 import React from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {theme} from '../styles/theme';
-import {cafeListItemStyles} from '../styles/cafeListItemStyles';
+import { theme } from '../styles/theme';
+import { cafeListItemStyles } from '../styles/cafeListItemStyles';
 
 interface Cafe {
   id: string;
@@ -13,13 +13,18 @@ interface Cafe {
 
 interface CafeListItemProps {
   cafe: Cafe;
+  onPress?: () => void;
 }
 
-export default function CafeListItem({cafe}: CafeListItemProps) {
+export default function CafeListItem({ cafe, onPress }: CafeListItemProps) {
   const [isFavorite, setIsFavorite] = React.useState(false);
 
   return (
-    <View style={cafeListItemStyles.container}>
+    <TouchableOpacity
+      style={cafeListItemStyles.container}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       {/* 아바타 */}
       <View style={cafeListItemStyles.avatar}>
         <Ionicons name="cafe" size={24} color={theme.colors.primary} />
@@ -34,14 +39,14 @@ export default function CafeListItem({cafe}: CafeListItemProps) {
       {/* 하트 아이콘 */}
       <TouchableOpacity
         onPress={() => setIsFavorite(!isFavorite)}
-        style={cafeListItemStyles.favoriteButton}>
+        style={cafeListItemStyles.favoriteButton}
+      >
         <Ionicons
           name={isFavorite ? 'heart' : 'heart-outline'}
           size={20}
           color={isFavorite ? '#FF715B' : theme.colors.gray500}
         />
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 }
-
