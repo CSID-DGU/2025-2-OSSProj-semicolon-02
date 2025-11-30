@@ -28,6 +28,8 @@ import { fetchIntakes } from '../api/intakes';
 import { IntakeDTO } from '../types/intake';
 
 import { LineChart } from 'react-native-gifted-charts';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+
 
 // AI 요약용
 import {
@@ -36,6 +38,8 @@ import {
   type LatestDrinkPlan,
   type CurvePoint,
 } from '../lib/aiHttp';
+
+const formatDate = (d: Date) => d.toISOString().slice(0, 10);
 
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -158,6 +162,30 @@ export default function HomeScreen() {
     useState<LatestDrinkPlan | null>(null);
 
   // 카페인 곡선 데이터 (그래프용)
+
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const changeDate = (delta: number) => {
+    setSelectedDate(prev => {
+      const next = new Date(prev);
+      next.setDate(prev.getDate() + delta);
+      return next;
+    });
+  };
+
+  const openDatePicker = () => {
+    DateTimePickerAndroid.open({
+      value: selectedDate,
+      mode: 'date',
+      is24Hour: true,
+      onChange: (_event, date) => {
+        if (date) {
+          setSelectedDate(date);   // 여기서 선택한 날짜로 갱신
+        }
+      },
+    });
+  };  
+
   const [curve, setCurve] = useState<CurvePoint[]>([]);
 
   const fetchTodaySummary = useCallback(async (uid: number) => {
@@ -196,13 +224,15 @@ export default function HomeScreen() {
     }
   }, []);
 
-  const fetchCaffeineAI = useCallback(
-    async (uid: number) => {
+    const fetchCaffeineAI = useCallback(
+    async (uid: number, baseDate?: Date) => {
       try {
-        const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const dateObj = baseDate ?? new Date();
+        const dateStr = formatDate(dateObj); // YYYY-MM-DD
+
         const data: CaffeineSummaryRes = await fetchCaffeineSummary(
           uid,
-          todayStr,
+          dateStr,
         );
         console.log('[Home] AI summary', data);
 
@@ -269,10 +299,10 @@ export default function HomeScreen() {
         return;
       }
       fetchTodaySummary(userId);
-      fetchCaffeineAI(userId);
+      fetchCaffeineAI(userId, selectedDate);
       // 필요하면 수면도 함께 새로고침
       // fetchTodaySleep(userId);
-    }, [userId, fetchTodaySummary, fetchCaffeineAI]),
+    }, [userId, selectedDate, fetchTodaySummary, fetchCaffeineAI]),
   );
 
   const reloadToday = useCallback(async () => {
@@ -281,12 +311,12 @@ export default function HomeScreen() {
         const data = await fetchIntakes(userId);
         setIntakes(data);
         await fetchTodaySummary(userId);
-        await fetchCaffeineAI(userId);
+        await fetchCaffeineAI(userId, selectedDate);
       }
     } catch (e) {
       console.log('[Home] reloadToday error', e);
     }
-  }, [userId, fetchTodaySummary, fetchCaffeineAI]);
+  }, [userId, selectedDate, fetchTodaySummary, fetchCaffeineAI]);
 
   // 수면 시간 계산
   const calcDurationLabel = () => {
@@ -338,54 +368,28 @@ export default function HomeScreen() {
 
   const curveChartData = useMemo(() => {
     if (curve.length === 0) return [];
-
-    const now = new Date();
-
-    const toDateFromPoint = (timeStr: string) => {
-      const num = Number(timeStr);
-
-      if (!Number.isNaN(num)) {
-        const h = Math.floor(num);
-        const m = Math.round((num - h) * 60);
-        return new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate(),
-          now.getHours() + h,
-          now.getMinutes() + m,
-          0,
-          0,
+  
+    const sameDayPoints = curve
+      .map((p) => {
+        const d = new Date(p.time);
+        return { value: p.caffeineMg, date: d };
+      })
+      .filter(({ date }) => {
+        return (
+          date.getFullYear() === selectedDate.getFullYear() &&
+          date.getMonth() === selectedDate.getMonth() &&
+          date.getDate() === selectedDate.getDate()
         );
-      }
-
-      const d = new Date(timeStr);
-      if (!Number.isNaN(d.getTime())) {
-        return d;
-      }
-
-      return now;
-    };
-
-    const withDate = curve.map(p => ({
-      value: p.caffeineMg,
-      date: toDateFromPoint(p.time),
-    }));
-
-    const FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
-    const filtered = withDate.filter(({ date }) => {
-      const diff = date.getTime() - now.getTime();
-      return diff >= -FIVE_HOURS_MS && diff <= FIVE_HOURS_MS;
-    });
-
-    filtered.sort((a, b) => a.date.getTime() - b.date.getTime());
-
-    return filtered.map(({ value, date }) => {
+      })
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  
+    return sameDayPoints.map(({ value, date }) => {
       const hh = date.getHours();
       const mm = date.getMinutes();
       const label = mm === 0 ? String(hh) : '';
       return { value, label };
     });
-  }, [curve]);
+  }, [curve, selectedDate]);  
 
   // Y축 설정
   const yAxisConfig = useMemo(() => {
@@ -458,7 +462,7 @@ export default function HomeScreen() {
       }
 
       await fetchTodaySleep(userId);
-      await fetchCaffeineAI(userId);
+      await fetchCaffeineAI(userId, selectedDate);
     } catch (e) {
       console.log('[Home] save sleep error', e);
     }
@@ -688,7 +692,39 @@ export default function HomeScreen() {
 
         {/* 그래프 카드 */}
         <View style={homeStyles.section}>
-          <Text style={homeStyles.sectionTitle}>카페인 그래프</Text>
+          <View style={homeStyles.statHeaderRow}>
+            <Text style={homeStyles.sectionTitle}>카페인 그래프</Text>
+
+            <View style={homeStyles.dateSelectorRow}>
+              <TouchableOpacity
+                style={homeStyles.dateArrowBtn}
+                onPress={() => changeDate(-1)}
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={16}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={openDatePicker}>
+                <Text style={homeStyles.dateText}>
+                  {formatDate(selectedDate)}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={homeStyles.dateArrowBtn}
+                onPress={() => changeDate(1)}
+              >
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
           <View style={homeStyles.chartCard}>
             {curveChartData.length === 0 ? (
               <Text style={common.subtle}>

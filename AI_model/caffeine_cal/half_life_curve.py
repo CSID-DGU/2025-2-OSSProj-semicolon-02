@@ -144,3 +144,14 @@ def predict_caffeine_at(
     외부에서 임의 시점의 카페인 잔여량이 필요할 때 사용하는 함수.
     """
     return _residual_caffeine_at(t, intakes, half_life_h)
+
+
+def residual_caffeine_at(
+    t: datetime,
+    intakes: List[Intake],
+    half_life_h: float,
+) -> float:
+    """
+    ML 쪽에서 재사용하기 위한 public 래퍼.
+    """
+    return _residual_caffeine_at(t, intakes, half_life_h)

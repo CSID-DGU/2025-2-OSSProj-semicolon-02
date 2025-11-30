@@ -1,23 +1,17 @@
 # AI_model/caffeine_cal/advisor.py
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import List, Dict, Any, Optional
 import math
 
 from .models import Intake
 from .half_life_curve import predict_caffeine_at
 
-# 취침 시 잔여 카페인 목표값.
-# 지금은 정책값으로 30mg 고정.
 SAFE_THRESHOLD_MG: float = 30.0
 
 
 def get_safe_threshold_for_user(user_id: Optional[int] = None) -> float:
-    """
-    향후 사용자별 튜닝을 위해 뺀 함수
-    현재는 user_id와 무관하게 30mg 고정으로 반환
-    """
     return SAFE_THRESHOLD_MG
 
 
@@ -42,20 +36,27 @@ def find_latest_safe_drink_time(
     step_minutes: int = 10,
     safe_threshold_mg: Optional[float] = None,
     user_id: Optional[int] = None,
+    base_day: Optional[date] = None,
 ) -> Dict[str, Any]:
     """
-    오늘 기준으로 dose_mg 한 잔을 추가로 마실 때
-    취침 시 잔여 카페인이 safe_threshold_mg 이하가 되도록 허용되는 마지막 가능 시각 찾음음
-    """
-    now = datetime.now()
-    start = now
-    end = target_sleep_at
+    선택된 날짜(base_day)를 기준으로, 해당 날짜 안에서
+    dose_mg 한 잔을 추가로 마실 수 있는 마지막 시각을 찾기기
 
+    - base_day 가 주어지면: base_day 00:00 ~ target_sleep_at 사이에서 탐색
+    - base_day 가 없으면: 기존처럼 now ~ target_sleep_at 사이에서 탐색
+    """
     if safe_threshold_mg is None:
         safe_threshold_mg = get_safe_threshold_for_user(user_id)
 
+    if base_day is not None:
+        start = datetime(base_day.year, base_day.month, base_day.day, 0, 0, 0)
+    else:
+        start = datetime.now()
+
+    end = target_sleep_at
+
     if end <= start:
-        # 이미 취침 시간이 지났거나 이상한 입력
+        # 과거 날짜에 base_day 없이 호출하거나, 잘못된 입력인 경우
         return {
             "possible": False,
             "reason": "target_sleep_at_is_past",
@@ -63,10 +64,9 @@ def find_latest_safe_drink_time(
             "safeThreshold": safe_threshold_mg,
         }
 
-    # 기준: 현재까지 마신 것만으로 취침 시 잔여 카페인
+
     base_at_sleep = predict_caffeine_at(target_sleep_at, intakes, half_life_h)
 
-    # 이미 임계값을 넘으면 더 못 마심
     if base_at_sleep >= safe_threshold_mg:
         return {
             "possible": False,
@@ -78,6 +78,7 @@ def find_latest_safe_drink_time(
 
     latest_safe: Optional[datetime] = None
     latest_c_at_sleep: float = base_at_sleep
+
 
     t = start
     while t <= end:
