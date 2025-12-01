@@ -32,7 +32,7 @@ SYSTEM_PROMPT = """
   예: "Hot Americano", "Iced Americano", "Caffe Latte", "Vanilla Latte",
       "Cold Brew", "Cappuccino", "Mocha", "Non-coffee (Ade)", "Non-coffee (Smoothie)" 등.
 - 라벨에 정확한 메뉴명이 없어도,
-  1) 브랜드(예: 메가커피, 스타벅스, 이디야),
+  1) 브랜드(예: 메가커피, 스타벅스, 이디야)를 꼭 "한글"로 출력해줘,
   2) 컵 색/디자인,
   3) 얼음 유무, 우유 느낌,
   등을 보고 가장 가능성 높은 drink_type 을 하나 선택하세요.
