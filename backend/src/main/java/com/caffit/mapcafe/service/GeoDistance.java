@@ -1,4 +1,4 @@
-package com.caffit.cafe.service;
+package com.caffit.mapcafe.service;
 
 public final class GeoDistance {
     private static final double EARTH_RADIUS = 6371e3;

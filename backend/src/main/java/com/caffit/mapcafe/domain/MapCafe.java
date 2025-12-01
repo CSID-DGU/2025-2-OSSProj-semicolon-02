@@ -1,13 +1,14 @@
-package com.caffit.cafe.domain;
+package com.caffit.mapcafe.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "map_cafe")
 @Getter
 @NoArgsConstructor
-public class Cafe {
+public class MapCafe {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

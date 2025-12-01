@@ -1,6 +1,6 @@
 // Kakao REST API가 주는 JSON 응답 그대로 담아
 
-package com.caffit.cafe.infra.dto;
+package com.caffit.mapcafe.infra.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;

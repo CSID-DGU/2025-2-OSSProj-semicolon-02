@@ -7,7 +7,7 @@ import { cafeFindStyles } from '../styles/cafeFindStyles';
 import CafeListItem from '../components/CafeListItem';
 import { useCurrentPosition } from '../hooks/useCurrentPosition';
 import { useNearCafe } from '../hooks/useNearCafe';
-import type { Cafe } from '../api/cafes';
+import type { MapCafe } from '../api/cafes';
 import KakaoMap from '../components/map/KakaoMap';
 
 export default function CafeFindScreen() {

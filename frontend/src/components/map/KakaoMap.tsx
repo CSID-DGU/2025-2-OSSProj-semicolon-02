@@ -1,12 +1,12 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { WebView } from 'react-native-webview';
-import { Cafe } from '../../api/cafes';
+import { MapCafe } from '../../api/cafes';
 import { KAKAO_JAVASCRIPT_KEY } from '../../config/apiKeys';
 
 type Props = {
   userCoords: { lat: number; lng: number }; // 현재 위치
-  cafes: Cafe[];
-  onMarkerPress?: (cafe: Cafe) => void; // 마커 클릭 시 상위로 전달할 콜백
+  cafes: MapCafe[];
+  onMarkerPress?: (cafe: MapCafe) => void; // 마커 클릭 시 상위로 전달할 콜백
   onCenterChanged?: (coords: { lat: number; lng: number }) => void; // 지도 중심 변경 시 콜백
 };
 
@@ -290,7 +290,7 @@ const KakaoMap = ({
           }
 
           // 기존 형식 호환 (cafe 객체만 전달된 경우)
-          const cafe = data as Cafe;
+          const cafe = data as MapCafe;
           if (cafe.id && cafe.name) {
             onMarkerPress?.(cafe);
           }

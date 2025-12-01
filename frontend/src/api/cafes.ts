@@ -1,6 +1,6 @@
 import { http } from '../lib/http';
 
-export type Cafe = {
+export type MapCafe = {
   id: number;
   name: string;
   address: string;
@@ -16,7 +16,7 @@ export async function fetchCafes(params: {
 }) {
   console.log('📡 [API] 카페 검색 요청:', params);
   try {
-    const res = await http.get<Cafe[]>('/api/cafes', { params });
+    const res = await http.get<MapCafe[]>('/api/cafes', { params });
     console.log('✅ [API] 카페 검색 성공:', res.data.length, '개');
     console.log('📋 [API] 카페 데이터:', res.data);
     return res.data;
