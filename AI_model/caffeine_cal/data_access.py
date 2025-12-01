@@ -5,15 +5,26 @@ import os
 from datetime import datetime, timedelta
 from typing import List
 import pymysql
-
+from dotenv import load_dotenv
 from .models import Intake, SleepLog
+from pathlib import Path 
 
+# 🔹 1) .env 경로가 어디로 잡히는지 먼저 확인
+ROOT_DIR = Path(__file__).resolve().parents[1]    # .../AI_model
+env_path = ROOT_DIR / ".env"
+
+print("[DEBUG] ENV PATH =", env_path, "EXISTS:", env_path.exists())
+
+# 🔹 2) 해당 경로의 .env 로드
+load_dotenv(dotenv_path=env_path)
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
 DB_NAME = os.getenv("DB_NAME", "caffit")
 DB_USER = os.getenv("DB_USER", "caffit")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "caffit1234")
+
+print("[DEBUG] DB_HOST =", DB_HOST, "DB_USER =", DB_USER)
 
 
 def get_conn():
@@ -84,3 +95,5 @@ def load_sleep_logs_for_user(user_id: int, days: int = 60) -> List[SleepLog]:
             )
         )
     return sleeps
+
+print("[DEBUG] DB_HOST =", DB_HOST, "DB_USER =", DB_USER)
