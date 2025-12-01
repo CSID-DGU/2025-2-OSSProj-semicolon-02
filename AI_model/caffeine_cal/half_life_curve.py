@@ -37,15 +37,16 @@ def _build_pairs_for_fitting(
     window_hours: int = 18,
 ):
     """
-    (잔여 카페인, 수면부족 정도) 쌍을 만들기 위한 준비.
+    (잔여 카페인, 수면부족 정도) 쌍을 만들기 위한 준비
+    잔여 카페인 0에서의 수면 시간'도 함께 학습에 사용
     """
     pairs = []
     for log in sleeps:
         start = log.sleep_at - timedelta(hours=window_hours)
         relevant = [i for i in intakes if start <= i.consumed_at <= log.sleep_at]
-        if not relevant:
-            continue
 
+        # 여기서 더 이상 continue 하지 않음.
+        # relevant가 빈 리스트면, 나중에 _residual_caffeine_at 호출 시 0이 나옴.
         sleep_debt = max(0, target_minutes - log.duration_minutes)
         pairs.append((relevant, log.sleep_at, float(sleep_debt)))
 
@@ -75,12 +76,12 @@ def estimate_half_life_curve(
     sleeps: List[SleepLog],
 ) -> Tuple[float, Dict[float, float]]:
     """
-    데이터가 적을 때 사용할 Curve fitting 기반 반감기 추정.
-    3.0h ~ 8.0h 범위에서 가장 상관계수가 큰 T를 선택.
+    데이터가 적을 때 사용할 Curve fitting 기반 반감기 추정
+    3.0h ~ 8.0h 범위에서 가장 상관계수가 큰 T를 선택
     """
     pairs = _build_pairs_for_fitting(intakes, sleeps)
     if not pairs:
-        # 데이터가 너무 적을 때는 5.0h 고정 (기본값)
+        # 수면로그 자체가 너무 적을 때는 5.0h 고정
         return 5.0, {}
 
     candidate_T = [x / 10.0 for x in range(30, 81, 5)]  # 3.0, 3.5, ..., 8.0
@@ -113,8 +114,8 @@ def build_daily_curve(
     step_minutes: int = 30,
 ) -> List[Dict[str, Any]]:
     """
-    해당 날짜(day) 00:00~24:00 카페인 곡선.
-    RN 그래프 데이터로 사용.
+    해당 날짜(day) 00:00~24:00 카페인 곡선
+    RN 그래프 데이터로 사용
     """
     start = datetime(day.year, day.month, day.day, 0, 0, 0)
     end = start + timedelta(days=1)
@@ -141,5 +142,16 @@ def predict_caffeine_at(
 ) -> float:
     """
     외부에서 임의 시점의 카페인 잔여량이 필요할 때 사용하는 함수.
+    """
+    return _residual_caffeine_at(t, intakes, half_life_h)
+
+
+def residual_caffeine_at(
+    t: datetime,
+    intakes: List[Intake],
+    half_life_h: float,
+) -> float:
+    """
+    ML 쪽에서 재사용하기 위한 public 래퍼.
     """
     return _residual_caffeine_at(t, intakes, half_life_h)

@@ -27,7 +27,7 @@ def get_conn():
     )
 
 def load_intakes_for_user(user_id: int, days: int = 60) -> List[Intake]:
-    """최근 days일 섭취 기록을 가져옵니다."""
+    # 최근 days일 섭취 기록 로드
     now = datetime.now()
     start = now - timedelta(days=days)
 
@@ -41,7 +41,7 @@ def load_intakes_for_user(user_id: int, days: int = 60) -> List[Intake]:
 
     with get_conn() as conn:
         with conn.cursor() as cur:
-            # **순서 중요**: user_id, start, now
+            # 순서 중요: user_id, start, now
             cur.execute(sql, (user_id, start, now))
             rows = cur.fetchall()
 

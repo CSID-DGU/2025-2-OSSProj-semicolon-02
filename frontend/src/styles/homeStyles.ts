@@ -290,16 +290,57 @@ export const homeStyles = StyleSheet.create({
   },
   statNote: { ...common.subtle, marginTop: theme.spacing(0.5) },
 
+  // 민감도 숫자 텍스트
+  sensitivityValue: {
+    ...common.subtle,
+    marginTop: theme.spacing(0.75),
+    color: theme.colors.gray600,
+  },
+
+  // "카페인 영향 거의 없음" 태그 영역
+  insensitiveTag: {
+    marginTop: theme.spacing(0.5),
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: theme.spacing(1.5),
+    paddingVertical: theme.spacing(0.5),
+    borderRadius: 999,
+    backgroundColor: theme.colors.gray100,
+  },
+
+  // 태그 내부 글자
+  insensitiveTagText: {
+    fontSize: 11,
+    color: theme.colors.gray700,
+    fontWeight: '500',
+  },
+
   /** 그래프 카드 */
   chartCard: {
     ...common.card,
     ...common.shadowCard,
     backgroundColor: theme.colors.white,
     marginHorizontal: theme.spacing(3),
-    height: 160,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    marginTop: theme.spacing(1),
+    paddingHorizontal: theme.spacing(2),
+    paddingVertical: theme.spacing(1),
+    height: 230,
+    overflow: 'hidden',           
+  },  
+
+sleepAvgCard: {
+  ...common.card,
+  ...common.shadowCard,
+  backgroundColor: theme.colors.white,
+  marginHorizontal: theme.spacing(3),
+  marginTop: theme.spacing(1),
+  paddingHorizontal: theme.spacing(2),
+  paddingVertical: theme.spacing(2),
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
   gaugeValue: { fontSize: 28, fontWeight: '800', color: theme.colors.text },
   subtle: { fontSize: 12, color: theme.colors.gray500 },
   //section: { marginTop: theme.spacing(2) },
@@ -359,5 +400,40 @@ export const homeStyles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     marginHorizontal: theme.spacing(3),
   },
+
+  // 섭취 가능 요약 카드
+intakePlanCard: {
+  ...common.card,
+  ...common.shadowCard,
+  backgroundColor: theme.colors.white,
+  marginHorizontal: theme.spacing(3),
+},
+
+intakePlanMain: {
+  fontSize: 14,
+  fontWeight: '700',
+  color: theme.colors.text,
+  marginBottom: theme.spacing(0.5),
+},
+
+intakePlanSub: {
+  ...common.subtle,
+  lineHeight: 18,
+},
+
+dateSelectorRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+},
+dateArrowBtn: {
+  paddingHorizontal: theme.spacing(0.5),
+  paddingVertical: theme.spacing(0.5),
+},
+dateText: {
+  fontSize: 13,
+  fontWeight: '600',
+  color: theme.colors.text,
+  marginHorizontal: theme.spacing(0.5),
+},
 
 });

@@ -10,3 +10,9 @@ __pycache__/
 *.pyc
 
 /venv/
+
+venv/
+AI_model/venv/
+
+**/venv/
+**/.venv/
