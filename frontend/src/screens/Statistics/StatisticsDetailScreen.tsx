@@ -62,29 +62,27 @@ export default function StatisticsDetailScreen() {
     try {
       const user = await getCurrentUser();
       if (!user) {
-        console.log('❌ [즐겨찾기] 사용자 정보 없음');
+        console.log(' [즐겨찾기] 사용자 정보 없음');
         return;
       }
 
       const key = `${item.brand}|${item.name}`;
       const existing = favoriteMap.get(key);
 
-      console.log('❤️ [즐겨찾기] 토글 시작:', { key, existing, item });
-
       if (existing) {
-        console.log('🗑️ [즐겨찾기] 삭제 시도:', existing.id);
+        console.log(' [즐겨찾기] 삭제 시도:', existing.id);
         await deleteFavorite(existing.id);
         setFavoriteMap(prev => {
           const next = new Map(prev);
           next.delete(key);
           console.log(
-            '✅ [즐겨찾기] 삭제 완료, 새로운 맵:',
+            '[즐겨찾기] 삭제 완료, 새로운 맵:',
             Array.from(next.keys()),
           );
           return next;
         });
       } else {
-        console.log('➕ [즐겨찾기] 추가 시도:', {
+        console.log(' [즐겨찾기] 추가 시도:', {
           brand: item.brand,
           name: item.name,
         });
@@ -96,19 +94,19 @@ export default function StatisticsDetailScreen() {
           caffeineMg: 0,
           volumeMl: 0,
         });
-        console.log('✅ [즐겨찾기] 추가 완료, ID:', favoriteId);
+        console.log('[즐겨찾기] 추가 완료, ID:', favoriteId);
         setFavoriteMap(prev => {
           const next = new Map(prev);
           next.set(key, { id: favoriteId, beverageId: null });
           console.log(
-            '✅ [즐겨찾기] 상태 업데이트 완료, 새로운 맵:',
+            '[즐겨찾기] 상태 업데이트 완료, 새로운 맵:',
             Array.from(next.keys()),
           );
           return next;
         });
       }
     } catch (e) {
-      console.error('❌ [즐겨찾기] 토글 실패:', e);
+      console.error(' [즐겨찾기] 토글 실패:', e);
       if (e instanceof Error) {
         console.error('에러 메시지:', e.message);
         console.error('에러 스택:', e.stack);
@@ -121,7 +119,7 @@ export default function StatisticsDetailScreen() {
   const isFavorite = (item: Drink) => {
     const key = `${item.brand}|${item.name}`;
     const result = favoriteMap.has(key);
-    console.log('🔍 [즐겨찾기] 체크:', {
+    console.log(' [즐겨찾기] 체크:', {
       key,
       result,
       mapSize: favoriteMap.size,

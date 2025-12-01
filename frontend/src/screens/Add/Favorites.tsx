@@ -1,4 +1,3 @@
-// screens/Add/Favorites.tsx
 import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import {
   View,
@@ -31,9 +30,9 @@ export type FavItem = {
   type: FavType;
 
   // 표시용
-  name: string; // 예: 아이스 아메리카노
-  brand: string; // 예: 스타벅스
-  volumeText?: string; // 예: Tall / 355ml
+  name: string;  
+  brand: string;  
+  volumeText?: string;  
 
   // 백엔드 저장용(지금은 manual API만 사용하므로 beverageId는 실제로 쓰지 않음)
   beverageId: number;

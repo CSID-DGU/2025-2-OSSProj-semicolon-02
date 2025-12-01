@@ -1,4 +1,3 @@
-// styles/favoritesStyles.ts
 import {StyleSheet} from 'react-native';
 import {theme} from './theme';
 import {common, fonts} from './common';
@@ -8,7 +7,7 @@ export const favoritesStyles = StyleSheet.create({
     marginTop: theme.spacing(2),
   },
 
-  /** 카테고리 칩 */
+
   chipRow: {
     flexDirection: 'row',
     columnGap: 8,
