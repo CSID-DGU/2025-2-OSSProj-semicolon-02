@@ -1,4 +1,3 @@
-// screens/Add/DrinkSelect.tsx
 import React, {memo, useCallback, useMemo} from 'react';
 import {
   View,
