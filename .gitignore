@@ -16,3 +16,8 @@ AI_model/venv/
 
 **/venv/
 **/.venv/
+
+echo "
+AI_model/chroma_db/
+AI_model/__pycache__/
+" >> .gitignore

@@ -4,7 +4,7 @@ import os
 import base64
 from openai import OpenAI
 from dotenv import load_dotenv
-from mapping_db import VectorRAGAgent
+from .mapping_db import VectorRAGAgent
 import json
 
 load_dotenv()
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     vision_json = json.loads(result_str)
 
     # 2) 벡터 RAG 결과
-    from mapping_db import VectorRAGAgent
+    from .mapping_db import VectorRAGAgent
     rag = VectorRAGAgent()
     rag_out = rag.query(vision_json)
 

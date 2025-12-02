@@ -19,9 +19,9 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 
-from caffeine_cal.models import Intake
-from caffeine_cal.half_life_curve import residual_caffeine_at
-from caffeine_cal.data_access import load_intakes_for_user
+from .caffeine_cal.models import Intake
+from .caffeine_cal.half_life_curve import residual_caffeine_at
+from .caffeine_cal.data_access import load_intakes_for_user
 
 load_dotenv()
 
@@ -148,9 +148,7 @@ class AdvisorAgent:
         return response.choices[0].message.content
 
 
-from drink_image import analyze_drink
-
-from drink_image import analyze_drink
+from .drink_image import analyze_drink
 
 if __name__ == "__main__":
     # 1번 유저(user1)의 최근 30일 섭취 기록을 DB에서 불러오기
