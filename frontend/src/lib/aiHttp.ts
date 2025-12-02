@@ -12,7 +12,7 @@ export interface LatestDrinkPlan {
 }
 
 export interface CurvePoint {
-  time: string;       // ISO 문자열
+  time: string; // ISO 문자열
   caffeineMg: number;
 }
 
@@ -30,7 +30,7 @@ export interface TwoParamDebug {
 
 export interface CaffeineSummaryRes {
   userId: number;
-  date: string;              // YYYY-MM-DD
+  date: string; // YYYY-MM-DD
   halfLifeHours: number;
 
   // Flask에서 내려주는 메서드 + 민감도
@@ -39,7 +39,7 @@ export interface CaffeineSummaryRes {
 
   curve: CurvePoint[];
   latestDrinkPlan: LatestDrinkPlan | null;
-  debug: TwoParamDebug;      // ← any 제거
+  debug: TwoParamDebug; // ← any 제거
 }
 
 // Flask 서버 주소에 맞게 baseURL 수정
@@ -48,12 +48,22 @@ export const aiHttp = axios.create({
   timeout: 7000,
 });
 
+
 export async function fetchCaffeineSummary(
   userId: number,
   date?: string,
+  options?: {
+    targetSleepTime?: string;
+    doseMg?: number;
+  },
 ): Promise<CaffeineSummaryRes> {
   const res = await aiHttp.get<CaffeineSummaryRes>('/caffeine-cal/summary', {
-    params: { userId, date },
+    params: {
+      userId,
+      date,
+      doseMg: options?.doseMg ?? 150, // 아이스 아메리카노 1잔 기준 (150mg)
+      targetSleepTime: options?.targetSleepTime,
+    },
   });
   return res.data;
 }

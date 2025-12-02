@@ -8,13 +8,34 @@ import math
 from .models import Intake
 from .half_life_curve import predict_caffeine_at
 
-SAFE_THRESHOLD_MG: float = 30.0
+SAFE_THRESHOLD_MG: float = 50.0
 
+def get_safe_threshold_for_user(
+    user_id: Optional[int] = None,
+    sensitivity: Optional[float] = None,
+) -> float:
+    """
+    민감도(S)에 따라 수면 시 잔여 카페인 허용 상한선을 조정.
 
-def get_safe_threshold_for_user(user_id: Optional[int] = None) -> float:
-    return SAFE_THRESHOLD_MG
+    - |S| < 0.05  : 카페인과 수면의 상관성이 거의 없음 → 300mg까지 허용
+    - |S| < 0.10  : 약간 둔감 → 200mg
+    - 그 외       : 기본값 SAFE_THRESHOLD_MG (50mg)
+    """
+    base = SAFE_THRESHOLD_MG
 
+    if sensitivity is None:
+        return base
 
+    if abs(sensitivity) < 0.05:
+        # 거의 영향 없는 둔감형
+        return 300.0
+    elif abs(sensitivity) < 0.10:
+        # 약간 둔감
+        return 200.0
+    else:
+        # 보통 또는 예민
+        return base
+    
 def _residual_from_single_drink(
     drink_time: datetime,
     dose_mg: float,
@@ -32,7 +53,7 @@ def find_latest_safe_drink_time(
     intakes: List[Intake],
     half_life_h: float,
     target_sleep_at: datetime,
-    dose_mg: float = 80.0,
+    dose_mg: float = 150.0,
     step_minutes: int = 10,
     safe_threshold_mg: Optional[float] = None,
     user_id: Optional[int] = None,
@@ -40,11 +61,12 @@ def find_latest_safe_drink_time(
 ) -> Dict[str, Any]:
     """
     선택된 날짜(base_day)를 기준으로, 해당 날짜 안에서
-    dose_mg 한 잔을 추가로 마실 수 있는 마지막 시각을 찾기기
+    dose_mg 한 잔을 추가로 마실 수 있는 마지막 시각을 찾기.
 
-    - base_day 가 주어지면: base_day 00:00 ~ target_sleep_at 사이에서 탐색
-    - base_day 가 없으면: 기존처럼 now ~ target_sleep_at 사이에서 탐색
+    - base_day 가 주어지면: base_day 00:00 ~ target_sleep_at 사이 탐색
+    - base_day 가 없으면: now ~ target_sleep_at 사이 탐색
     """
+    # API에서 safe_threshold_mg를 넘겨주지 않으면 여기서 계산
     if safe_threshold_mg is None:
         safe_threshold_mg = get_safe_threshold_for_user(user_id)
 
@@ -56,14 +78,12 @@ def find_latest_safe_drink_time(
     end = target_sleep_at
 
     if end <= start:
-        # 과거 날짜에 base_day 없이 호출하거나, 잘못된 입력인 경우
         return {
             "possible": False,
             "reason": "target_sleep_at_is_past",
             "latestAllowedTime": None,
             "safeThreshold": safe_threshold_mg,
         }
-
 
     base_at_sleep = predict_caffeine_at(target_sleep_at, intakes, half_life_h)
 
@@ -79,10 +99,11 @@ def find_latest_safe_drink_time(
     latest_safe: Optional[datetime] = None
     latest_c_at_sleep: float = base_at_sleep
 
-
     t = start
     while t <= end:
-        extra = _residual_from_single_drink(t, dose_mg, half_life_h, target_sleep_at)
+        extra = _residual_from_single_drink(
+            t, dose_mg, half_life_h, target_sleep_at
+        )
         total = base_at_sleep + extra
 
         if total <= safe_threshold_mg:
@@ -102,7 +123,9 @@ def find_latest_safe_drink_time(
 
     return {
         "possible": True,
-        "latestAllowedTime": latest_safe.isoformat(sep="T", timespec="minutes"),
+        "latestAllowedTime": latest_safe.isoformat(
+            sep="T", timespec="minutes"
+        ),
         "caffeineAtSleepIfDrink": round(latest_c_at_sleep, 1),
         "baseCaffeineAtSleep": round(base_at_sleep, 1),
         "doseMg": dose_mg,
