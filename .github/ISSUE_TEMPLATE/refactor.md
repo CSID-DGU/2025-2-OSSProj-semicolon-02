@@ -1,8 +1,8 @@
 ---
-name: '♻️ [Refactor] 리펙토링'
+name: '[Refactor] 리펙토링'
 about: 리펙토링을 위한 이슈 템플릿
-title: '♻️ [Refactor] '
-labels: '♻️ refactor'
+title: '[Refactor] '
+labels: 'refactor'
 assignees: ''
 ---
 ## 📝 개요

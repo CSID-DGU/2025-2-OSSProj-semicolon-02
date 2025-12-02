@@ -29,7 +29,7 @@ export default function CafeFindScreen() {
         </Text>
       </View>
 
-      {/* Bottom Sheet */}
+
       <View style={cafeFindStyles.bottomSheet}>
         {/* Handle */}
         <View style={cafeFindStyles.handle} />
@@ -42,7 +42,7 @@ export default function CafeFindScreen() {
           </Text>
         </View>
 
-        {/* 진행 상태 바 */}
+  
         <View style={cafeFindStyles.progressBar}>
           {[1, 2, 3, 4, 5].map((step) => (
             <View
@@ -73,7 +73,7 @@ export default function CafeFindScreen() {
             </View>
           </View>
 
-          {/* 카페 리스트 */}
+     
           <View style={cafeFindStyles.cafeList}>
             {cafes.map((cafe) => (
               <CafeListItem key={cafe.id} cafe={cafe} />
