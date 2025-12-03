@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
+  Dimensions,
   Image,
   Pressable,
   ScrollView,
@@ -7,9 +8,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { statisticsStyles } from '../../../styles/statisticsStyles';
 import { theme } from '../../../styles/theme';
+import { getCurrentUser, type StoredUser } from '../../../lib/authSession';
+import type { RootStackParamList } from '../../../navigation/types';
+import logoImg from '../../../../assets/img/logo.png';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 type Props = {
   title: string;
@@ -26,6 +34,7 @@ export default function StatisticsHeader({
   selectedLabel,
   onSelect,
 }: Props) {
+  const navigation = useNavigation<NavigationProp>();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [buttonLayout, setButtonLayout] = useState<{
     x: number;
@@ -40,6 +49,58 @@ export default function StatisticsHeader({
     height: number;
   } | null>(null);
 
+  // 월 스크롤
+  const monthScrollRef = useRef<ScrollView>(null);
+  const monthPillRefs = useRef<(View | null)[]>([]);
+
+  // 로그인 상태
+  const [user, setUser] = useState<StoredUser | null>(null);
+
+  // 회원 정보 가져오기
+  useEffect(() => {
+    const loadUser = async () => {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    };
+    loadUser();
+  }, []);
+
+  // 선택된 월이 변경=> 선택된 월ㄹㅇ보이도록 스크롤
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (monthScrollRef.current && monthPillRefs.current[selectedIndex]) {
+        monthPillRefs.current[selectedIndex]?.measureLayout(
+          monthScrollRef.current as any,
+          (x, y, width, height) => {
+            //  중앙에 오도록 스크롤
+            monthScrollRef.current?.scrollTo({
+              x: Math.max(
+                0,
+                x - Dimensions.get('window').width / 2 + width / 2,
+              ),
+              animated: true,
+            });
+          },
+          () => {
+            const pillWidth = 60;
+            const scrollX = Math.max(
+              0,
+              selectedIndex * pillWidth -
+                Dimensions.get('window').width / 2 +
+                pillWidth / 2,
+            );
+            monthScrollRef.current?.scrollTo({
+              x: scrollX,
+              animated: true,
+            });
+          },
+        );
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [selectedIndex]);
+
   const openPicker = () => setPickerOpen(true);
   const closePicker = () => setPickerOpen(false);
   const handleSelect = (index: number) => {
@@ -47,11 +108,11 @@ export default function StatisticsHeader({
     closePicker();
   };
 
-  // 드롭다운 위치 계산: periodSelector 아래에 배치
+  // 드롭다운 위치
   const pickerStyle =
     buttonLayout && periodSelectorLayout
       ? {
-          top: periodSelectorLayout.height + 20,
+          top: periodSelectorLayout.height,
           left: buttonLayout.x,
           width: buttonLayout.width,
         }
@@ -61,16 +122,26 @@ export default function StatisticsHeader({
     <View style={statisticsStyles.header}>
       <View style={statisticsStyles.headerTopRow}>
         <TouchableOpacity
-          style={statisticsStyles.backButton}
+          style={statisticsStyles.profileWrap}
           activeOpacity={0.7}
+          onPress={() => navigation.navigate('AccountSettings')}
         >
-          <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
-        </TouchableOpacity>
-        <View style={statisticsStyles.profileWrap}>
-          <Image
-            source={{ uri: 'https://i.pravatar.cc/100?img=12' }} //바꾸기
-            style={statisticsStyles.avatar}
-          />
+          <View
+            style={[
+              statisticsStyles.avatar,
+              {
+                backgroundColor: theme.colors.white,
+                justifyContent: 'center',
+                alignItems: 'center',
+              },
+            ]}
+          >
+            <Image
+              source={logoImg}
+              style={{ width: 28, height: 28 }}
+              resizeMode="contain"
+            />
+          </View>
           <Text
             style={{
               fontSize: 14,
@@ -78,9 +149,9 @@ export default function StatisticsHeader({
               color: theme.colors.text,
             }}
           >
-            서현 님
+            {user?.name ? `${user.name} 님` : '사용자'}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       <Text style={statisticsStyles.headerTitle}>{title}</Text>
@@ -90,9 +161,6 @@ export default function StatisticsHeader({
           style={statisticsStyles.periodSelector}
           onLayout={event => setPeriodSelectorLayout(event.nativeEvent.layout)}
         >
-          <Text style={{ fontSize: 15, color: theme.colors.gray600 }}>
-            월별
-          </Text>
           <TouchableOpacity
             style={statisticsStyles.dropdownButton}
             activeOpacity={0.8}
@@ -112,7 +180,6 @@ export default function StatisticsHeader({
           </TouchableOpacity>
         </View>
 
-        {/* 드롭다운이 펼쳐지면 absolute로 표시하여 아래 요소가 움직이지 않게 함 */}
         {pickerOpen && pickerStyle && (
           <View style={[statisticsStyles.monthPickerBase, pickerStyle]}>
             <ScrollView
@@ -147,6 +214,7 @@ export default function StatisticsHeader({
       </View>
 
       <ScrollView
+        ref={monthScrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         style={statisticsStyles.monthScroll}
@@ -154,24 +222,30 @@ export default function StatisticsHeader({
         {months.map((month, index) => {
           const active = index === selectedIndex;
           return (
-            <TouchableOpacity
+            <View
               key={month}
-              activeOpacity={0.8}
-              onPress={() => onSelect(index)}
-              style={[
-                statisticsStyles.monthPill,
-                active && statisticsStyles.monthPillActive,
-              ]}
+              ref={el => {
+                monthPillRefs.current[index] = el;
+              }}
             >
-              <Text
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => onSelect(index)}
                 style={[
-                  statisticsStyles.monthLabel,
-                  active && statisticsStyles.monthLabelActive,
+                  statisticsStyles.monthPill,
+                  active && statisticsStyles.monthPillActive,
                 ]}
               >
-                {month}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    statisticsStyles.monthLabel,
+                    active && statisticsStyles.monthLabelActive,
+                  ]}
+                >
+                  {month}
+                </Text>
+              </TouchableOpacity>
+            </View>
           );
         })}
       </ScrollView>

@@ -4,7 +4,7 @@ import { theme } from './theme';
 export const statisticsStyles = StyleSheet.create({
   screen: {
     flex: 1,
-   
+
     backgroundColor: theme.colors.background,
   },
   container: {
@@ -22,7 +22,7 @@ export const statisticsStyles = StyleSheet.create({
   },
   headerTopRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
   backButton: {
@@ -36,7 +36,7 @@ export const statisticsStyles = StyleSheet.create({
   profileWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing(1),
+    gap: theme.spacing(0.75),
   },
   avatar: {
     width: 36,
@@ -44,16 +44,17 @@ export const statisticsStyles = StyleSheet.create({
     borderRadius: 18,
   },
   headerTitle: {
-    marginTop: theme.spacing(3),
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(2),
     fontSize: 26,
     fontWeight: '700',
     color: theme.colors.text,
   },
   periodSelector: {
-    marginTop: theme.spacing(3),
+    marginTop: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
   dropdownButton: {
     flexDirection: 'row',
@@ -114,9 +115,10 @@ export const statisticsStyles = StyleSheet.create({
     flexDirection: 'row',
   },
   chartYAxis: {
-    width: 40,
+    width: 30, // 간격 더 줄임 (35 -> 30)
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing(1),
+    paddingVertical: 0, // 패딩 제거
+    alignItems: 'flex-end', // 오른쪽 정렬로 라인에 더 가깝게
   },
   chartYAxisLabel: {
     fontSize: 12,
@@ -124,7 +126,7 @@ export const statisticsStyles = StyleSheet.create({
   },
   chartScrollArea: {
     flex: 1,
-    paddingLeft: theme.spacing(2),
+    paddingLeft: theme.spacing(0.25), // 간격 더 줄임 (0.5 -> 0.25)
   },
   chartColumn: {
     width: 36,
@@ -219,7 +221,7 @@ export const statisticsStyles = StyleSheet.create({
     position: 'absolute',
     borderRadius: theme.radius.md,
     backgroundColor: 'rgba(255,255,255,0.95)',
-    paddingVertical: theme.spacing(0.5),
+    paddingVertical: 0,
     paddingHorizontal: theme.spacing(0.5),
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',

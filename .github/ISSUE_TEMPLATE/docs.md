@@ -1,8 +1,8 @@
 ---
-name: '📝 [Docs] 문서'
+name: '[Docs] 문서'
 about: 문서작업을 위한 이슈 템플릿
-title: '📝 [Docs] '
-labels: '📝 Docs'
+title: '[Docs] '
+labels: 'Docs'
 assignees: ''
 ---
 ## 📝 개요

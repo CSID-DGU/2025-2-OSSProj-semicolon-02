@@ -4,7 +4,7 @@ import os
 import base64
 from openai import OpenAI
 from dotenv import load_dotenv
-from mapping_db import VectorRAGAgent
+from .mapping_db import VectorRAGAgent
 import json
 
 load_dotenv()
@@ -32,7 +32,7 @@ SYSTEM_PROMPT = """
   예: "Hot Americano", "Iced Americano", "Caffe Latte", "Vanilla Latte",
       "Cold Brew", "Cappuccino", "Mocha", "Non-coffee (Ade)", "Non-coffee (Smoothie)" 등.
 - 라벨에 정확한 메뉴명이 없어도,
-  1) 브랜드(예: 메가커피, 스타벅스, 이디야),
+  1) 브랜드(예: 메가커피, 스타벅스, 이디야)를 꼭 "한글"로 출력해줘,
   2) 컵 색/디자인,
   3) 얼음 유무, 우유 느낌,
   등을 보고 가장 가능성 높은 drink_type 을 하나 선택하세요.
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     vision_json = json.loads(result_str)
 
     # 2) 벡터 RAG 결과
-    from mapping_db import VectorRAGAgent
+    from .mapping_db import VectorRAGAgent
     rag = VectorRAGAgent()
     rag_out = rag.query(vision_json)
 
@@ -126,4 +126,32 @@ if __name__ == "__main__":
         "caffeine_mg": rag_out.get("caffeine_mg"),   # ← RAG 기반 카페인 mg
     }
 
+    print(json.dumps(final_out, ensure_ascii=False, indent=2))
+    
+    
+def analyze_drink(image_path: str) -> dict:
+    """
+    이미지 한 장을 받아서
+    Vision → RAG까지 돌린 최종 음료 정보(dict)를 반환.
+    형태: { "brand": ..., "drink_type": ..., "caffeine_mg": ... }
+    """
+    # 1) Vision 결과
+    vision_agent = VisionAgent()
+    result_str = vision_agent.analyze(image_path)
+    vision_json = json.loads(result_str)
+
+    # 2) 벡터 RAG 결과
+    rag = VectorRAGAgent()
+    rag_out = rag.query(vision_json)
+
+    # 3) 최종 결과
+    final_out = {
+        "brand": vision_json.get("brand"),
+        "drink_type": vision_json.get("drink_type"),
+        "caffeine_mg": rag_out.get("caffeine_mg"),
+    }
+    return final_out
+
+if __name__ == "__main__":
+    final_out = analyze_drink(image_path)
     print(json.dumps(final_out, ensure_ascii=False, indent=2))
