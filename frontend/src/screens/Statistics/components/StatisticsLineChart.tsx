@@ -90,7 +90,7 @@ export default function StatisticsDateLineChart({
   );
 
   return (
-    <View style={statisticsStyles.chartCard}>
+    <View style={[statisticsStyles.chartCard, { overflow: 'visible' }]}>
       {caption ? (
         <View style={statisticsStyles.sectionHeaderRow}>
           <Text style={statisticsStyles.sectionTitle}>{caption}</Text>
@@ -105,7 +105,12 @@ export default function StatisticsDateLineChart({
         </View>
       ) : null}
 
-      <View style={statisticsStyles.chartAxes}>
+      <View
+        style={[
+          statisticsStyles.chartAxes,
+          { paddingTop: 50, overflow: 'visible' },
+        ]}
+      >
         <View
           style={[
             statisticsStyles.chartYAxis,
@@ -146,7 +151,7 @@ export default function StatisticsDateLineChart({
         </View>
 
         {/* Line Chart (점 + 선) */}
-        <View style={{ flex: 1, position: 'relative' }}>
+        <View style={{ flex: 1, position: 'relative', overflow: 'visible' }}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={true}
@@ -231,26 +236,35 @@ export default function StatisticsDateLineChart({
                     calculatedSpacing / 2;
                   const pointY = 180 - (point.mg / 500) * 180;
 
-                  // 위쪽 점(낮은 pointY, 높은 mg 값): 툴팁을 점 위에
-                  // 아래쪽 점(높은 pointY, 낮은 mg 값): 툴팁을 점 아래에
+                  // 위쪽 점(높은 mg 값, 낮은 pointY): 툴팁을 그리드 200 선에 배치
+                  // 아래쪽 점(낮은 mg 값, 높은 pointY): 툴팁을 점 아래에 배치
                   const chartMidPoint = 90; // 차트 높이 180의 중간
                   const isUpperHalf = pointY < chartMidPoint;
 
-                  // 위쪽 점: 툴팁을 더 위로 올림 (점 위쪽에 명확히 표시)
-                  // 아래쪽 점: 툴팁을 아래로 (점 아래쪽에 명확히 표시)
+                  // 그리드 200 선 위치 계산
+                  // Y축 레이블 위치: 500(0), 400(36), 300(72), 200(108), 100(144)
+                  const grid200Position = 3 * (180 / 5); // 200 레이블 위치 = 108px
+
+                  // 위쪽 점: 그리드 200 선 높이에 고정, 아래쪽 점: 점 아래
                   const tooltipTop = isUpperHalf
-                    ? Math.max(0, pointY - 55) // 위쪽: 점보다 더 위로
+                    ? grid200Position // 그리드 200 선 높이 (108px)에 정확히 배치
                     : pointY + 20; // 아래쪽: 점 아래로
+
+                  // 툴팁의 X 위치: 점의 X 위치에 맞춰서 배치
+                  const tooltipLeft = Math.max(
+                    theme.spacing(0.25),
+                    pointX - 40, // 점 중앙 기준
+                  );
 
                   return (
                     <View
                       style={{
                         position: 'absolute',
-                        left: pointX - 40,
+                        left: tooltipLeft,
                         top: tooltipTop,
                         zIndex: 1000,
-                        backgroundColor: '#CD853F', // 진한 갈색 배경
-                        paddingHorizontal: theme.spacing(1.5),
+                        backgroundColor: '#C4A484', // 뮤트한 갈색/베이지 톤 배경
+                        paddingHorizontal: theme.spacing(2), // 패딩 증가
                         paddingVertical: theme.spacing(0.5),
                         borderRadius: theme.radius.md,
                         shadowColor: '#000',
@@ -262,7 +276,7 @@ export default function StatisticsDateLineChart({
                     >
                       <Text
                         style={{
-                          color: '#FFFFFF', // 흰색 텍스트 (진한 배경에 대비)
+                          color: theme.colors.text, // 어두운 텍스트 (베이지 배경에 대비)
                           fontSize: 11,
                           fontWeight: '600',
                         }}

@@ -304,7 +304,7 @@ export default function StatisticsScreen() {
           </View>
           <View style={statisticsStyles.section}>
             <DrinkList
-              title="최근에 마신 음료"
+              title="최근 마신 음료"
               items={recentDrinks}
               monthLabel={monthLabel}
             />
