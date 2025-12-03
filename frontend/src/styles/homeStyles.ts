@@ -436,4 +436,19 @@ dateText: {
   marginHorizontal: theme.spacing(0.5),
 },
 
+  sleepTargetBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing(1.5),
+    paddingVertical: theme.spacing(0.5),
+    borderRadius: 999,
+    backgroundColor: theme.colors.gray100,
+  },
+  sleepTargetBadgeText: {
+    fontSize: 11,
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+
+
 });

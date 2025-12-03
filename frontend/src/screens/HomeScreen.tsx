@@ -154,6 +154,11 @@ export default function HomeScreen() {
   const [tmpSleepAt, setTmpSleepAt] = useState('');
   const [tmpWakeAt, setTmpWakeAt] = useState('');
 
+  // 오늘 목표 수면 시각 (예: "23:30")
+  const [targetSleepTime, setTargetSleepTime] = useState<string>('23:30');
+  const [sleepTargetModalVisible, setSleepTargetModalVisible] =
+    useState<boolean>(false);
+
   // AI 요약 상태
   const [halfLifeHours, setHalfLifeHours] = useState<number | null>(null);
   const [halfLifeMethod, setHalfLifeMethod] = useState<string | null>(null);
@@ -165,9 +170,9 @@ export default function HomeScreen() {
 
   // 카페인 둔감 사용자 태그 여부 (S 절댓값이 매우 작으면 둔감으로 간주)
   const isInsensitive = useMemo(
-    () => sensitivity != null && Math.abs(sensitivity) < 0.05,
-    [sensitivity],
-  );
+  () => sensitivity != null && Math.abs(sensitivity) < 0.05,
+  [sensitivity],
+);
 
   // 카페인 곡선 데이터 (그래프용)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -230,12 +235,25 @@ export default function HomeScreen() {
     }
   }, []);
 
-  const fetchCaffeineAI = useCallback(async (uid: number, baseDate?: Date) => {
+/**
+ * AI 요약/그래프 + 섭취 가능 시간 계산
+ * - targetSleepTime(오늘 목표 수면 시각)을 함께 전달
+ * - doseMg는 아이스 아메리카노 1잔 = 150mg 기준
+ */
+const fetchCaffeineAI = useCallback(
+  async (uid: number, baseDate?: Date, sleepTimeOverride?: string) => {
     try {
       const dateObj = baseDate ?? new Date();
       const dateStr = formatDate(dateObj); // YYYY-MM-DD
 
-      const data: CaffeineSummaryRes = await fetchCaffeineSummary(uid, dateStr);
+      const data: CaffeineSummaryRes = await fetchCaffeineSummary(
+        uid,
+        dateStr,
+        {
+          targetSleepTime: sleepTimeOverride ?? targetSleepTime,
+          doseMg: 150,
+        },
+      );
       console.log('[Home] AI summary', data);
 
       setHalfLifeHours(data.halfLifeHours ?? null);
@@ -243,7 +261,6 @@ export default function HomeScreen() {
       setLatestDrinkPlan(data.latestDrinkPlan ?? null);
       setCurve(data.curve ?? []);
 
-      // 민감도 값 세팅
       if (typeof data.sensitivity === 'number') {
         setSensitivity(data.sensitivity);
       } else {
@@ -257,7 +274,9 @@ export default function HomeScreen() {
       setCurve([]);
       setSensitivity(null);
     }
-  }, []);
+  },
+  [targetSleepTime],
+);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -485,68 +504,90 @@ export default function HomeScreen() {
   })();
 
   // 섭취 가능 요약용 메인 텍스트
-  const intakePlanMain = useMemo(() => {
-    if (!latestDrinkPlan) {
-      return '아직 섭취 계획을 계산할 수 없습니다.';
+const intakePlanMain = useMemo(() => {
+  if (!latestDrinkPlan) {
+    return `오늘 수면 목표 ${targetSleepTime} 기준 섭취 계획을 계산할 수 없습니다.`;
+  }
+
+  if (!latestDrinkPlan.possible) {
+    const reason = latestDrinkPlan.reason;
+    if (reason === 'already_over_threshold') {
+      return `오늘 수면 목표 ${targetSleepTime} 기준, 추가 카페인 섭취를 권장하지 않습니다.`;
     }
-
-    if (!latestDrinkPlan.possible) {
-      const reason = latestDrinkPlan.reason;
-      if (reason === 'already_over_threshold') {
-        return '오늘은 추가 카페인 섭취를 권장하지 않습니다.';
-      }
-      if (reason === 'no_safe_slot') {
-        return '오늘 남은 시간에 안전한 섭취 시간이 없습니다.';
-      }
-      if (reason === 'target_sleep_at_is_past') {
-        return '설정된 취침 시간이 지나 내일 기준으로 다시 계산합니다.';
-      }
-      return '오늘은 추가 카페인 섭취를 권장하지 않습니다.';
+    if (reason === 'no_safe_slot') {
+      return `오늘 수면 목표 ${targetSleepTime} 기준, 안전한 섭취 시간이 없습니다.`;
     }
-
-    const latestHM = formatIsoHM(latestDrinkPlan.latestAllowedTime);
-    const dose = latestDrinkPlan.doseMg ?? 80;
-
-    if (latestHM === '-') {
-      return '오늘은 한 잔 정도의 추가 섭취가 가능합니다.';
+    if (reason === 'target_sleep_at_is_past') {
+      return '설정된 취침 시간이 지나 내일 기준으로 다시 계산해 주세요.';
     }
+    return `오늘 수면 목표 ${targetSleepTime} 기준, 추가 카페인 섭취를 권장하지 않습니다.`;
+  }
 
-    return `${latestHM}까지 약 ${dose}mg 1잔 섭취 가능`;
-  }, [latestDrinkPlan]);
+  const latestHM = formatIsoHM(latestDrinkPlan.latestAllowedTime);
+  const dose = latestDrinkPlan.doseMg ?? 150;
 
-  // 섭취 가능 요약용 서브 텍스트 (상한선/수면 시 농도 설명)
-  const intakePlanSub = useMemo(() => {
-    if (!latestDrinkPlan) {
-      return '수면·섭취 데이터를 더 수집하면 보다 정확한 계획이 제공됩니다.';
+  if (latestHM === '-') {
+    return `오늘 수면 목표 ${targetSleepTime} 기준, 아이스 아메리카노 1잔(약 150mg) 정도의 추가 섭취가 가능합니다.`;
+  }
+
+  return `오늘 수면 목표 ${targetSleepTime} 기준, ${latestHM}까지 약 ${dose}mg(아이스 아메리카노 1잔) 섭취 가능`;
+}, [latestDrinkPlan, targetSleepTime]);
+
+// 섭취 가능 요약용 서브 텍스트 (상한선/수면 시 농도 설명)
+const intakePlanSub = useMemo(() => {
+  // 둔감형이면, 플랜/수면상한과 무관하게 이 문장 고정
+  if (isInsensitive) {
+    // latestDrinkPlan이 있는 경우 상한선 숫자만 곁들이고 싶으면 이렇게 추가해도 됨
+    const threshold = latestDrinkPlan?.safeThreshold;
+    if (threshold != null) {
+      return '현재 데이터 기준으로는 카페인이 수면 시간과 거의 상관이 없는 패턴으로 분석되었습니다. 반감기 개인화보다는 하루 총 섭취량만 가볍게 확인하셔도 됩니다.';
+  }
+}
+
+  // 아직 플랜이 없을 때
+  if (!latestDrinkPlan) {
+    return '수면·섭취 데이터를 더 수집하면 보다 정확한 계획이 제공됩니다.';
+  }
+
+  const atSleep = latestDrinkPlan.caffeineAtSleepIfDrink;
+  const threshold = latestDrinkPlan.safeThreshold;
+
+  // 플랜은 있지만 이미 상한 초과/안전구간 없음
+  if (!latestDrinkPlan.possible) {
+    if (threshold != null) {
+      return `현재 잔여 카페인이 설정된 수면 상한선(${threshold}mg)을 이미 초과했거나, 초과할 가능성이 높습니다.`;
     }
+    return '현재 잔여 카페인이 높거나 오늘 남은 시간에 안전한 섭취 구간이 없습니다.';
+  }
 
-    const atSleep = latestDrinkPlan.caffeineAtSleepIfDrink;
-    const threshold = latestDrinkPlan.safeThreshold;
+  // 일반형/민감형인 경우에만 세부 수면 영향 설명
+  if (atSleep != null && threshold != null) {
+    return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg, 설정 상한선은 ${threshold}mg입니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
+  }
 
-    if (!latestDrinkPlan.possible) {
-      if (threshold != null) {
-        return `현재 잔여 카페인이 설정된 수면 상한선(${threshold}mg)을 이미 초과했거나, 초과할 가능성이 높습니다.`;
-      }
-      return '현재 잔여 카페인이 높거나 오늘 남은 시간에 안전한 섭취 구간이 없습니다.';
-    }
+  if (atSleep != null) {
+    return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg 이하로 예상됩니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
+  }
 
-    if (atSleep != null && threshold != null) {
-      return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg, 설정 상한선은 ${threshold}mg입니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
-    }
+  return '해당 시간 이후 섭취는 수면에 영향을 줄 수 있어 피하는 편이 좋습니다.';
+}, [latestDrinkPlan, isInsensitive]);
 
-    if (atSleep != null) {
-      return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg 이하로 예상됩니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
-    }
-
-    return '해당 시간 이후 섭취는 수면에 영향을 줄 수 있어 피하는 편이 좋습니다.';
-  }, [latestDrinkPlan]);
 
   const adviceText = (() => {
-    if (!latestDrinkPlan) {
-      return '충분한 데이터가 쌓이면 개인 맞춤 섭취 조언이 제공됩니다.';
-    }
-    return '현재 모델 기반 상세 조언은 준비 중입니다.';
-  })();
+  // 민감도 둔감형이면, 플랜 여부와 상관없이 이 문장 고정
+  if (isInsensitive) {
+    return '현재 민감도 지표(S)가 매우 낮아, 카페인이 수면 시간에 거의 영향을 주지 않는 패턴입니다. 반감기 세부 튜닝보다는 하루 총 섭취량만 기본 권장량 내에서 관리하시면 됩니다.';
+  }
+
+  // 아직 플랜 계산이 안 된 경우
+  if (!latestDrinkPlan) {
+    return '충분한 데이터가 쌓이면 개인 맞춤 섭취 조언이 제공됩니다.';
+  }
+
+  // 그 외(민감도는 있는데 일반/민감형인 경우)
+  return '현재 모델 기반 상세 조언은 준비 중입니다.';
+})();
+
 
   return (
     <SafeAreaView style={common.screen}>
@@ -785,7 +826,26 @@ export default function HomeScreen() {
 
         {/* 섭취 가능 요약 */}
         <View style={homeStyles.section}>
-          <Text style={homeStyles.sectionTitle}>섭취 가능 요약</Text>
+          <View style={homeStyles.statHeaderRow}>
+            <Text style={homeStyles.sectionTitle}>섭취 가능 요약</Text>
+
+            <TouchableOpacity
+              style={homeStyles.sleepTargetBadge}
+              onPress={() => setSleepTargetModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="time-outline"
+                size={14}
+                color={theme.colors.primary}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={homeStyles.sleepTargetBadgeText}>
+                오늘 수면 목표 {targetSleepTime}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={homeStyles.intakePlanCard}>
             <Text style={homeStyles.intakePlanMain}>{intakePlanMain}</Text>
             <Text style={homeStyles.intakePlanSub}>{intakePlanSub}</Text>
@@ -839,6 +899,58 @@ export default function HomeScreen() {
                 onPress={saveSleepEdit}
               >
                 <Text style={homeStyles.sleepSaveText}>저장</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* 오늘 목표 수면 시각 설정 모달 */}
+      {sleepTargetModalVisible && (
+        <View style={homeStyles.sleepEditOverlay}>
+          <View style={homeStyles.sleepEditCard}>
+            <Text style={homeStyles.sleepEditTitle}>오늘 목표 수면 시각</Text>
+
+            <View style={homeStyles.sleepEditRow}>
+              <Text style={homeStyles.sleepLabel}>취침 시각</Text>
+              <TextInput
+                style={homeStyles.sleepInput}
+                value={targetSleepTime}
+                onChangeText={setTargetSleepTime}
+                placeholder="HH:MM"
+              />
+            </View>
+
+            <View style={homeStyles.sleepEditActions}>
+              <TouchableOpacity
+                style={homeStyles.sleepCancelBtn}
+                onPress={() => setSleepTargetModalVisible(false)}
+              >
+                <Text style={homeStyles.sleepCancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={homeStyles.sleepSaveBtn}
+                onPress={async () => {
+                  const ok = /^\d{2}:\d{2}$/.test(targetSleepTime);
+                  if (!ok) {
+                    console.log(
+                      '[Home] invalid targetSleepTime',
+                      targetSleepTime,
+                    );
+                    setSleepTargetModalVisible(false);
+                    return;
+                  }
+                  setSleepTargetModalVisible(false);
+                  if (userId) {
+                    await fetchCaffeineAI(
+                      userId,
+                      selectedDate,
+                      targetSleepTime,
+                    );
+                  }
+                }}
+              >
+                <Text style={homeStyles.sleepSaveText}>적용</Text>
               </TouchableOpacity>
             </View>
           </View>

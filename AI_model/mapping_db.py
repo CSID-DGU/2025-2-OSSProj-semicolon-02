@@ -60,3 +60,23 @@ class VectorRAGAgent:
             "matched_text": best_match,
             "caffeine_mg": caffeine,
         }
+    def map(self, vision_json: dict):
+        """
+        Supervisor / 옛 코드에서 쓰던 인터페이스를 맞춰주기 위한 래퍼.
+
+        입력: VisionAgent가 준 JSON (brand, drink_type 포함)
+        출력: Advisor / Supervisor에서 쓰기 좋은 형태
+        """
+        base = self.query(vision_json)
+
+        brand = vision_json.get("brand") or ""
+        drink_type = vision_json.get("drink_type") or ""
+
+        return {
+            "brand": brand,
+            "drink_type": drink_type,
+            "caffeine_mg": base["caffeine_mg"],
+            # 디버깅용으로 원본 텍스트도 같이 넘겨줌
+            "matched_text": base["matched_text"],
+            "query_text": base["query_text"],
+        }
