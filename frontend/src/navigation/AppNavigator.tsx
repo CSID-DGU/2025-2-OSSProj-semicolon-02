@@ -11,6 +11,7 @@ import Login from '../screens/Account/LoginScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 import SleepHistoryScreen from '../screens/SleepHistoryScreen';
 import SelectDrink from '../screens/Add/SelectDrink';
+import AccountSettingsScreen from '../screens/MyPage/AccountSettingsScreen';
 
 import type { RootStackParamList } from './types';
 import CafeFindScreen from '../screens/CafeFindScreen';
@@ -43,6 +44,7 @@ export default function AppNavigator() {
         name="NotificationSettings"
         component={NotificationSettingsScreen}
       />
+      <Stack.Screen name="AccountSettings" component={AccountSettingsScreen} />
       <Stack.Screen name="CafeFind" component={CafeFindScreen} />
       <Stack.Screen name="SleepHistory" component={SleepHistoryScreen} />
       <Stack.Screen name="SelectDrink" component={SelectDrink} />

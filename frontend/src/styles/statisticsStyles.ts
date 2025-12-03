@@ -221,7 +221,7 @@ export const statisticsStyles = StyleSheet.create({
     position: 'absolute',
     borderRadius: theme.radius.md,
     backgroundColor: 'rgba(255,255,255,0.95)',
-    paddingVertical: theme.spacing(0.5),
+    paddingVertical: 0,
     paddingHorizontal: theme.spacing(0.5),
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',

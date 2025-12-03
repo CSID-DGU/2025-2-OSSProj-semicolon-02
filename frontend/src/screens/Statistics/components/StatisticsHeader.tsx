@@ -8,11 +8,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { statisticsStyles } from '../../../styles/statisticsStyles';
 import { theme } from '../../../styles/theme';
 import { getCurrentUser, type StoredUser } from '../../../lib/authSession';
+import type { RootStackParamList } from '../../../navigation/types';
 import logoImg from '../../../../assets/img/logo.png';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 type Props = {
   title: string;
@@ -29,6 +34,7 @@ export default function StatisticsHeader({
   selectedLabel,
   onSelect,
 }: Props) {
+  const navigation = useNavigation<NavigationProp>();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [buttonLayout, setButtonLayout] = useState<{
     x: number;
@@ -106,7 +112,7 @@ export default function StatisticsHeader({
   const pickerStyle =
     buttonLayout && periodSelectorLayout
       ? {
-          top: periodSelectorLayout.height + 20,
+          top: periodSelectorLayout.height,
           left: buttonLayout.x,
           width: buttonLayout.width,
         }
@@ -115,7 +121,11 @@ export default function StatisticsHeader({
   return (
     <View style={statisticsStyles.header}>
       <View style={statisticsStyles.headerTopRow}>
-        <View style={statisticsStyles.profileWrap}>
+        <TouchableOpacity
+          style={statisticsStyles.profileWrap}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('AccountSettings')}
+        >
           <View
             style={[
               statisticsStyles.avatar,
@@ -141,7 +151,7 @@ export default function StatisticsHeader({
           >
             {user?.name ? `${user.name} 님` : '사용자'}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       <Text style={statisticsStyles.headerTitle}>{title}</Text>
