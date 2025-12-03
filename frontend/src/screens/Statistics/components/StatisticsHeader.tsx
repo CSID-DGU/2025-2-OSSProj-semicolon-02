@@ -151,9 +151,6 @@ export default function StatisticsHeader({
           style={statisticsStyles.periodSelector}
           onLayout={event => setPeriodSelectorLayout(event.nativeEvent.layout)}
         >
-          <Text style={{ fontSize: 15, color: theme.colors.gray600 }}>
-            월별
-          </Text>
           <TouchableOpacity
             style={statisticsStyles.dropdownButton}
             activeOpacity={0.8}

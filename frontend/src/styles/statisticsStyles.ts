@@ -36,7 +36,7 @@ export const statisticsStyles = StyleSheet.create({
   profileWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing(1),
+    gap: theme.spacing(0.75),
   },
   avatar: {
     width: 36,
@@ -44,16 +44,17 @@ export const statisticsStyles = StyleSheet.create({
     borderRadius: 18,
   },
   headerTitle: {
-    marginTop: theme.spacing(3),
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(2),
     fontSize: 26,
     fontWeight: '700',
     color: theme.colors.text,
   },
   periodSelector: {
-    marginTop: theme.spacing(3),
+    marginTop: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
   dropdownButton: {
     flexDirection: 'row',

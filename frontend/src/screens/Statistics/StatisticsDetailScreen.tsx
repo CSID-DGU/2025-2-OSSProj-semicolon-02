@@ -133,7 +133,7 @@ export default function StatisticsDetailScreen() {
       edges={['top']}
     >
       <AppHeader
-        title={`${monthLabel} 자주 마시는 음료`}
+        title="최근에 마신 음료"
         onBack={() => {
           if (navigation.canGoBack()) {
             navigation.goBack();

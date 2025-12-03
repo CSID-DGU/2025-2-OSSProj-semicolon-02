@@ -26,17 +26,14 @@ export default function AppHeader({
           <TouchableOpacity
             onPress={onBack}
             style={styles.backBtn}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Text style={styles.backTxt}>←</Text>
           </TouchableOpacity>
         )}
 
         {showLogo && (
-          <Image
-            source={logoImg}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <Image source={logoImg} style={styles.logo} resizeMode="contain" />
         )}
 
         <View>
@@ -52,7 +49,7 @@ export default function AppHeader({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: theme.spacing(theme.layout.screenPX),
-    paddingTop: theme.spacing(theme.layout.headerPT+1),
+    paddingTop: theme.spacing(theme.layout.headerPT + 1),
     paddingBottom: theme.spacing(1),
     backgroundColor: theme.colors.background,
     borderBottomWidth: 1,
@@ -63,7 +60,7 @@ const styles = StyleSheet.create({
   },
 
   containerWithLogo: {
-    paddingTop: theme.spacing(theme.layout.headerPT - 5), 
+    paddingTop: theme.spacing(theme.layout.headerPT - 5),
   },
   left: {
     flexDirection: 'row',
@@ -72,16 +69,18 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     paddingRight: 4,
-    paddingBottom: 2,
+    paddingBottom: 0,
+    marginTop: -12,
   },
   backTxt: {
-    fontSize: 22,
+    fontSize: 28,
+    fontWeight: '700',
     color: theme.colors.text,
   },
   logo: {
     width: 50,
     height: 50,
-    marginTop: -20, 
+    marginTop: -20,
     marginBottom: -20,
   },
   title: {

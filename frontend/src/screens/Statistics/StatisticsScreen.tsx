@@ -125,12 +125,12 @@ export default function StatisticsScreen() {
               monthLabel={monthLabel}
               data={currentDateChart}
               targetLabel="400mg"
-              caption={`${monthLabel} 일별 카페인 섭취량`}
+              caption={`${monthLabel} 카페인 섭취량`}
             />
           </View>
           <View style={statisticsStyles.section}>
             <DrinkList
-              title={`${monthLabel} 자주 마시는 음료`}
+              title="최근에 마신 음료"
               items={currentDrinks}
               monthLabel={monthLabel}
             />
