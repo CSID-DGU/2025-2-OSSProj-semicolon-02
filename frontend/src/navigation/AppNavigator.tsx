@@ -28,7 +28,11 @@ export default function AppNavigator() {
       <Stack.Screen name="ManualAdd" component={ManualAdd} />
       <Stack.Screen name="CameraAdd" component={CameraAdd} />
       <Stack.Screen name="Favorites" component={Favorites} />
-      <Stack.Screen name="Statistics" component={StatisticsScreen} />
+      <Stack.Screen
+        name="Statistics"
+        component={StatisticsScreen}
+        options={{ headerShown: false, headerBackVisible: false }}
+      />
       <Stack.Screen
         name="StatisticsDetail"
         component={StatisticsDetailScreen}

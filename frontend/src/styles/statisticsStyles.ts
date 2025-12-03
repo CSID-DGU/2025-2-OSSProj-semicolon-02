@@ -22,7 +22,7 @@ export const statisticsStyles = StyleSheet.create({
   },
   headerTopRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
   backButton: {

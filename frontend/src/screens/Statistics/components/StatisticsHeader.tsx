@@ -115,12 +115,6 @@ export default function StatisticsHeader({
   return (
     <View style={statisticsStyles.header}>
       <View style={statisticsStyles.headerTopRow}>
-        <TouchableOpacity
-          style={statisticsStyles.backButton}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
-        </TouchableOpacity>
         <View style={statisticsStyles.profileWrap}>
           <View
             style={[
