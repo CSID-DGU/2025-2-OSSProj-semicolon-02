@@ -1,4 +1,3 @@
-// com.caffit.intake.IntakeController.java
 package com.caffit.intake.controller;
 
 import com.caffit.beverage.Beverage;
@@ -30,7 +29,6 @@ public class IntakeController {
             LocalDateTime consumedAt
     ) {}
 
-    // 수동 등록용: 브랜드/이름/카페인/용량만 받아서 Beverage + Intake 한 번에 생성
     private record ManualCreateReq(
             Long userId,
             String brand,
@@ -153,5 +151,36 @@ public class IntakeController {
                 + ", total=" + totalMg);
 
         return new TodaySummaryRes(totalMg, count);
+    }
+
+    // 월별 섭취 기록 조회 (consumed_at 기준)
+    @GetMapping("/monthly")
+    @Transactional(readOnly = true)
+    public List<IntakeDTO> listMonthly(
+            @RequestParam("userId") Long userId,
+            @RequestParam("year") int year,
+            @RequestParam("month") int month
+    ) {
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.atTime(LocalTime.MAX);
+
+        List<Intake> entries = intakes.findByUser_IdAndConsumedAtBetween(userId, start, end);
+        
+        return entries.stream()
+                .map(i -> new IntakeDTO(
+                        i.getId(),
+                        i.getUser().getId(),
+                        i.getBeverage().getId(),
+                        i.getBeverage().getName(),
+                        i.getVolumeMl(),
+                        i.getCaffeineMg(),
+                        i.getConsumedAt(),
+                        i.getNote()
+                ))
+                .sorted((a, b) -> b.consumedAt().compareTo(a.consumedAt())) // 최신 순 정렬
+                .toList();
     }
 }

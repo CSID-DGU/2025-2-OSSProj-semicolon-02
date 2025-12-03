@@ -371,9 +371,7 @@ const fetchCaffeineAI = useCallback(
   // 오늘 섭취한 음료 목록
   const todayIntakes = useMemo(() => {
     const today = new Date().toDateString();
-    return intakes.filter(
-      i => new Date(i.consumedAt).toDateString() === today,
-    );
+    return intakes.filter(i => new Date(i.consumedAt).toDateString() === today);
   }, [intakes]);
 
   const todayDrinksText = todayIntakes
@@ -969,10 +967,7 @@ const intakePlanSub = useMemo(() => {
             setGoalVisible(false);
 
             const payload: StoredGoals = { daily, monthly };
-            await AsyncStorage.setItem(
-              'caffit:goals',
-              JSON.stringify(payload),
-            );
+            await AsyncStorage.setItem('caffit:goals', JSON.stringify(payload));
           } catch (e) {
             console.log('[Home] save goals error', e);
           }

@@ -9,6 +9,7 @@ export type RootStackParamList = {
   MyReports: undefined;
   NotificationSettings: undefined;
   SleepHistory: undefined;
+  AccountSettings: undefined;
   SelectDrink: {
     imageUri: string;
   };
