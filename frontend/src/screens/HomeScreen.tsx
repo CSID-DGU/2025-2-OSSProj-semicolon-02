@@ -230,40 +230,34 @@ export default function HomeScreen() {
     }
   }, []);
 
-  const fetchCaffeineAI = useCallback(
-    async (uid: number, baseDate?: Date) => {
-      try {
-        const dateObj = baseDate ?? new Date();
-        const dateStr = formatDate(dateObj); // YYYY-MM-DD
+  const fetchCaffeineAI = useCallback(async (uid: number, baseDate?: Date) => {
+    try {
+      const dateObj = baseDate ?? new Date();
+      const dateStr = formatDate(dateObj); // YYYY-MM-DD
 
-        const data: CaffeineSummaryRes = await fetchCaffeineSummary(
-          uid,
-          dateStr,
-        );
-        console.log('[Home] AI summary', data);
+      const data: CaffeineSummaryRes = await fetchCaffeineSummary(uid, dateStr);
+      console.log('[Home] AI summary', data);
 
-        setHalfLifeHours(data.halfLifeHours ?? null);
-        setHalfLifeMethod(data.halfLifeMethod ?? null);
-        setLatestDrinkPlan(data.latestDrinkPlan ?? null);
-        setCurve(data.curve ?? []);
+      setHalfLifeHours(data.halfLifeHours ?? null);
+      setHalfLifeMethod(data.halfLifeMethod ?? null);
+      setLatestDrinkPlan(data.latestDrinkPlan ?? null);
+      setCurve(data.curve ?? []);
 
-        // 민감도 값 세팅
-        if (typeof data.sensitivity === 'number') {
-          setSensitivity(data.sensitivity);
-        } else {
-          setSensitivity(null);
-        }
-      } catch (e) {
-        console.log('[Home] fetchCaffeineAI error', e);
-        setHalfLifeHours(null);
-        setHalfLifeMethod(null);
-        setLatestDrinkPlan(null);
-        setCurve([]);
+      // 민감도 값 세팅
+      if (typeof data.sensitivity === 'number') {
+        setSensitivity(data.sensitivity);
+      } else {
         setSensitivity(null);
       }
-    },
-    [],
-  );
+    } catch (e) {
+      console.log('[Home] fetchCaffeineAI error', e);
+      setHalfLifeHours(null);
+      setHalfLifeMethod(null);
+      setLatestDrinkPlan(null);
+      setCurve([]);
+      setSensitivity(null);
+    }
+  }, []);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -358,9 +352,7 @@ export default function HomeScreen() {
   // 오늘 섭취한 음료 목록
   const todayIntakes = useMemo(() => {
     const today = new Date().toDateString();
-    return intakes.filter(
-      i => new Date(i.consumedAt).toDateString() === today,
-    );
+    return intakes.filter(i => new Date(i.consumedAt).toDateString() === today);
   }, [intakes]);
 
   const todayDrinksText = todayIntakes
@@ -863,10 +855,7 @@ export default function HomeScreen() {
             setGoalVisible(false);
 
             const payload: StoredGoals = { daily, monthly };
-            await AsyncStorage.setItem(
-              'caffit:goals',
-              JSON.stringify(payload),
-            );
+            await AsyncStorage.setItem('caffit:goals', JSON.stringify(payload));
           } catch (e) {
             console.log('[Home] save goals error', e);
           }
