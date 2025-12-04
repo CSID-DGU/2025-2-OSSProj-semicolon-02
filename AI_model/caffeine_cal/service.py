@@ -8,7 +8,7 @@ from flask import Blueprint, request, jsonify
 
 from .data_access import load_intakes_for_user
 from .models import Intake
-from .half_life_curve import build_curve
+from .half_life_curve import build_daily_curve
 from .advisor import find_latest_safe_drink_time
 
 bp = Blueprint("caffeine_cal", __name__, url_prefix="/caffeine-cal")
