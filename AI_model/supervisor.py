@@ -1,121 +1,135 @@
-## 카페인 관리 섭취 총괄 ##
+#카페인 관리 섭취 총괄
+# AI_model/supervisor.py
 
-## 스스로 생각해서 불러오게끔 해야되나
 
 from datetime import datetime
 from typing import Optional, List, Dict
 import json
 
-#from 뒤에있는게 py 파일명 import 뒤에 있는게 그 안에 정의된 클래스 이름
-from drink_image import VisionAgent
-from mapping_db import VectorRAGAgent
-from caffeine_cal import CaffeineCalculator
-from advisor import AdvisorAgent
+from drink_image import VisionAgent          # 같은 폴더
+from mapping_db import VectorRAGAgent        # 같은 폴더
+from advisor import AdvisorAgent             # 같은 폴더
+
+from caffeine_cal.data_access import load_intakes_for_user  # 하위 패키지
+
 
 class SupervisorAgent:
     """
-    VisionAgent, MappingAgent, CaffeineCalculator, AdvisorAgent
-    전체를 관리하는 상위 에이전트.
+    사진 한 장(or 없음) + user_id만 받아서
 
-    입력 형태에 따라 자동으로 플로우를 결정한다:
-    - 이미지만 들어왔을 때
-    - 텍스트 질문만 들어왔을 때
-    - 이미지 + 질문 같이 들어왔을 때
+    1) DB에서 과거 섭취 기록 불러오고
+    2) 이미지가 있으면 Vision + RAG로 음료/카페인 분석하고
+    3) AdvisorAgent에게 넘겨서 LLM 기반 조언까지 만들어주는 총괄 에이전트
     """
 
-    def __init__(self):
+    def __init__(self, default_user_id: int = 1) -> None:
         self.vision = VisionAgent()
         self.mapping = VectorRAGAgent()
-        self.calc = CaffeineCalculator()
-        self.advisor = AdvisorAgent(self.calc)
+        self.advisor = AdvisorAgent()
+        self.default_user_id = default_user_id
 
+    # -------------------------
+    # 내부 헬퍼: DB → events 포맷으로 변환
+    # -------------------------
+    def _load_events_from_db(self, user_id: int, days: int = 30) -> List[Dict]:
+        """
+        events: [{ "user_id": int, "mg": float, "time": datetime }, ...]
+        """
+        intakes = load_intakes_for_user(user_id=user_id, days=days)
+        events: List[Dict] = [
+            {
+                "user_id": intake.user_id,
+                "mg": float(intake.caffeine_mg),
+                "time": intake.consumed_at,
+            }
+            for intake in intakes
+        ]
+        return events
+
+    # -------------------------
+    # 메인 진입점
+    # -------------------------
     def handle(
         self,
-        events: List[Dict],          # 지금까지 마신 음료 기록
-        image_path: Optional[str],   # 분석할 음료 이미지 (없으면 None)
-        question: Optional[str],     # 사용자 질문 (없으면 None)
+        user_id: Optional[int] = None,
+        image_path: Optional[str] = None,
         now: Optional[datetime] = None,
-        target_sleep_time: Optional[datetime] = None
-    ) -> str:
+    ) -> Dict:
         """
-        사용자의 입력 상황에 맞게 전체 파이프라인을 실행한 후,
-        AdvisorAgent의 자연어 응답을 돌려준다.
-        """
+        - user_id: 필수 (없으면 default_user_id 사용)
+        - image_path: 새로 마실 음료 사진 (없으면 과거 기록만 가지고 조언)
+        - now: 기준 시각 (디폴트는 현재)
 
+        return:
+        {
+          "detected_drink": {...} or None,
+          "advice": str,
+        }
+        """
         if now is None:
             now = datetime.now()
+        if user_id is None:
+            user_id = self.default_user_id
 
-        drink_info = None
-        added_mg = None
+        # 1) DB에서 과거 섭취 기록 불러오기
+        events = self._load_events_from_db(user_id=user_id, days=30)
 
-        # -------------------------
-        # 1) 이미지가 들어온 경우 → Vision + Mapping
-        # -------------------------
+        detected_drink: Optional[Dict] = None
+
+        # 2) 이미지가 있으면 → Vision + RAG로 음료/카페인 분석
         if image_path is not None:
             drink_info = self.vision.analyze(image_path)
-            
             if isinstance(drink_info, str):
                 drink_info = json.loads(drink_info)
-                
+
             mapped = self.mapping.map(drink_info)
-            
-         
-                
-            added_mg = mapped["caffeine_mg"]
 
-            # 마신 시간 now로 event 추가
-            
-            events.append({
-                "mg": added_mg,
-                "time": now
-            })
+            detected_drink = {
+                "brand": mapped.get("brand"),
+                "drink_type": mapped.get("drink_type"),
+                "caffeine_mg": float(mapped.get("caffeine_mg", 0.0)),
+            }
 
-        # -------------------------
-        # 2) 텍스트 질문 처리
-        # -------------------------
-        if question is not None:
-            answer = self.advisor.advise(
-                events=events,
-                question=question,
-                added_mg=added_mg,              # 이미지 기반 mg 있다면 포함
-                target_sleep_time=target_sleep_time,
-                now=now
-            )
-            return answer
-
-        # -------------------------
-        # 3) 질문 없이 이미지만 들어온 경우
-        # -------------------------
-        if image_path and not question:
-            return (
-                f"음료가 기록되었습니다. "
-                f"추정 카페인: {added_mg} mg\n"
-                f"현재 총량: {self.calc.total_remaining(events)} mg"
+            # 이번에 마신 음료를 events에 추가
+            events.append(
+                {
+                    "user_id": user_id,
+                    "mg": detected_drink["caffeine_mg"],
+                    "time": now,
+                }
             )
 
-        # -------------------------
-        # 4) 아무 입력도 없을 때
-        # -------------------------
-        return "입력(이미지 또는 질문)이 필요합니다."
-    
-    
+        # 3) AdvisorAgent에게 넘겨서 LLM 조언 생성
+        #    (이미지 없으면 detected_drink는 None 대신 기본값 사용)
+        if detected_drink is None:
+            detected_drink = {
+                "brand": None,
+                "drink_type": None,
+                "caffeine_mg": 0.0,
+            }
+
+        advice_text = self.advisor.advise(
+            events=events,
+            detected_drink=detected_drink,
+            now=now,
+        )
+
+        return {
+            "detected_drink": detected_drink,
+            "advice": advice_text,
+        }
+
+
 if __name__ == "__main__":
-    sup = SupervisorAgent()
+    sup = SupervisorAgent(default_user_id=1)
 
-    # 예시 이벤트 — 오늘 이미 마신 음료 기록
-    events = []
-
-    # 예시 이미지 파일 (원하는 이미지로 바꿔도 됨)
     image_path = "/Users/eunjung/Desktop/OSSProj/2025-2-OSSProj-semicolon-02/AI_model/Unknown.jpeg"
 
-    # 예시 질문
-    question = "지금 이 커피 마셔도 돼?"
-
     result = sup.handle(
-        events=events,
+        user_id=1,
         image_path=image_path,
-        question=question
     )
 
     print("\n=== Supervisor Output ===\n")
-    print(result)
+    print("감지된 음료:", result["detected_drink"])
+    print("\n조언:\n", result["advice"])

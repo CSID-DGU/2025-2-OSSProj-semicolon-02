@@ -1,5 +1,5 @@
 ---
-name: 🐛 버그 리포트
+name: 버그 리포트
 about: 버그를 보고합니다.
 title: "[Bug] "
 labels: bug

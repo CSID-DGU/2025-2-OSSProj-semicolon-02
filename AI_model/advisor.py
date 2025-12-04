@@ -3,7 +3,6 @@
 """
  •	입력:
 	•	계산 결과 (총량, 남은 농도, threshold 등)
-	•	사용자의 질문 텍스트 (예: “이거 더 마셔도 돼?”)
 	•	내부 동작:
 	•	LLM 호출해서 “해석 + 설명 + 조언” 생성
 	•	출력:
@@ -19,12 +18,18 @@ from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from caffeine_cal import CaffeineCalculator
-from drink_image import analyze_drink
+
+from .caffeine_cal.models import Intake
+from .caffeine_cal.half_life_curve import residual_caffeine_at
+from .caffeine_cal.data_access import load_intakes_for_user
 
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# 반감기 / threshold를 caffeine_cal 쪽과 맞추고 싶으면 여기서 상수로 정의
+DEFAULT_HALF_LIFE_H = 5.0          # service.py에서 쓰는 값이랑 통일
+DEFAULT_THRESHOLD_MG = 300.0       # “오늘 카페인 총량 위험선”에 쓸 값 (원하면 조정)
 
 
 SYSTEM_PROMPT = """
@@ -42,10 +47,27 @@ SYSTEM_PROMPT = """
 
 
 class AdvisorAgent:
+    def __init__(
+        self,
+        half_life_h: float = DEFAULT_HALF_LIFE_H,
+        threshold_mg: float = DEFAULT_THRESHOLD_MG,
+    ) -> None:
+        self.half_life_h = half_life_h
+        self.threshold = threshold_mg
 
-    def __init__(self, calculator: Optional[CaffeineCalculator] = None):
-        # 외부에서 Calculator 안 주면 기본값 사용
-        self.calc = calculator or CaffeineCalculator()
+    # events(List[Dict]) → Intake 리스트로 바꿔주는 내부 헬퍼
+    def _events_to_intakes(self, events: List[Dict]) -> List[Intake]:
+        """
+        events: [{ "user_id": int, "mg": float, "time": datetime }]
+        """
+        return [
+            Intake(
+                user_id=e["user_id"],
+                caffeine_mg=float(e["mg"]),
+                consumed_at=e["time"],
+            )
+            for e in events
+        ]
 
     def advise(
         self,
@@ -62,24 +84,48 @@ class AdvisorAgent:
         }
         now: 분석 기준 시각
         """
-
         if now is None:
             now = datetime.now()
 
-        # 1) Vision+RAG에서 나온 새로운 음료 정보
         brand = detected_drink.get("brand")
         drink_type = detected_drink.get("drink_type")
-        added_mg = detected_drink.get("caffeine_mg", 0.0)
+        added_mg = float(detected_drink.get("caffeine_mg", 0.0))
 
-        # 2) 현재 사용자 상태 계산
-        remaining = self.calc.total_remaining(events, now)          # 지금 몸속 카페인
-        daily_total = self.calc.total_daily_intake(events, now)     # 오늘 총 섭취량
+        # 여기서 user_id 포함된 events → Intake 리스트로 변환
+        base_intakes = self._events_to_intakes(events)
 
-        # 3) 새 음료를 마셨을 때 5시간 뒤 예상 카페인
-        sim_events = events + [{"mg": added_mg, "time": now}]
-        predicted_after_5h = self.calc.total_remaining(sim_events, now + timedelta(hours=5))
+        # 남은 카페인 / 오늘 총량 계산
+        remaining = residual_caffeine_at(
+            now,
+            base_intakes,
+            self.half_life_h,
+        )
 
-        # 4) LLM에 제공할 해석용 데이터
+        today = now.date()
+        daily_total = sum(
+            e["mg"] for e in events
+            if e["time"].date() == today
+        )
+
+        # 새 음료 지금 마신다고 가정해서 5시간 뒤
+        if events:
+            uid = events[0]["user_id"]   # 동일 사용자라고 가정
+        else:
+            uid = 0                      # 비어있을 때 임시값
+
+        future_intakes = base_intakes + [
+            Intake(
+                user_id=uid,
+                consumed_at=now,
+                caffeine_mg=added_mg,
+            )
+        ]
+        predicted_after_5h = residual_caffeine_at(
+            now + timedelta(hours=5),
+            future_intakes,
+            self.half_life_h,
+        )
+
         data = {
             "brand": brand,
             "drink_type": drink_type,
@@ -87,28 +133,36 @@ class AdvisorAgent:
             "remaining_now": remaining,
             "daily_total": daily_total,
             "predicted_after_5h": predicted_after_5h,
-            "half_life": self.calc.half_life,
-            "threshold": self.calc.threshold,
+            "half_life": self.half_life_h,
+            "threshold": self.threshold,
         }
 
-        # 5) LLM 호출 → 자연어 설명 생성
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"입력 데이터:\n{data}"},
-            ]
+            ],
         )
 
         return response.choices[0].message.content
-    
-    
-from datetime import datetime, timedelta
+
+
+from .drink_image import analyze_drink
+
 if __name__ == "__main__":
-    # 오늘 마신 기록 예시
+    # 1번 유저(user1)의 최근 30일 섭취 기록을 DB에서 불러오기
+    user_id = 1
+    intakes = load_intakes_for_user(user_id=user_id, days=30)
+
+    # Intake 리스트를 AdvisorAgent가 사용하는 events 포맷으로 변환
     events = [
-        {"mg": 150, "time": datetime(2025, 11, 27, 9, 30)},
-        {"mg": 85,  "time": datetime(2025, 11, 27, 13, 30)},
+        {
+            "user_id": intake.user_id,
+            "mg": intake.caffeine_mg,
+            "time": intake.consumed_at,
+        }
+        for intake in intakes
     ]
 
     image_path = "/Users/eunjung/Desktop/OSSProj/2025-2-OSSProj-semicolon-02/AI_model/Unknown.jpeg"

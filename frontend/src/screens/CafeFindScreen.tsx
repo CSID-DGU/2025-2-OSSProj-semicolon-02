@@ -103,7 +103,7 @@ export default function CafeFindScreen() {
         />
       </View>
 
-      {/* Bottom Sheet */}
+
       <View style={cafeFindStyles.bottomSheet}>
         {/* Handle */}
         <View style={cafeFindStyles.handle} />

@@ -1,4 +1,3 @@
-// screens/Add/DrinkSelect.tsx
 import React, {memo, useCallback, useMemo} from 'react';
 import {
   View,
@@ -88,8 +87,8 @@ export default function DrinkSelectScreen() {
 
   // 후보 리스트 (나중에 route.params.candidates 를 쓰면 됨)
   const list = useMemo(
-    () => candidatesFromRoute ?? DEMO_CANDIDATES,
-    [candidatesFromRoute],
+     () => candidatesFromRoute ?? [],
+  [candidatesFromRoute],
   );
 
   const handleSelect = useCallback(

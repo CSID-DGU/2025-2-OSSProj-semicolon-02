@@ -1,5 +1,4 @@
-// screens/Add/Favorites.tsx
-import React, {memo, useCallback, useMemo, useState} from 'react';
+import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,17 +8,19 @@ import {
   Platform,
   ToastAndroid,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 import AppHeader from '../../components/AppHeader';
-import {common} from '../../styles/common';
-import {theme} from '../../styles/theme';
-import {favoritesStyles as styles} from '../../styles/favoritesStyles';
-import {http} from '../../lib/http';
-import {getCurrentUser} from '../../lib/authSession';
+import { common } from '../../styles/common';
+import { theme } from '../../styles/theme';
+import { favoritesStyles as styles } from '../../styles/favoritesStyles';
+import { http } from '../../lib/http';
+import { getCurrentUser } from '../../lib/authSession';
+import { fetchFavorites } from '../../api/favorites';
 //섭취량 연동
-import { createIntake } from '../../api/intakes'; 
+import { createIntake } from '../../api/intakes';
 
 // 타입
 type FavType = '커피' | '티' | '그 외';
@@ -29,9 +30,9 @@ export type FavItem = {
   type: FavType;
 
   // 표시용
-  name: string; // 예: 아이스 아메리카노
-  brand: string; // 예: 스타벅스
-  volumeText?: string; // 예: Tall / 355ml
+  name: string;  
+  brand: string;  
+  volumeText?: string;  
 
   // 백엔드 저장용(지금은 manual API만 사용하므로 beverageId는 실제로 쓰지 않음)
   beverageId: number;
@@ -55,12 +56,14 @@ const Chip = memo(function Chip({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
-      style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}>
+      style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
+    >
       <Text
         style={[
           styles.chipText,
           active ? styles.chipTextActive : styles.chipTextInactive,
-        ]}>
+        ]}
+      >
         {label}
       </Text>
     </TouchableOpacity>
@@ -78,7 +81,8 @@ const FavoriteRow = memo(function FavoriteRow({
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={() => onSelect(item)}
-      style={styles.rowCard}>
+      style={styles.rowCard}
+    >
       <View style={styles.rowTextWrap}>
         <Text numberOfLines={1} style={styles.rowTitle}>
           {item.name}
@@ -95,33 +99,52 @@ const FavoriteRow = memo(function FavoriteRow({
   );
 });
 
-/**
- * DEMO 데이터
- */
-const DEMO_DATA: FavItem[] = [
-  {
-    id: '1',
-    type: '커피',
-    name: '아이스 아메리카노',
-    brand: '스타벅스',
-    volumeText: 'Tall / 355ml',
-    beverageId: 1,
-    volumeMl: 355,
-    caffeineMg: 141,
-  },
-];
-
 export default function FavoritesScreen() {
   const nav = useNavigation(); // 구조 확정 후 타입 지정 가능
 
   const [category, setCategory] = useState<Category>('전체');
+  const [favorites, setFavorites] = useState<FavItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 즐겨찾기 목록 로드
+  useEffect(() => {
+    const loadFavorites = async () => {
+      try {
+        const user = await getCurrentUser();
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
+        const data = await fetchFavorites(user.id);
+        const mapped: FavItem[] = data.map(f => ({
+          id: String(f.id),
+          type: '커피' as FavType, // 실제로는 beverage 정보에서 가져와야 함
+          name: f.name,
+          brand: f.brand,
+          volumeText: f.volumeMl > 0 ? `${f.volumeMl}ml` : undefined,
+          beverageId: f.beverageId || 0,
+          volumeMl: f.volumeMl,
+          caffeineMg: f.caffeineMg,
+        }));
+        setFavorites(mapped);
+      } catch (e) {
+        console.error('Failed to load favorites', e);
+        Alert.alert('오류', '즐겨찾기 목록을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadFavorites();
+  }, []);
 
   const list = useMemo(() => {
-    if (category === '전체') {
-      return DEMO_DATA;
-    }
-    return DEMO_DATA.filter(d => d.type === category);
-  }, [category]);
+    const filtered =
+      category === '전체'
+        ? favorites
+        : favorites.filter(d => d.type === category);
+    return filtered;
+  }, [category, favorites]);
 
   const handleSelect = useCallback(
     async (item: FavItem) => {
@@ -148,7 +171,7 @@ export default function FavoritesScreen() {
           ToastAndroid.show('섭취 기록을 등록했습니다.', ToastAndroid.SHORT);
         }
 
-        nav.navigate('Tabs' as never, {screen: 'Home'} as never);
+        nav.navigate('Tabs' as never, { screen: 'Home' } as never);
       } catch (e: unknown) {
         if (e instanceof Error) {
           console.log('favorites add error', e.message);
@@ -165,7 +188,7 @@ export default function FavoritesScreen() {
     <SafeAreaView style={common.screen}>
       <AppHeader title="즐겨찾기 등록" />
 
-      <View style={[common.container, {paddingTop: theme.spacing(2)}]}>
+      <View style={[common.container, { paddingTop: theme.spacing(2) }]}>
         {/* 카테고리 칩 */}
         <View style={styles.chipRow}>
           {CATEGORIES.map(c => (
@@ -179,16 +202,54 @@ export default function FavoritesScreen() {
         </View>
 
         {/* 리스트 */}
-        <FlatList
-          data={list}
-          keyExtractor={it => it.id}
-          renderItem={({item}) => (
-            <FavoriteRow item={item} onSelect={handleSelect} />
-          )}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          contentContainerStyle={{paddingBottom: theme.spacing(4)}}
-          showsVerticalScrollIndicator={false}
-        />
+        {loading ? (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingTop: 100,
+            }}
+          >
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={{ marginTop: 16, color: theme.colors.gray500 }}>
+              즐겨찾기를 불러오는 중...
+            </Text>
+          </View>
+        ) : list.length === 0 ? (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingTop: 100,
+            }}
+          >
+            <Text style={{ color: theme.colors.gray500 }}>
+              즐겨찾기가 없습니다.
+            </Text>
+            <Text
+              style={{
+                color: theme.colors.gray500,
+                marginTop: 8,
+                fontSize: 12,
+              }}
+            >
+              통계 화면에서 하트 버튼을 눌러 즐겨찾기를 추가하세요.
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={list}
+            keyExtractor={it => it.id}
+            renderItem={({ item }) => (
+              <FavoriteRow item={item} onSelect={handleSelect} />
+            )}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            contentContainerStyle={{ paddingBottom: theme.spacing(4) }}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </View>
     </SafeAreaView>
   );

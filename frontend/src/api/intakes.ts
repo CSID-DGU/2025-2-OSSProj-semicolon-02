@@ -23,3 +23,15 @@ export async function createIntake(payload: {
 export async function deleteIntake(id: number): Promise<void> {
   await http.delete(`/api/intakes/${id}`);
 }
+
+// 월별 섭취 기록 조회 (consumed_at 기준으로 백엔드에서 필터링)
+export async function fetchIntakesByMonth(
+  userId: number,
+  year: number,
+  month: number,
+): Promise<IntakeDTO[]> {
+  const res = await http.get<IntakeDTO[]>('/api/intakes/monthly', {
+    params: { userId, year, month },
+  });
+  return res.data;
+}
