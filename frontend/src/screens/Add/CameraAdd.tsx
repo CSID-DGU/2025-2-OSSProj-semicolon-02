@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
+import DrinkLoader from './DrinkLoader';
 import {Camera, useCameraDevices} from 'react-native-vision-camera';
 import {
   launchImageLibrary,
@@ -296,6 +297,7 @@ navigation.navigate('SelectDrink', {
           <View style={{width: 60}} />
         )}
       </View>
+      <DrinkLoader visible={loading} message="음료 사진 분석 중입니다..." />
     </View>
   );
 }

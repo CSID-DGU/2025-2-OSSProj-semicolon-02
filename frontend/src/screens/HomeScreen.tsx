@@ -38,6 +38,7 @@ import {
   type LatestDrinkPlan,
   type CurvePoint,
 } from '../lib/aiHttp';
+import { ForceTouchGesture } from 'react-native-gesture-handler/lib/typescript/handlers/gestures/forceTouchGesture';
 
 const formatDate = (d: Date) => d.toISOString().slice(0, 10);
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
@@ -139,7 +140,7 @@ export default function HomeScreen() {
   const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
 
   const [aiAdvice, setAiAdvice] = useState<string | null>(null);
-  const [aiAdviceLoading, setAiAdviceLoading] = useState(false);
+  const [aiAdviceLoading, setAiAdviceLoading] = useState(ForceTouchGesture);
 
   const [todayMg, setTodayMg] = useState<number>(0);
   const [todayCount, setTodayCount] = useState<number>(0);
@@ -310,7 +311,7 @@ const fetchCaffeineAI = useCallback(
         await fetchTodaySummary(effectiveUserId);
         await fetchTodaySleep(effectiveUserId);
         await fetchCaffeineAI(effectiveUserId);
-        await fetchAiAdvice(effectiveUserId);
+        //await fetchAiAdvice(effectiveUserId);
 
         const intakeData = await fetchIntakes(effectiveUserId);
         setIntakes(intakeData);
@@ -611,23 +612,30 @@ const intakePlanSub = useMemo(() => {
 }, [latestDrinkPlan, isInsensitive]);
 
 
-  const adviceText = (() => {
-  // 민감도 둔감형이면, 플랜 여부와 상관없이 이 문장 고정
-    if (aiAdvice && aiAdvice.trim().length > 0) {
+  // 섭취 조언 텍스트
+const adviceText = (() => {
+  // 1) LLM 호출 중일 때
+  if (aiAdviceLoading) {
+    return '섭취 조언을 생성하는 중입니다...';
+  }
+
+  // 2) LLM에서 실제 조언이 왔을 때
+  if (aiAdvice && aiAdvice.trim().length > 0) {
     return aiAdvice.trim();
   }
-  
+
+  // 3) 카페인 둔감형(민감도 거의 없음)
   if (isInsensitive) {
-    return '현재 민감도 지표(S)가 매우 낮아, 카페인이 수면 시간에 거의 영향을 주지 않는 패턴입니다. 반감기 세부 튜닝보다는 하루 총 섭취량만 기본 권장량 내에서 관리하시면 됩니다.';
+    return '현재 민감도 지표(S)가 매우 낮아, 카페인이 수면 시간에 크게 영향을 주지 않는 패턴입니다. 반감기보다는 하루 총 섭취량만 기본 권장량 내에서 관리하시면 됩니다.';
   }
 
-  // 아직 플랜 계산이 안 된 경우
+  // 4) 아직 데이터가 부족할 때
   if (!latestDrinkPlan) {
-    return '충분한 데이터가 쌓이면 개인 맞춤 섭취 조언이 제공됩니다.';
+    return '수면·섭취 데이터가 조금 더 쌓이면, 오늘 패턴에 맞춘 개인 맞춤 섭취 조언을 보여드릴게요.';
   }
 
-  // 그 외(민감도는 있는데 일반/민감형인 경우)
-  return '현재 모델 기반 상세 조언은 준비 중입니다.';
+  // 5) 기본 fallback
+  return '오늘 기록을 기반으로 한 섭취 조언을 준비 중입니다.';
 })();
 
 
@@ -896,11 +904,10 @@ const intakePlanSub = useMemo(() => {
 
         {/* 섭취 조언 (LLM/무카페인 추천용) */}
         <View style={homeStyles.section}>
-          <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
-          <View style={homeStyles.adviceCard}>
-            <Text style={common.body}>{adviceText}</Text>
-          </View>
-        </View>
+        <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
+        <View style={homeStyles.adviceCard}>
+  </View>
+</View>
       </ScrollView>
 
       {/* 수면 편집 미니 모듈 */}
