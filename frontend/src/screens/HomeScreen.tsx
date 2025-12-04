@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -39,7 +40,6 @@ import {
 } from '../lib/aiHttp';
 
 const formatDate = (d: Date) => d.toISOString().slice(0, 10);
-
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
 type TodaySummary = {
@@ -137,6 +137,9 @@ export default function HomeScreen() {
   const [limitMg, setLimitMg] = useState<number>(400);
   const [goalVisible, setGoalVisible] = useState(false);
   const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
+
+  const [aiAdvice, setAiAdvice] = useState<string | null>(null);
+  const [aiAdviceLoading, setAiAdviceLoading] = useState(false);
 
   const [todayMg, setTodayMg] = useState<number>(0);
   const [todayCount, setTodayCount] = useState<number>(0);
@@ -307,6 +310,7 @@ const fetchCaffeineAI = useCallback(
         await fetchTodaySummary(effectiveUserId);
         await fetchTodaySleep(effectiveUserId);
         await fetchCaffeineAI(effectiveUserId);
+        await fetchAiAdvice(effectiveUserId);
 
         const intakeData = await fetchIntakes(effectiveUserId);
         setIntakes(intakeData);
@@ -326,11 +330,44 @@ const fetchCaffeineAI = useCallback(
       }
       fetchTodaySummary(userId);
       fetchCaffeineAI(userId, selectedDate);
+      fetchAiAdvice(userId);
       // 필요하면 수면도 함께 새로고침
       // fetchTodaySleep(userId);
     }, [userId, selectedDate, fetchTodaySummary, fetchCaffeineAI]),
   );
+  /**
+   * 홈 화면용 섭취 조언 (LLM) 호출
+   * - Flask AI 서버: http://10.0.2.2:5001/ai/advice
+   */
+  const fetchAiAdvice = useCallback(
+    async (uid: number) => {
+      try {
+        setAiAdviceLoading(true);
 
+        const res = await fetch('http://10.0.2.2:5001/ai/advice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: uid }),
+        });
+
+        if (!res.ok) {
+          console.log('[Home] ai/advice http error', res.status);
+          return;
+        }
+
+        const json = await res.json();
+        console.log('[Home] ai/advice res', json);
+
+        setAiAdvice(json.advice ?? null);
+        // 원하면 여기서 json.caffeine_state도 어딘가에 반영 가능
+      } catch (e) {
+        console.log('[Home] fetchAiAdvice error', e);
+      } finally {
+        setAiAdviceLoading(false);
+      }
+    },
+    [],
+  );
   const reloadToday = useCallback(async () => {
     try {
       if (userId) {
@@ -338,6 +375,7 @@ const fetchCaffeineAI = useCallback(
         setIntakes(data);
         await fetchTodaySummary(userId);
         await fetchCaffeineAI(userId, selectedDate);
+        await fetchAiAdvice(userId);
       }
     } catch (e) {
       console.log('[Home] reloadToday error', e);
@@ -577,6 +615,10 @@ const intakePlanSub = useMemo(() => {
 
   const adviceText = (() => {
   // 민감도 둔감형이면, 플랜 여부와 상관없이 이 문장 고정
+    if (aiAdvice && aiAdvice.trim().length > 0) {
+    return aiAdvice.trim();
+  }
+  
   if (isInsensitive) {
     return '현재 민감도 지표(S)가 매우 낮아, 카페인이 수면 시간에 거의 영향을 주지 않는 패턴입니다. 반감기 세부 튜닝보다는 하루 총 섭취량만 기본 권장량 내에서 관리하시면 됩니다.';
   }

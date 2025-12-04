@@ -9,6 +9,7 @@ import {
   Image,
   Platform,
   PermissionsAndroid,
+  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
@@ -18,10 +19,20 @@ import {
   ImageLibraryOptions,
   Asset,
 } from 'react-native-image-picker';
-
+import {getCurrentUser} from '../../lib/authSession';
 // ✅ 목업용 이미지 (에뮬레이터 / 카메라 디바이스 없을 때 사용)
 const PLACEHOLDER = {
   uri: 'https://mblogthumb-phinf.pstatic.net/MjAyMTA0MThfMTI5/MDAxNjE4NzQ3MDI1NDgw.0K6GVeUMDyHDupFCi5O8AdNuJKdnRSSOfxbG4rrD8x8g.dp0gIeUaX9TlUR7Yog70VofFRj8WhCV4-NUDTs480YIg.JPEG.dbwlsdl0117/IMG_7827.jpg?type=w800',
+};
+
+// SelectDrink.tsx의 타입과 동일하게 맞추기
+type DrinkCandidate = {
+  id: string;
+  name: string;
+  brand: string;
+  volumeText?: string;
+  volumeMl: number;
+  caffeineMg: number;
 };
 
 export default function CameraAddScreen() {
@@ -30,6 +41,7 @@ export default function CameraAddScreen() {
 
   const [shotUri, setShotUri] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const devices = useCameraDevices();
   const device = devices.back; // 후면 카메라
@@ -72,15 +84,72 @@ export default function CameraAddScreen() {
     }
   };
 
-  // ✅ 확인 버튼: 다음 페이지로 이동
-  const onConfirm = () => {
-    if (!shotUri) return;
+// ✅ 확인 버튼: 이미지 → 서버 업로드 → 후보 받아서 다음 화면 이동
+const onConfirm = async () => {
+  if (!shotUri || loading) return;
 
-    // ❗ 여기서 화면 이름은 네가 네비게이션에 등록한 이름으로 바꿔줘
-    navigation.navigate('SelectDrink', {
-      imageUri: shotUri,
+  try {
+    setLoading(true);
+
+    const user = await getCurrentUser();
+    if (!user) {
+      Alert.alert('로그인 필요', '로그인 후 이용해주세요.');
+      return;
+    }
+
+    const form = new FormData();
+    form.append('user_id', String(user.id));
+    form.append('image', {
+      uri: shotUri,
+      type: 'image/jpeg',
+      name: 'drink.jpg',
+    } as any);
+
+    console.log('📤 업로드 시작');
+
+    const res = await fetch('http://10.0.2.2:5001/ai/analyze', {
+      method: 'POST',
+      body: form,
     });
-  };
+
+    console.log('✅ fetch 완료, status =', res.status);
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.log('❌ 서버 에러 응답 텍스트:', text);
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const json = await res.json();
+    console.log('📥 파싱된 JSON:', json);
+
+    const rawList = json.drink_candidates ?? [];
+const candidates: DrinkCandidate[] = rawList.map(
+  (d: any, idx: number): DrinkCandidate => ({
+    id: String(idx + 1),
+    name: d.name ?? '',
+    brand: d.brand ?? '',
+    volumeMl: d.volumeMl ?? 0,        // size → 나중에 ml로 변환
+    caffeineMg: d.caffeine_mg ?? 0,
+  }),
+);
+
+if (!candidates.length) {
+  Alert.alert('인식 실패', '음료를 인식하지 못했어요. 다시 촬영해주세요!');
+  return;
+}
+
+navigation.navigate('SelectDrink', {
+  imageUri: shotUri,
+  candidates,
+});
+  } catch (err: any) {
+    console.warn('❌ analyze error:', err);
+    Alert.alert('오류', `이미지 분석 중 문제가 발생했습니다.\n${String(err?.message ?? '')}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // 📁 갤러리 권한 요청 (Android용)
   const requestGalleryPermission = async (): Promise<boolean> => {
