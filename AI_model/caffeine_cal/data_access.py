@@ -9,13 +9,13 @@ from dotenv import load_dotenv
 from .models import Intake, SleepLog
 from pathlib import Path 
 
-# 🔹 1) .env 경로가 어디로 잡히는지 먼저 확인
+
 ROOT_DIR = Path(__file__).resolve().parents[1]    # .../AI_model
 env_path = ROOT_DIR / ".env"
 
 print("[DEBUG] ENV PATH =", env_path, "EXISTS:", env_path.exists())
 
-# 🔹 2) 해당 경로의 .env 로드
+
 load_dotenv(dotenv_path=env_path)
 
 DB_HOST = os.getenv("DB_HOST", "localhost")

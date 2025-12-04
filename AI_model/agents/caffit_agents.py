@@ -9,6 +9,8 @@ from .caffeine_tool import calc_caffeine_state
 from .advisor_tool import make_advice
 ##from .rag_tool import rag_query
 
+import json
+
 llm = ChatOpenAI(model="gpt-4o-mini")  # 또는 "gpt-4.1-mini"
 
 
@@ -62,6 +64,26 @@ supervisor_workflow = create_supervisor(
         "- user_id가 있으면 caffeine_agent를 호출해서 현재 상태를 확인해라.\n"
         "- 마지막으로 advisor_agent를 사용해서 사용자에게 조언을 전달해라.\n"
         "- 직접 계산하거나 조언하지 말고, 항상 worker 에이전트/툴을 사용해라."
+        
+        "### 최종 응답 형식\n"
+        "- 모든 작업이 끝나면 아래 JSON 형식으로만 답해라.\n"
+        "- JSON 외의 설명 텍스트는 절대 출력하지 마라.\n"
+        '{\n'
+        '  \"drink_candidates\": [\n'
+        '    {\n'
+        '      \"name\": \"아이스 아메리카노\",\n'
+        '      \"brand\": \"메가커피\",\n'
+        '      \"size\": \"24oz\",\n'
+        '      \"caffeine_mg\": 237.0\n'
+        '    }\n'
+        '  ],\n'
+        '  \"caffeine_state\": {\n'
+        '    \"total_today_mg\": 300.0,\n'
+        '    \"remaining_mg\": 120.0,\n'
+        '    \"risk_level\": \"medium\"\n'
+        '  },\n'
+        '  \"advice\": \"오늘 카페인 섭취량은 적당하지만, 오후 늦게는 추가 섭취를 피하는 것이 좋습니다.\"\n'
+        '}\n'
     ),
 ).compile()  # LangGraph 앱으로 컴파일
 
@@ -101,11 +123,25 @@ def run_caffit_supervisor(
     final_msg = messages[-1]
     final_text = final_msg.content  # <- 이게 우리가 앱에 보여줄 텍스트
 
-    # 필요하면 이렇게 JSON으로 정리해서 돌려줘도 됨
-    return {
-        "advice": final_text,
-        # "debug": result,  # 디버깅용으로 필요하면 남겨두고, 실제 서비스에선 빼도 됨
-    }
+    try:
+        data = json.loads(final_text)
+    except Exception:
+        # 혹시 LLM이 JSON 잘못 뱉으면 최소한 advice 텍스트라도 살려서 리턴
+        pass
+    
+    try:
+        outer = json.loads(final_text)
+        if isinstance(outer, dict) and "advice" in outer:
+            inner = outer["advice"]
+            try:
+                return json.loads(inner)
+            except Exception:
+                return outer
+    except Exception:
+        pass
+
+    # 3) 다 안 되면 그냥 텍스트만 리턴
+    return {"advice": final_text}
 
 if __name__ == "__main__":
     # 테스트용 입력
