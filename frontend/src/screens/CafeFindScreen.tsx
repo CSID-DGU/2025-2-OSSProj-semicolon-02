@@ -10,6 +10,9 @@ import { useNearCafe } from '../hooks/useNearCafe';
 import type { MapCafe } from '../api/cafes';
 import KakaoMap from '../components/map/KakaoMap';
 
+// 기본 위치 (서울 중심 - 서울시청) - GPS 위치를 가져오지 못할 때 사용
+const DEFAULT_COORDS = { lat: 37.5665, lng: 126.9780 };
+
 export default function CafeFindScreen() {
   const { coords: gpsCoords, error } = useCurrentPosition();
   const [mapCenter, setMapCenter] = useState<{
@@ -17,8 +20,9 @@ export default function CafeFindScreen() {
     lng: number;
   } | null>(null);
 
-  // 지도 중심 위치를 우선 사용, 없으면 GPS 위치 사용
-  const searchCoords = mapCenter || gpsCoords;
+  // 지도 중심 위치를 우선 사용, 없으면 GPS 위치 사용, 그것도 없으면 기본 위치 사용
+  const searchCoords = mapCenter || gpsCoords || DEFAULT_COORDS;
+  const displayCoords = gpsCoords || DEFAULT_COORDS; // 지도 표시용 좌표
 
   const {
     data: cafes = [],
@@ -56,21 +60,23 @@ export default function CafeFindScreen() {
     }
   }, [gpsCoords, searchCoords, cafes, isLoading, apiError]);
 
-  if (error) {
-    return (
-      <View style={common.screen}>
-        <Text>{error}</Text>
-      </View>
-    );
-  }
+  // 에러가 있어도 기본 위치로 지도는 표시
+  // if (error) {
+  //   return (
+  //     <View style={common.screen}>
+  //       <Text>{error}</Text>
+  //     </View>
+  //   );
+  // }
 
-  if (!gpsCoords) {
-    return (
-      <View style={common.screen}>
-        <Text>현재 위치를 가져오는 중입니다…</Text>
-      </View>
-    );
-  }
+  // GPS 위치가 없어도 기본 위치로 지도 표시
+  // if (!gpsCoords) {
+  //   return (
+  //     <View style={common.screen}>
+  //       <Text>현재 위치를 가져오는 중입니다…</Text>
+  //     </View>
+  //   );
+  // }
 
   /*  // 더미 데이터
   const progressStep = 3; // 총 5단계 중 3단계 완료
@@ -90,7 +96,7 @@ export default function CafeFindScreen() {
       {/* 지도 영역 */}
       <View style={cafeFindStyles.mapContainer}>
         <KakaoMap
-          userCoords={gpsCoords}
+          userCoords={displayCoords}
           cafes={cafes}
           onMarkerPress={cafe => setSelectedId(String(cafe.id))}
           onCenterChanged={handleCenterChanged}
@@ -105,7 +111,13 @@ export default function CafeFindScreen() {
         {/* 헤더 */}
         <View style={cafeFindStyles.header}>
           <Text style={cafeFindStyles.title}>주변 카페 찾기</Text>
-          <Text style={cafeFindStyles.subtitle}>현재 위치 기준 검색 중</Text>
+          <Text style={cafeFindStyles.subtitle}>
+            {gpsCoords 
+              ? '현재 위치 기준 검색 중' 
+              : error 
+                ? '기본 위치 기준 검색 (위치 권한 필요)' 
+                : '기본 위치 기준 검색'}
+          </Text>
         </View>
 
         <ScrollView
