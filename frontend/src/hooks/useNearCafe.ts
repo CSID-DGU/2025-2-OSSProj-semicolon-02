@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { MapCafe, fetchCafes } from '../api/cafes';
 
-
 export const useNearCafe = (coords?: { lat: number; lng: number }) =>
   useQuery<MapCafe[]>({
     queryKey: ['cafes', coords],

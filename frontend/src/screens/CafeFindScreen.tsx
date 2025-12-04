@@ -48,15 +48,15 @@ export default function CafeFindScreen() {
 
   // API 상태 확인 로그
   useEffect(() => {
-    console.log('📍 [지도화면] GPS 위치:', gpsCoords);
-    console.log('📍 [지도화면] 검색 위치:', searchCoords);
-    console.log('☕ [지도화면] 카페 데이터:', cafes.length, '개');
-    console.log('⏳ [지도화면] 로딩 중:', isLoading);
+    console.log(' [지도화면] GPS 위치:', gpsCoords);
+    console.log(' [지도화면] 검색 위치:', searchCoords);
+    console.log('[지도화면] 카페 데이터:', cafes.length, '개');
+    console.log(' [지도화면] 로딩 중:', isLoading);
     if (apiError) {
-      console.error('❌ [지도화면] API 에러:', apiError);
+      console.error(' [지도화면] API 에러:', apiError);
     }
     if (cafes.length > 0) {
-      console.log('📋 [지도화면] 카페 목록:', cafes);
+      console.log('[지도화면] 카페 목록:', cafes);
     }
   }, [gpsCoords, searchCoords, cafes, isLoading, apiError]);
 
@@ -81,7 +81,7 @@ export default function CafeFindScreen() {
   /*  // 더미 데이터
   const progressStep = 3; // 총 5단계 중 3단계 완료
   const searchLocation = '동대입구역';
-  
+  image.png 
   const cafes = [
     {
       id: '1',
