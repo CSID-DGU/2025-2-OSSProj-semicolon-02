@@ -38,7 +38,7 @@ import {
   type LatestDrinkPlan,
   type CurvePoint,
 } from '../lib/aiHttp';
-import { ForceTouchGesture } from 'react-native-gesture-handler/lib/typescript/handlers/gestures/forceTouchGesture';
+// import { ForceTouchGesture } from 'react-native-gesture-handler/lib/typescript/handlers/gestures/forceTouchGesture';
 
 const formatDate = (d: Date) => d.toISOString().slice(0, 10);
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
@@ -140,7 +140,8 @@ export default function HomeScreen() {
   const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
 
   const [aiAdvice, setAiAdvice] = useState<string | null>(null);
-  const [aiAdviceLoading, setAiAdviceLoading] = useState(ForceTouchGesture);
+  const [aiAdviceLoading, setAiAdviceLoading] = useState<boolean>(false);
+  // const [aiAdviceLoading, setAiAdviceLoading] = useState(ForceTouchGesture);
 
   const [todayMg, setTodayMg] = useState<number>(0);
   const [todayCount, setTodayCount] = useState<number>(0);
@@ -174,9 +175,9 @@ export default function HomeScreen() {
 
   // 카페인 둔감 사용자 태그 여부 (S 절댓값이 매우 작으면 둔감으로 간주)
   const isInsensitive = useMemo(
-  () => sensitivity != null && Math.abs(sensitivity) < 0.05,
-  [sensitivity],
-);
+    () => sensitivity != null && Math.abs(sensitivity) < 0.05,
+    [sensitivity],
+  );
 
   // 카페인 곡선 데이터 (그래프용)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -239,48 +240,48 @@ export default function HomeScreen() {
     }
   }, []);
 
-/**
- * AI 요약/그래프 + 섭취 가능 시간 계산
- * - targetSleepTime(오늘 목표 수면 시각)을 함께 전달
- * - doseMg는 아이스 아메리카노 1잔 = 150mg 기준
- */
-const fetchCaffeineAI = useCallback(
-  async (uid: number, baseDate?: Date, sleepTimeOverride?: string) => {
-    try {
-      const dateObj = baseDate ?? new Date();
-      const dateStr = formatDate(dateObj); // YYYY-MM-DD
+  /**
+   * AI 요약/그래프 + 섭취 가능 시간 계산
+   * - targetSleepTime(오늘 목표 수면 시각)을 함께 전달
+   * - doseMg는 아이스 아메리카노 1잔 = 150mg 기준
+   */
+  const fetchCaffeineAI = useCallback(
+    async (uid: number, baseDate?: Date, sleepTimeOverride?: string) => {
+      try {
+        const dateObj = baseDate ?? new Date();
+        const dateStr = formatDate(dateObj); // YYYY-MM-DD
 
-      const data: CaffeineSummaryRes = await fetchCaffeineSummary(
-        uid,
-        dateStr,
-        {
-          targetSleepTime: sleepTimeOverride ?? targetSleepTime,
-          doseMg: 150,
-        },
-      );
-      console.log('[Home] AI summary', data);
+        const data: CaffeineSummaryRes = await fetchCaffeineSummary(
+          uid,
+          dateStr,
+          {
+            targetSleepTime: sleepTimeOverride ?? targetSleepTime,
+            doseMg: 150,
+          },
+        );
+        console.log('[Home] AI summary', data);
 
-      setHalfLifeHours(data.halfLifeHours ?? null);
-      setHalfLifeMethod(data.halfLifeMethod ?? null);
-      setLatestDrinkPlan(data.latestDrinkPlan ?? null);
-      setCurve(data.curve ?? []);
+        setHalfLifeHours(data.halfLifeHours ?? null);
+        setHalfLifeMethod(data.halfLifeMethod ?? null);
+        setLatestDrinkPlan(data.latestDrinkPlan ?? null);
+        setCurve(data.curve ?? []);
 
-      if (typeof data.sensitivity === 'number') {
-        setSensitivity(data.sensitivity);
-      } else {
+        if (typeof data.sensitivity === 'number') {
+          setSensitivity(data.sensitivity);
+        } else {
+          setSensitivity(null);
+        }
+      } catch (e) {
+        console.log('[Home] fetchCaffeineAI error', e);
+        setHalfLifeHours(null);
+        setHalfLifeMethod(null);
+        setLatestDrinkPlan(null);
+        setCurve([]);
         setSensitivity(null);
       }
-    } catch (e) {
-      console.log('[Home] fetchCaffeineAI error', e);
-      setHalfLifeHours(null);
-      setHalfLifeMethod(null);
-      setLatestDrinkPlan(null);
-      setCurve([]);
-      setSensitivity(null);
-    }
-  },
-  [targetSleepTime],
-);
+    },
+    [targetSleepTime],
+  );
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -340,35 +341,32 @@ const fetchCaffeineAI = useCallback(
    * 홈 화면용 섭취 조언 (LLM) 호출
    * - Flask AI 서버: http://10.0.2.2:5001/ai/advice
    */
-  const fetchAiAdvice = useCallback(
-    async (uid: number) => {
-      try {
-        setAiAdviceLoading(true);
+  const fetchAiAdvice = useCallback(async (uid: number) => {
+    try {
+      setAiAdviceLoading(true);
 
-        const res = await fetch('http://10.0.2.2:5001/ai/advice', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: uid }),
-        });
+      const res = await fetch('http://10.0.2.2:5001/ai/advice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: uid }),
+      });
 
-        if (!res.ok) {
-          console.log('[Home] ai/advice http error', res.status);
-          return;
-        }
-
-        const json = await res.json();
-        console.log('[Home] ai/advice res', json);
-
-        setAiAdvice(json.advice ?? null);
-        // 원하면 여기서 json.caffeine_state도 어딘가에 반영 가능
-      } catch (e) {
-        console.log('[Home] fetchAiAdvice error', e);
-      } finally {
-        setAiAdviceLoading(false);
+      if (!res.ok) {
+        console.log('[Home] ai/advice http error', res.status);
+        return;
       }
-    },
-    [],
-  );
+
+      const json = await res.json();
+      console.log('[Home] ai/advice res', json);
+
+      setAiAdvice(json.advice ?? null);
+      // 원하면 여기서 json.caffeine_state도 어딘가에 반영 가능
+    } catch (e) {
+      console.log('[Home] fetchAiAdvice error', e);
+    } finally {
+      setAiAdviceLoading(false);
+    }
+  }, []);
   const reloadToday = useCallback(async () => {
     try {
       if (userId) {
@@ -543,101 +541,99 @@ const fetchCaffeineAI = useCallback(
   })();
 
   // 섭취 가능 요약용 메인 텍스트
-const intakePlanMain = useMemo(() => {
-  if (!latestDrinkPlan) {
-    return `오늘 수면 목표 ${targetSleepTime} 기준 섭취 계획을 계산할 수 없습니다.`;
-  }
+  const intakePlanMain = useMemo(() => {
+    if (!latestDrinkPlan) {
+      return `오늘 수면 목표 ${targetSleepTime} 기준 섭취 계획을 계산할 수 없습니다.`;
+    }
 
-  if (!latestDrinkPlan.possible) {
-    const reason = latestDrinkPlan.reason;
-    if (reason === 'already_over_threshold') {
+    if (!latestDrinkPlan.possible) {
+      const reason = latestDrinkPlan.reason;
+      if (reason === 'already_over_threshold') {
+        return `오늘 수면 목표 ${targetSleepTime} 기준, 추가 카페인 섭취를 권장하지 않습니다.`;
+      }
+      if (reason === 'no_safe_slot') {
+        return `오늘 수면 목표 ${targetSleepTime} 기준, 안전한 섭취 시간이 없습니다.`;
+      }
+      if (reason === 'target_sleep_at_is_past') {
+        return '설정된 취침 시간이 지나 내일 기준으로 다시 계산해 주세요.';
+      }
       return `오늘 수면 목표 ${targetSleepTime} 기준, 추가 카페인 섭취를 권장하지 않습니다.`;
     }
-    if (reason === 'no_safe_slot') {
-      return `오늘 수면 목표 ${targetSleepTime} 기준, 안전한 섭취 시간이 없습니다.`;
+
+    const latestHM = formatIsoHM(latestDrinkPlan.latestAllowedTime);
+    const dose = latestDrinkPlan.doseMg ?? 150;
+
+    if (latestHM === '-') {
+      return `오늘 수면 목표 ${targetSleepTime} 기준, 아이스 아메리카노 1잔(약 150mg) 정도의 추가 섭취가 가능합니다.`;
     }
-    if (reason === 'target_sleep_at_is_past') {
-      return '설정된 취침 시간이 지나 내일 기준으로 다시 계산해 주세요.';
+
+    return `오늘 수면 목표 ${targetSleepTime} 기준, ${latestHM}까지 약 ${dose}mg(아이스 아메리카노 1잔) 섭취 가능`;
+  }, [latestDrinkPlan, targetSleepTime]);
+
+  // 섭취 가능 요약용 서브 텍스트 (상한선/수면 시 농도 설명)
+  const intakePlanSub = useMemo(() => {
+    // 둔감형이면, 플랜/수면상한과 무관하게 이 문장 고정
+    if (isInsensitive) {
+      // latestDrinkPlan이 있는 경우 상한선 숫자만 곁들이고 싶으면 이렇게 추가해도 됨
+      const threshold = latestDrinkPlan?.safeThreshold;
+      if (threshold != null) {
+        return '현재 데이터 기준으로는 카페인이 수면 시간과 거의 상관이 없는 패턴으로 분석되었습니다. 반감기 개인화보다는 하루 총 섭취량만 가볍게 확인하셔도 됩니다.';
+      }
     }
-    return `오늘 수면 목표 ${targetSleepTime} 기준, 추가 카페인 섭취를 권장하지 않습니다.`;
-  }
 
-  const latestHM = formatIsoHM(latestDrinkPlan.latestAllowedTime);
-  const dose = latestDrinkPlan.doseMg ?? 150;
-
-  if (latestHM === '-') {
-    return `오늘 수면 목표 ${targetSleepTime} 기준, 아이스 아메리카노 1잔(약 150mg) 정도의 추가 섭취가 가능합니다.`;
-  }
-
-  return `오늘 수면 목표 ${targetSleepTime} 기준, ${latestHM}까지 약 ${dose}mg(아이스 아메리카노 1잔) 섭취 가능`;
-}, [latestDrinkPlan, targetSleepTime]);
-
-// 섭취 가능 요약용 서브 텍스트 (상한선/수면 시 농도 설명)
-const intakePlanSub = useMemo(() => {
-  // 둔감형이면, 플랜/수면상한과 무관하게 이 문장 고정
-  if (isInsensitive) {
-    // latestDrinkPlan이 있는 경우 상한선 숫자만 곁들이고 싶으면 이렇게 추가해도 됨
-    const threshold = latestDrinkPlan?.safeThreshold;
-    if (threshold != null) {
-      return '현재 데이터 기준으로는 카페인이 수면 시간과 거의 상관이 없는 패턴으로 분석되었습니다. 반감기 개인화보다는 하루 총 섭취량만 가볍게 확인하셔도 됩니다.';
-  }
-}
-
-  // 아직 플랜이 없을 때
-  if (!latestDrinkPlan) {
-    return '수면·섭취 데이터를 더 수집하면 보다 정확한 계획이 제공됩니다.';
-  }
-
-  const atSleep = latestDrinkPlan.caffeineAtSleepIfDrink;
-  const threshold = latestDrinkPlan.safeThreshold;
-
-  // 플랜은 있지만 이미 상한 초과/안전구간 없음
-  if (!latestDrinkPlan.possible) {
-    if (threshold != null) {
-      return `현재 잔여 카페인이 설정된 수면 상한선(${threshold}mg)을 이미 초과했거나, 초과할 가능성이 높습니다.`;
+    // 아직 플랜이 없을 때
+    if (!latestDrinkPlan) {
+      return '수면·섭취 데이터를 더 수집하면 보다 정확한 계획이 제공됩니다.';
     }
-    return '현재 잔여 카페인이 높거나 오늘 남은 시간에 안전한 섭취 구간이 없습니다.';
-  }
 
-  // 일반형/민감형인 경우에만 세부 수면 영향 설명
-  if (atSleep != null && threshold != null) {
-    return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg, 설정 상한선은 ${threshold}mg입니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
-  }
+    const atSleep = latestDrinkPlan.caffeineAtSleepIfDrink;
+    const threshold = latestDrinkPlan.safeThreshold;
 
-  if (atSleep != null) {
-    return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg 이하로 예상됩니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
-  }
+    // 플랜은 있지만 이미 상한 초과/안전구간 없음
+    if (!latestDrinkPlan.possible) {
+      if (threshold != null) {
+        return `현재 잔여 카페인이 설정된 수면 상한선(${threshold}mg)을 이미 초과했거나, 초과할 가능성이 높습니다.`;
+      }
+      return '현재 잔여 카페인이 높거나 오늘 남은 시간에 안전한 섭취 구간이 없습니다.';
+    }
 
-  return '해당 시간 이후 섭취는 수면에 영향을 줄 수 있어 피하는 편이 좋습니다.';
-}, [latestDrinkPlan, isInsensitive]);
+    // 일반형/민감형인 경우에만 세부 수면 영향 설명
+    if (atSleep != null && threshold != null) {
+      return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg, 설정 상한선은 ${threshold}mg입니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
+    }
 
+    if (atSleep != null) {
+      return `해당 시간까지 마셔도 취침 시 잔여 카페인은 약 ${atSleep}mg 이하로 예상됩니다. 이후 섭취는 수면에 영향을 줄 수 있습니다.`;
+    }
+
+    return '해당 시간 이후 섭취는 수면에 영향을 줄 수 있어 피하는 편이 좋습니다.';
+  }, [latestDrinkPlan, isInsensitive]);
 
   // 섭취 조언 텍스트
-const adviceText = (() => {
-  // 1) LLM 호출 중일 때
-  if (aiAdviceLoading) {
-    return '섭취 조언을 생성하는 중입니다...';
-  }
+  const adviceText = (() => {
+    // 1) LLM 호출 중일 때
+    if (aiAdviceLoading) {
+      return '섭취 조언을 생성하는 중입니다...';
+    }
 
-  // 2) LLM에서 실제 조언이 왔을 때
-  if (aiAdvice && aiAdvice.trim().length > 0) {
-    return aiAdvice.trim();
-  }
+    // 2) LLM에서 실제 조언이 왔을 때
+    if (aiAdvice && aiAdvice.trim().length > 0) {
+      return aiAdvice.trim();
+    }
 
-  // 3) 카페인 둔감형(민감도 거의 없음)
-  if (isInsensitive) {
-    return '현재 민감도 지표(S)가 매우 낮아, 카페인이 수면 시간에 크게 영향을 주지 않는 패턴입니다. 반감기보다는 하루 총 섭취량만 기본 권장량 내에서 관리하시면 됩니다.';
-  }
+    // 3) 카페인 둔감형(민감도 거의 없음)
+    if (isInsensitive) {
+      return '현재 민감도 지표(S)가 매우 낮아, 카페인이 수면 시간에 크게 영향을 주지 않는 패턴입니다. 반감기보다는 하루 총 섭취량만 기본 권장량 내에서 관리하시면 됩니다.';
+    }
 
-  // 4) 아직 데이터가 부족할 때
-  if (!latestDrinkPlan) {
-    return '수면·섭취 데이터가 조금 더 쌓이면, 오늘 패턴에 맞춘 개인 맞춤 섭취 조언을 보여드릴게요.';
-  }
+    // 4) 아직 데이터가 부족할 때
+    if (!latestDrinkPlan) {
+      return '수면·섭취 데이터가 조금 더 쌓이면, 오늘 패턴에 맞춘 개인 맞춤 섭취 조언을 보여드릴게요.';
+    }
 
-  // 5) 기본 fallback
-  return '오늘 기록을 기반으로 한 섭취 조언을 준비 중입니다.';
-})();
-
+    // 5) 기본 fallback
+    return '오늘 기록을 기반으로 한 섭취 조언을 준비 중입니다.';
+  })();
 
   return (
     <SafeAreaView style={common.screen}>
@@ -904,10 +900,9 @@ const adviceText = (() => {
 
         {/* 섭취 조언 (LLM/무카페인 추천용) */}
         <View style={homeStyles.section}>
-        <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
-        <View style={homeStyles.adviceCard}>
-  </View>
-</View>
+          <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
+          <View style={homeStyles.adviceCard}></View>
+        </View>
       </ScrollView>
 
       {/* 수면 편집 미니 모듈 */}
