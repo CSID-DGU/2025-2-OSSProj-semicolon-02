@@ -48,7 +48,7 @@ advisor_agent = create_react_agent(
         "너는 카페인 섭취 조언 전문가다.\n"
         "- 앞 단계에서 얻은 이벤트/음료 정보를 바탕으로 make_advice 도구를 사용해서 "
         "자연어 조언을 만들어라.\n"
-        "- 사용자가 이해하기 쉽게 3~5 문장으로 설명해라."
+        "- 사용자가 이해하기 쉽게 최소 6 문장으로 설명해라."
     ),
 )
 
@@ -92,21 +92,17 @@ def run_caffit_supervisor(
     user_id: int,
     image_path: str | None = None,
 ):
-    """
-    앱/백엔드에서 호출할 entrypoint.
-
-    - user_id: DB에 저장된 현재 로그인 사용자 id
-    - image_path: 서버/로컬에 저장된 음료 이미지 경로
-    """
-
-    # 실제 사용자는 질문을 안 하지만,
-    # LLM에게는 "무슨 일을 해야 하는지"를 알려주는 내부 메시지가 필요함
+    ...
     analysis_request = (
         "사용자가 카페인 관리 앱에서 음료 사진을 업로드했습니다. "
         "사진에서 음료 정보를 추정하고, 사용자의 현재 카페인 상태와 조언을 생성하세요."
     )
 
-    meta_text = f"user_id={user_id}, image_path={image_path}"
+    # 🔧 meta 정보 만들 때 image_path가 None이면 아예 빼기
+    meta_parts = [f"user_id={user_id}"]
+    if image_path:  # None, '', 등은 무시
+        meta_parts.append(f"image_path={image_path}")
+    meta_text = ", ".join(meta_parts)
 
     inputs = {
         "messages": [
