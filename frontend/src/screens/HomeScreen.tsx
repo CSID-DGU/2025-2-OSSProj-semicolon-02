@@ -38,7 +38,7 @@ import {
   type LatestDrinkPlan,
   type CurvePoint,
 } from '../lib/aiHttp';
-// import { ForceTouchGesture } from 'react-native-gesture-handler/lib/typescript/handlers/gestures/forceTouchGesture';
+//import { ForceTouchGesture } from 'react-native-gesture-handler/lib/typescript/handlers/gestures/forceTouchGesture';
 
 const formatDate = (d: Date) => d.toISOString().slice(0, 10);
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
@@ -140,8 +140,9 @@ export default function HomeScreen() {
   const [intakes, setIntakes] = useState<IntakeDTO[]>([]);
 
   const [aiAdvice, setAiAdvice] = useState<string | null>(null);
-  const [aiAdviceLoading, setAiAdviceLoading] = useState<boolean>(false);
-  // const [aiAdviceLoading, setAiAdviceLoading] = useState(ForceTouchGesture);
+  const [aiAdviceLoading, setAiAdviceLoading] = useState(false);
+  //const [aiAdviceLoading, setAiAdviceLoading] = useState(ForceTouchGesture);
+  //const [aiAdviceLoading, setAiAdviceLoading] = useState(ForceTouchGesture);
 
   const [todayMg, setTodayMg] = useState<number>(0);
   const [todayCount, setTodayCount] = useState<number>(0);
@@ -900,9 +901,16 @@ export default function HomeScreen() {
 
         {/* 섭취 조언 (LLM/무카페인 추천용) */}
         <View style={homeStyles.section}>
-          <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
-          <View style={homeStyles.adviceCard}></View>
-        </View>
+        <Text style={homeStyles.sectionTitle}>섭취 조언</Text>
+        <View style={homeStyles.adviceCard}>
+    {aiAdviceLoading ? (
+      <Text style={common.body}>섭취 조언 생성 중입니다...</Text>
+    ) : (
+      <Text style={common.body}>{adviceText}</Text>
+    )}
+  </View>
+      
+</View>
       </ScrollView>
 
       {/* 수면 편집 미니 모듈 */}

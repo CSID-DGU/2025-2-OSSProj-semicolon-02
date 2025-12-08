@@ -44,7 +44,7 @@ export interface CaffeineSummaryRes {
 
 // Flask 서버 주소에 맞게 baseURL 수정
 export const aiHttp = axios.create({
-  baseURL: 'http://10.0.2.2:5000',
+  baseURL: 'http://10.0.2.2:5001',
   timeout: 7000,
 });
 
