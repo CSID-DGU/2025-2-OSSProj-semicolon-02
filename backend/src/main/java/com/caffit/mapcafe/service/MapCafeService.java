@@ -27,10 +27,13 @@ public class MapCafeService {
         
         // MapCafeResponseDTO로 변환
         List<MapCafeResponseDTO> kakaoCafes = kakaoResponse.documents().stream()
+                .filter(doc -> doc.y() != null && !doc.y().isEmpty() 
+                        && doc.x() != null && !doc.x().isEmpty()
+                        && doc.id() != null && !doc.id().isEmpty())
                 .map(doc -> {
                     double cafeLat = Double.parseDouble(doc.y());
                     double cafeLng = Double.parseDouble(doc.x());
-                    double distance = doc.distance() != null 
+                    double distance = (doc.distance() != null && !doc.distance().isEmpty())
                             ? Double.parseDouble(doc.distance()) 
                             : GeoDistance.distance(lat, lng, cafeLat, cafeLng);
                     
