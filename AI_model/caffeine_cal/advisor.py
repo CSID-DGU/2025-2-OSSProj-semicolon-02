@@ -6,7 +6,7 @@ from typing import List, Dict, Any, Optional
 import math
 
 from .models import Intake
-from .half_life_curve import predict_caffeine_at
+from .half_life_personal import residual_caffeine_at
 
 SAFE_THRESHOLD_MG: float = 50.0
 
@@ -85,7 +85,7 @@ def find_latest_safe_drink_time(
             "safeThreshold": safe_threshold_mg,
         }
 
-    base_at_sleep = predict_caffeine_at(target_sleep_at, intakes, half_life_h)
+    base_at_sleep = residual_caffeine_at(target_sleep_at, intakes, half_life_h)
 
     if base_at_sleep >= safe_threshold_mg:
         return {

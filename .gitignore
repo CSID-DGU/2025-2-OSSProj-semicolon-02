@@ -21,3 +21,6 @@ echo "
 AI_model/chroma_db/
 AI_model/__pycache__/
 " >> .gitignore
+
+**/venv311/
+/venv311/

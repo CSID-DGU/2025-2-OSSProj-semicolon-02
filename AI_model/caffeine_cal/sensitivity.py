@@ -6,7 +6,7 @@ from datetime import timedelta
 import math
 
 from .models import Intake, SleepLog
-from .half_life_curve import residual_caffeine_at
+from .half_life_personal import residual_caffeine_at
 
 def _pearson(xs: List[float], ys: List[float]) -> float:
     n = len(xs)

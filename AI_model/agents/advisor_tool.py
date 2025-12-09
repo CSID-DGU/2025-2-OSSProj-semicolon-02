@@ -3,6 +3,7 @@ from langchain_core.tools import tool
 from ..advisor import AdvisorAgent
 from ..caffeine_cal.data_access import load_intakes_for_user
 
+
 advisor = AdvisorAgent()
 
 @tool
