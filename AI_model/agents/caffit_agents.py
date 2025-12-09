@@ -142,7 +142,7 @@ def run_caffit_supervisor(
 if __name__ == "__main__":
     # 테스트용 입력
     user_id = 1
-    image_path = "/Users/eunjung/Desktop/OSSProj/2025-2-OSSProj-semicolon-02/AI_model/Unknown.jpeg"
+    image_path = "C:\OSSProj\2025-2-OSSProj-semicolon-02\AI_model"
 
     result = run_caffit_supervisor(
         user_id=user_id,

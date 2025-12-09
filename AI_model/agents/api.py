@@ -1,19 +1,13 @@
 # AI_model/agents/api.py
-from flask import Blueprint, request, jsonify
-from .caffit_agents import run_caffit_supervisor
-
-bp = Blueprint("ai", __name__, url_prefix="/ai")
-
-@bp.route("/analyze", methods=["POST"])
-def analyze():
-    user_id = int(request.form.get("user_id", 1))
-    image = request.files["image"]
-
-    img_path = "/tmp/input.jpg"
-    image.save(img_path)
-
-    result = run_caffit_supervisor(user_id=user_id, image_path=img_path)
-    return jsonify(result)
+import os
+import tempfileimage.png
+        result = run_caffit_supervisor(user_id=user_id, image_path=img_path)
+        return jsonify(result)
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        traceback.print_exc()
+        return jsonify({"error": error_msg, "traceback": traceback.format_exc()}), 500
 
 @bp.route("/advice", methods=["POST"])
 def advice():
