@@ -1,10 +1,6 @@
 # Caffit(카핏): 개인 맞춤 카페인 코치  <img src="./Src/img/logo.png" width="50"/>
 ## 2025-2-OSSProj-semicolon-02
-&nbsp;
-&nbsp;
----
-&nbsp;
-&nbsp;
+
 ### 0. 팀 구성
 
 | 구분 | 성명 | 역할 | 소속 |
@@ -25,7 +21,6 @@
 - 국내 음료 DB 기반 정확한 카페인 추적  
 &nbsp;
 
-&nbsp;
 ---
 ### 2. 시스템 구조
 #### 2-1. 전체 아키텍처
@@ -45,7 +40,7 @@
 ![ERD](./Src/img/ERD.png)
 &nbsp;
 
----
+
 #### 2-2. 주요 기능
 ##### 1) 회원 관리  
 - 로그인/회원가입 (Google OAuth 예정)  
@@ -107,7 +102,6 @@ cd backend
 
 ---
 ### 7. 자료 관리
-&nbsp;
 **제안 발표**
 
 [수행계획서](./Docs/1_1_OSSProj_02_세미콜론_수행계획서.pdf)  
