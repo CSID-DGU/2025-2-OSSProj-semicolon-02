@@ -1,11 +1,11 @@
-# 📱 Caffit(카핏): 개인 맞춤 카페인 코치  
-2025-2-OSSProj-semicolon-02
+# Caffit(카핏): 개인 맞춤 카페인 코치  
 
 <img src="./Src/img/logo.png" width="100"/>
+2025-2-OSSProj-semicolon-02
 
 ---
 
-# 0. 팀 구성
+### 0. 팀 구성
 
 | 구분 | 성명 | 역할 | 소속 |
 |------|-------|--------|---------|
@@ -15,7 +15,7 @@
 
 ---
 
-# 1. 개발 목표
+### 1. 개발 목표
 
 - LLM 기반 음료 라벨 자동 인식  
 - 수면 데이터 기반 개인 반감기 추정
@@ -25,45 +25,45 @@
 
 ---
 
-# 2. 시스템 구조
+### 2. 시스템 구조
 
-## 2-1. 전체 아키텍처
+#### 2-1. 전체 아키텍처
 - Frontend: React Native (TypeScript)
 - Backend: Spring Boot (REST API)
 - AI Module: Flask (Python, LLM + RAG + AI Agent)
 - DB: MySQL (AWS RDS)
 - 배포: AWS EC2 / Elastic Beanstalk / Docker
 
-### 유스케이스 다이어그램
+##### 유스케이스 다이어그램
 ![UseCase](./Src/img/UseCaseDiagram.png)
 
-### 시스템 블록 다이어그램
+##### 시스템 블록 다이어그램
 ![SystemBlock](./Src/img/SystemBlockDiagram.png)
 
-### ERD
+##### ERD
 ![ERD](./Src/img/ERD.png)
 
 ---
 
-# 2-2. 주요 기능
+#### 2-2. 주요 기능
 
-## 1) 회원 관리  
+##### 1) 회원 관리  
 - 로그인/회원가입 (Google OAuth 예정)  
 - 마이페이지: 목표 설정, 알림 설정, 즐겨찾기 관리  
 
-## 2) 카페인 측정 관리  
+##### 2) 카페인 측정 관리  
 - 직접 등록  
 - 즐겨찾기 등록  
 - 사진 기반 음료 자동 인식 (LLM) 
 
-## 3) 통계 관리  
-- 월간 섭취 요약  
+##### 3) 통계 관리  
+- 수면 기록 관리
+- 섭취 기록 관리리
+- 월간 섭취 통계계
 - 시간대별 농도 변화  
-- 최다 섭취 음료  
-- 일/주/월 단위 소비 패턴  
 
-## 4) 추천/리포트 관리  
-- 수면과 섭취 시각을 결합한 개인 반감기 추정 
+##### 4) 추천/리포트 관리  
+- 수면과 섭취 시각을 결합한 개인 민감도, 반감기 추정 
 - 실시간 잔여량 계산  
 - 권장량 초과 경고  
 - AI Agent 기반 자연어 리포트 자동 생성 
@@ -71,54 +71,31 @@
   - 시간대별 위험 구간  
   - 개인 민감도 변화  
 
-## 5) 지도  
+##### 5) 지도  
 - 현재 위치 기반 카페 탐색  
 - 마커 기반 주변 카페 조회  
 
 ---
 
-# 3. 핵심 기능
+### 3. 앱 화면 
 
-## LLM 기반 음료 인식
-- 브랜드명, 제품명, 로고, 용량, 카페인 mg 자동 추출  
-- RAG 기반 DB 매칭  
-- 미등록 제품 자동 분류 지원 
+<img src="./Src/img/screen1.png"/>
+<img src="./Src/img/screen2.png"/>
 
-## 개인 반감기 추정 
-최종보고서 기준 적용된 실제 알고리즘 흐름:
+### 4. 실행 방법
 
-1. 프론트에서 수면 데이터(취침·기상 시간·수면 효율)를 전달  
-2. AI Agent가 최근 섭취 로그와 결합  
-3. “취침 직전 잔여 카페인 vs 수면 효율” 회귀 패턴 생성  
-4. 지수 감소 모델(half-life curve)에 개인 편차 보정  
-5. 최종 개인 반감기(H)를 업데이트  
-
-## AI 섭취 리포트 자동 생성
-- 하루 누적량 분석  
-- 시간대별 농도 변화 그래프용 데이터 생성  
-- 과다 섭취 패턴 탐지  
-- 수면 방해 가능 구간 예측  
-- 자연어 리포트로 요약  
-
----
-
-# 4. 앱 화면 
-
-<img src="./Src/img/screen1.png" width="260"/>
-<img src="./Src/img/screen2.png" width="260"/>
-
-# 5. 실행 방법
-
-## Frontend
+#### Frontend
 ```sh
 cd frontend
 npm install
 npx react-native run-android
+```
 
-## Backend (Spring Boot)
+#### Backend (Spring Boot)
 ```sh
 cd backend
 ./gradlew bootRun
+```
 
 ### 6. 기대효과
 | 측면 | 내용 |
