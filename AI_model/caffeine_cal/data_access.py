@@ -21,8 +21,8 @@ load_dotenv(dotenv_path=env_path)
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
 DB_NAME = os.getenv("DB_NAME", "caffit")
-DB_USER = os.getenv("DB_USER", "caffit")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "caffit1234")
+DB_USER = os.getenv("DB_USER", "admin")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "caffit1234!")
 
 print("[DEBUG] DB_HOST =", DB_HOST, "DB_USER =", DB_USER)
 

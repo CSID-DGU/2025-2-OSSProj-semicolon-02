@@ -53,7 +53,8 @@ export default function CafeFindScreen() {
     console.log('[지도화면] 카페 데이터:', cafes.length, '개');
     console.log(' [지도화면] 로딩 중:', isLoading);
     if (apiError) {
-      console.error(' [지도화면] API 에러:', apiError);
+      // NOTE: RN 개발 모드에서 console.error는 RedBox(오버레이)를 띄울 수 있어 warn으로 낮춥니다.
+      console.warn(' [지도화면] API 에러:', apiError);
     }
     if (cafes.length > 0) {
       console.log('[지도화면] 카페 목록:', cafes);

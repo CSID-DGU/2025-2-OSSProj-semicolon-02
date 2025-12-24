@@ -21,8 +21,9 @@ export async function fetchCafes(params: {
     console.log('📋 [API] 카페 데이터:', res.data);
     return res.data;
   } catch (error: any) {
-    console.error('❌ [API] 카페 검색 실패:', error.message);
-    console.error('🔍 [API] 에러 상세:', error);
+    // NOTE: RN 개발 모드에서 console.error는 RedBox(오버레이)를 띄울 수 있어 warn으로 낮춥니다.
+    console.warn('❌ [API] 카페 검색 실패:', error?.message);
+    console.warn('🔍 [API] 에러 상세:', error);
     throw error;
   }
 }
