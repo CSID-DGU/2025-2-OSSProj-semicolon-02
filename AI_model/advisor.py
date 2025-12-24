@@ -20,8 +20,9 @@ from openai import OpenAI
 
 
 from .caffeine_cal.models import Intake
-from .caffeine_cal.half_life_curve import residual_caffeine_at
+from .caffeine_cal.half_life_personal import residual_caffeine_at
 from .caffeine_cal.data_access import load_intakes_for_user
+
 
 load_dotenv()
 

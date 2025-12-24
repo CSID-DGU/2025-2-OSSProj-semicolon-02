@@ -193,17 +193,19 @@ export default function HomeScreen() {
   };
 
   const openDatePicker = () => {
-    DateTimePickerAndroid.open({
-      value: selectedDate,
-      mode: 'date',
-      is24Hour: true,
-      onChange: (_event, date) => {
-        if (date) {
-          setSelectedDate(date);
-        }
-      },
-    });
-  };
+  console.log('[Home] openDatePicker pressed');
+  DateTimePickerAndroid.open({
+    value: selectedDate,
+    mode: 'date',
+    is24Hour: true,
+    onChange: (_event, date) => {
+      if (date) {
+        setSelectedDate(date);
+      }
+    },
+  });
+};
+
 
   const fetchTodaySummary = useCallback(async (uid: number) => {
     try {
@@ -267,21 +269,51 @@ export default function HomeScreen() {
         setLatestDrinkPlan(data.latestDrinkPlan ?? null);
         setCurve(data.curve ?? []);
 
-        if (typeof data.sensitivity === 'number') {
-          setSensitivity(data.sensitivity);
-        } else {
-          setSensitivity(null);
-        }
-      } catch (e) {
-        console.log('[Home] fetchCaffeineAI error', e);
-        setHalfLifeHours(null);
-        setHalfLifeMethod(null);
-        setLatestDrinkPlan(null);
-        setCurve([]);
+      if (typeof data.sensitivity === 'number') {
+        setSensitivity(data.sensitivity);
+      } else {
         setSensitivity(null);
       }
+    } catch (e) {
+      console.log('[Home] fetchCaffeineAI error', e);
+      setHalfLifeHours(null);
+      setHalfLifeMethod(null);
+      setLatestDrinkPlan(null);
+      setCurve([]);
+      setSensitivity(null);
+    }
+  },
+  [targetSleepTime],
+);
+
+const fetchAiAdvice = useCallback(
+    async (uid: number) => {
+      try {
+        setAiAdviceLoading(true);
+
+        const res = await fetch('http://10.0.2.2:5001/ai/advice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: uid }),
+        });
+
+        if (!res.ok) {
+          console.log('[Home] ai/advice http error', res.status);
+          return;
+        }
+
+        const json = await res.json();
+        console.log('[Home] ai/advice res', json);
+
+        setAiAdvice(json.advice ?? null);
+        // 원하면 여기서 json.caffeine_state도 어딘가에 반영 가능
+      } catch (e) {
+        console.log('[Home] fetchAiAdvice error', e);
+      } finally {
+        setAiAdviceLoading(false);
+      }
     },
-    [targetSleepTime],
+    [],
   );
 
   useEffect(() => {
@@ -336,38 +368,13 @@ export default function HomeScreen() {
       fetchAiAdvice(userId);
       // 필요하면 수면도 함께 새로고침
       // fetchTodaySleep(userId);
-    }, [userId, selectedDate, fetchTodaySummary, fetchCaffeineAI]),
+    }, [userId, selectedDate, fetchTodaySummary, fetchCaffeineAI, fetchAiAdvice]),
   );
   /**
    * 홈 화면용 섭취 조언 (LLM) 호출
    * - Flask AI 서버: http://10.0.2.2:5001/ai/advice
    */
-  const fetchAiAdvice = useCallback(async (uid: number) => {
-    try {
-      setAiAdviceLoading(true);
-
-      const res = await fetch('http://10.0.2.2:5001/ai/advice', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: uid }),
-      });
-
-      if (!res.ok) {
-        console.log('[Home] ai/advice http error', res.status);
-        return;
-      }
-
-      const json = await res.json();
-      console.log('[Home] ai/advice res', json);
-
-      setAiAdvice(json.advice ?? null);
-      // 원하면 여기서 json.caffeine_state도 어딘가에 반영 가능
-    } catch (e) {
-      console.log('[Home] fetchAiAdvice error', e);
-    } finally {
-      setAiAdviceLoading(false);
-    }
-  }, []);
+  
   const reloadToday = useCallback(async () => {
     try {
       if (userId) {
@@ -380,7 +387,7 @@ export default function HomeScreen() {
     } catch (e) {
       console.log('[Home] reloadToday error', e);
     }
-  }, [userId, selectedDate, fetchTodaySummary, fetchCaffeineAI]);
+  }, [userId, selectedDate, fetchTodaySummary, fetchCaffeineAI, fetchAiAdvice]);
 
   // 수면 시간 계산
   const calcDurationLabel = () => {

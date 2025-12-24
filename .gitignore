@@ -22,5 +22,8 @@ AI_model/chroma_db/
 AI_model/__pycache__/
 " >> .gitignore
 
+**/venv311/
+/venv311/
+
 # API Keys (보안상 Git에 커밋하지 않음)
 frontend/src/config/apiKeys.ts
