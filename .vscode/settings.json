@@ -1,8 +1,6 @@
 {
-    "eslint.workingDirectories": [
-      { "directory": "frontend", "changeProcessCWD": true }
-    ],
-    "eslint.nodePath": "frontend/node_modules",
-    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
-  }
-  
+    "python.defaultInterpreterPath": "${workspaceFolder}/venv/Scripts/python.exe",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ]
+}

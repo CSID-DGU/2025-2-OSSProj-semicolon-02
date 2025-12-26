@@ -14,7 +14,7 @@ class VectorRAGAgent:
         self.embed_model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
         self.llm = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        print("📂 Chroma drinks collection document count:", self.collection.count())
+        print("Chroma drinks collection document count:", self.collection.count())
 
     def _brand_pref_search(self, query_text: str, brand: str | None):
         # 벡터 검색은 top-k 여러 개 가져오기

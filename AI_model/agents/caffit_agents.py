@@ -2,7 +2,7 @@
 ## supervisor 느낌
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from langgraph_supervisor import create_supervisor
+from ..langgraph_supervisor import create_supervisor
 
 from .vision_tool import analyze_drink
 from .caffeine_tool import calc_caffeine_state
@@ -85,7 +85,7 @@ supervisor_workflow = create_supervisor(
         '  \"advice\": \"오늘 카페인 섭취량은 적당하지만, 오후 늦게는 추가 섭취를 피하는 것이 좋습니다.\"\n'
         '}\n'
     ),
-).compile()  # LangGraph 앱으로 컴파일
+    )  # create_supervisor가 이미 컴파일된 앱을 반환함
 
 
 def run_caffit_supervisor(
@@ -142,7 +142,7 @@ def run_caffit_supervisor(
 if __name__ == "__main__":
     # 테스트용 입력
     user_id = 1
-    image_path = "C:\OSSProj\2025-2-OSSProj-semicolon-02\AI_model"
+    image_path = r"C:\OSSProj\2025-2-OSSProj-semicolon-02\AI_model"
 
     result = run_caffit_supervisor(
         user_id=user_id,

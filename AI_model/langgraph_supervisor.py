@@ -1,4 +1,3 @@
-"""
 # AI_model/langgraph_supervisor.py
 from langgraph.graph import StateGraph, END
 from langgraph.constants import START
@@ -22,6 +21,5 @@ def create_supervisor(agents, model, prompt):
     # 🔥 여기서 컴파일
     app = graph.compile()
 
-    # 그리고 “실행 가능한 앱” 리턴
+    # 그리고 "실행 가능한 앱" 리턴
     return app
-    """
